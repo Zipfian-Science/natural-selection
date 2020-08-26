@@ -1,3 +1,10 @@
+# Project specific
+.integration
+.unittest
+coverage_report/**
+requirements.txt
+.idea
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
