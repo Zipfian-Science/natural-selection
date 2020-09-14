@@ -1,9 +1,27 @@
+# -*- coding: utf-8 -*-
+'''
+    Base classes for running classic GA experiments
+    @author Justin Hocking
+    @version 0.0.1
+'''
+__author__ = "Justin Hocking"
+__copyright__ = "Copyright 2020, Zipfian Science"
+__credits__ = []
+__license__ = ""
+__version__ = "0.0.1"
+__maintainer__ = "Justin Hocking"
+__email__ = "justin.hocking@zipfian.science"
+__status__ = "Development"
+
 import random
 import uuid
-from math import floor
 import hashlib
 import copy
+import multiprocessing as mp
 
+from natural_selection.ga.selection import top_n_selection
+from natural_selection.ga.mating import classic_mate_function
+from natural_selection.ga.mutation import classic_mutate_function
 
 class Gene:
 
@@ -120,17 +138,17 @@ class EvolutionIsland:
         if selection_function:
             self.selection = selection_function
         else:
-            self.selection = self._selection_function
+            self.selection = top_n_selection
 
         if mate_function:
             self.mate = mate_function
         else:
-            self.mate = self._mate_function
+            self.mate = classic_mate_function
 
         if mutate_function:
             self.mutate = mutate_function
         else:
-            self.mutate = self._mutate_function
+            self.mutate = classic_mutate_function
 
         if crossover_prob_function:
             self.crossover_prob = crossover_prob_function
@@ -173,43 +191,17 @@ class EvolutionIsland:
                 self.population.append(i)
                 self.unique_genome.append(i.unique_genetic_code())
 
-    def _mate_function(self, mother, father, indpb):
-        size = min(len(mother.genome), len(father.genome))
-        for i in range(size):
-            if random.random() < indpb:
-                mother.genome[i], father.genome[i] = father.genome[i], mother.genome[i]
-                mother.reset_fitness()
-                father.reset_fitness()
-
-        return mother, father
-
-    def _mutate_function(self, individual, indpb):
-        for i in range(len(individual.genome)):
-            if random.random() < indpb:
-                individual.genome[i] = individual.genome[i].randomize()
-                individual.reset_fitness()
-
-        return individual
-
-    def _selection_function(self, population, count):
-        def sortFitness(val):
-            return val.fitness
-
-        population.sort(key=sortFitness, reverse=True)
-
-        return population[0:count]
-
-    def _clone_function(self, population):
+    def _clone_function(self, island, population):
         return copy.deepcopy(population)
 
-    def _mutation_prob_function(self, mutation_probability):
+    def _mutation_prob_function(self, island, mutation_probability):
         return mutation_probability
 
-    def _crossover_prob_function(self, crossover_probability):
+    def _crossover_prob_function(self, island, crossover_probability):
         return crossover_probability
 
     def evolve(self, starting_generation=0, n_generations=5, crossover_probability=0.5, mutation_probability=0.5,
-               mating_params=None, mutation_params=None, selection_params=None):
+               mating_params=None, mutation_params=None, selection_params=None, multiproc=False):
 
         for g in range(starting_generation, starting_generation + n_generations):
             if self.verbose:
@@ -217,12 +209,12 @@ class EvolutionIsland:
 
             elites = self.selection(self.population, **selection_params)
 
-            elites = self.clone(elites)
+            elites = self.clone(self, elites)
 
             self.elite_list.extend(elites)
 
             for child1, child2 in zip(elites[::2], elites[1::2]):
-                if random.random() < self.crossover_prob(crossover_probability):
+                if random.random() < self.crossover_prob(self, crossover_probability):
                     self.mate(child1, child2, **mating_params)
 
                     if self.verbose:
@@ -231,7 +223,7 @@ class EvolutionIsland:
                     self.children.extend([child1, child2])
 
             for mutant in elites:
-                if random.random() < self.mutation_prob(mutation_probability):
+                if random.random() < self.mutation_prob(self, mutation_probability):
                     self.mutate(mutant, **mutation_params)
 
                     if self.verbose:
@@ -241,8 +233,26 @@ class EvolutionIsland:
 
             invalid_ind = [ind for ind in elites if ind.fitness is None]
 
-            for popitem in invalid_ind:
-                popitem.evaluate(self.function_params)
+            if multiproc:
+                cpu_count = mp.cpu_count()
+                n = len(invalid_ind)
+
+                manager = mp.Manager()
+
+                fitted_pipelines = manager.list()
+
+                for i in range(0, n, cpu_count):
+                    jobs = list()
+                    for individual in invalid_ind[i:i + cpu_count]:
+                        p = mp.Process(target=individual.evaluate, args=(self.function_params))
+                        jobs.append(p)
+                        p.start()
+
+                    for proc in jobs:
+                        proc.join()
+            else:
+                for popitem in invalid_ind:
+                    popitem.evaluate(self.function_params)
 
             for popitem in elites:
                 if not popitem.unique_genetic_code() in self.unique_genome:
