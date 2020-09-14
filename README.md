@@ -1,21 +1,41 @@
 # Natural Selection
 ```
-.----. _        .--. .--.        _ 
-`--. ::_;      : .-': .--'      :_;
-  ,','.-..---. : `; `. `.  .--. .-.
-.'.'_ : :: .; `: :   _`, :'  ..': :
-:____;:_;: ._.':_;  `.__.'`.__.':_;
-         : :                       
-         :_;                       
+      ,(*                                         
+           @@                                     
+*@       @@% *@                                   
+*@     @@   %@ @                                  
+ @@/ @@   @@   @@                                 
+   @@@(,@(   @/ @@@@@@@&@@@@@                     
+                 @ @&  @@  /@@@#                  
+                 /@  @@  ,@@   @@                 
+                  ,@@   @@   @@  @                
+                    %@@@   @@    @@@@@@@@@@@@@    
+                          ,,      @  @@  @@  &@@@ 
+                                  %@@  @@  &@@  @@
+                                   @%@@  &@@     @
+                                    ,@,%@@        
+                                       @@@@@@     
+             _                   _ 
+ _ __   __ _| |_ _   _ _ __ __ _| |
+| '_ \ / _` | __| | | | '__/ _` | |
+| | | | (_| | |_| |_| | | | (_| | |
+|_| |_|\__,_|\__|\__,_|_|  \__,_|_|                                   
+          _           _   _             
+ ___  ___| | ___  ___| |_(_) ___  _ __  
+/ __|/ _ \ |/ _ \/ __| __| |/ _ \| '_ \ 
+\__ \  __/ |  __/ (__| |_| | (_) | | | |
+|___/\___|_|\___|\___|\__|_|\___/|_| |_|
+                                        
+by Zipfian Science                               
 ```
 Python tools for creating and running Evolutionary Algorithm (EA) experiments.
 
 ## Sauce layout
 
 ```
-natural-selection
+natural_selection
    |
-   |- natural_selection
+   |- ga
    |   |
    |   
    |- depoly.py
@@ -23,11 +43,31 @@ natural-selection
    |- setup.py
 ```
 ## Run tests
-...
+
+To run unit tests, use the helper script `run_tests.py`.
+
+```shell script
+# To see available options
+$ python run_tests.py -h
+```
+
 ## Deploying
-..
+
+To build and deploy to PyPi, use the helper script `deploy.py`.
+
+```shell script
+# To see available options
+$ python deploy.py -h
+```
+
 ## Install and use
-...
+
+Once deployed, the package can be installed via pip.
+
+```shell script
+$ pip install natural-selection
+```
+
 ## Branching dev repos 
 
 There are three main branches at any given point in time. These branches may only be pulled. These are:
@@ -77,7 +117,7 @@ Merge requests into master, dev, or release from feature development branches wi
 
 Example of branching:
 
-```
+```shell script
 $ git checkout master
 $ git pull
 $ git branch XXX_AA_description
@@ -88,7 +128,15 @@ $ git push origin XXX_AA_description
 
 In case of changes to master/dev, a git rebase will bring your branch up to date with master and avoid conflicts. For example:
 
+```shell script
+$ git checkout master
+$ git pull
+$ git checkout XXX_AA_description
+$ git merge master
 ```
+Alternatively, but not recommended:
+
+```shell script
 $ git checkout master
 $ git pull
 $ git checkout XXX_AA_description

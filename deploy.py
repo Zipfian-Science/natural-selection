@@ -16,16 +16,13 @@ def copy_wheel(release_name):
 
     if release_name and release_name.lower() in ['master', 'test', 'development']:
         raise ValueError('May not rename wheel to {}. To deploy a wheel by that name, checkout that branch')
-    local_name = version_name
+
     if not release_name:
-        release_name = local_name
+        release_name = version_name
+
     release_name = release_name.replace("-", "_")
-    local_file = "dist/natural_selection-{release_name}.tar.gz".format(
-        release_name=local_name
-    )
-    remote_file = "natural_selection-{release_name}.tar.gz".format(
-        release_name=release_name
-    )
+    local_file = f"dist/natural_selection-{version_name}.tar.gz"
+    remote_file = f"natural_selection-{release_name}.tar.gz"
 
     os.mkdir('deploy')
     shutil.copy(local_file, f"deploy/{remote_file}")
