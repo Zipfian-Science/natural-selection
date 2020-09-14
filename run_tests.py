@@ -5,9 +5,9 @@ import coverage
 def specified_tests(tests):
     for test in tests:
         file_name = '%s.py' % test
-        tests = unittest.TestLoader().discover(start_dir="./natural_selection/tests/unittest", pattern=file_name, top_level_dir=".")
+        tests = unittest.TestLoader().discover(start_dir="./tests/unittest", pattern=file_name, top_level_dir=".")
         unittest.TextTestRunner(verbosity=4).run(tests)
-        tests = unittest.TestLoader().discover(start_dir="./natural_selection/tests/integration", pattern=file_name, top_level_dir=".")
+        tests = unittest.TestLoader().discover(start_dir="./tests/integration", pattern=file_name, top_level_dir=".")
         unittest.TextTestRunner(verbosity=4).run(tests)
 
 def all_unit_tests(do_coverage=False):
@@ -15,7 +15,7 @@ def all_unit_tests(do_coverage=False):
     if do_coverage:
         cov.start()
 
-    tests = unittest.TestLoader().discover(start_dir="./natural_selection/tests/unittest", pattern="test_*.py", top_level_dir=".")
+    tests = unittest.TestLoader().discover(start_dir="./tests/unittest", pattern="test_*.py", top_level_dir=".")
     result = unittest.TextTestRunner(verbosity=4).run(tests)
     if do_coverage:
         cov.stop()
@@ -28,7 +28,7 @@ def all_integration_tests(do_coverage=False):
     if do_coverage:
         cov.start()
 
-    tests = unittest.TestLoader().discover(start_dir="./natural_selection/tests/integration", pattern="test_*.py", top_level_dir=".")
+    tests = unittest.TestLoader().discover(start_dir="./tests/integration", pattern="test_*.py", top_level_dir=".")
     result = unittest.TextTestRunner(verbosity=4).run(tests)
     if do_coverage:
         cov.stop()
@@ -74,7 +74,7 @@ if __name__ == "__main__":
         '-t',
         '--tests',
         nargs='+',
-        help='define a list of python test files to run, Usage: python run_tests.py -t test_data test_utils'
+        help='Define a list of python test files to run, Usage: python run_tests.py -t test_data test_utils'
     )
 
     main(parser.parse_args())

@@ -1,26 +1,43 @@
 import os
+import shutil
 import argparse
-from subprocess import check_output
 import run_tests as tests
 import sys
+from twine.commands import upload
+import json
+
 
 def copy_wheel(release_name):
+    with open("version.json", "r") as f:
+        version = json.load(f)
+
+    version_name = '{major}.{build}.{minor}'.format(**version)
+
+
     if release_name and release_name.lower() in ['master', 'test', 'development']:
         raise ValueError('May not rename wheel to {}. To deploy a wheel by that name, checkout that branch')
-    local_name = check_output(["git", "symbolic-ref", "--short", "HEAD"]).decode("utf8")[0:-1]
+    local_name = version_name
     if not release_name:
         release_name = local_name
     release_name = release_name.replace("-", "_")
-    local_file = "dist/natural_selection-{release_name}-py3-none-any.whl".format(
+    local_file = "dist/natural_selection-{release_name}.tar.gz".format(
         release_name=local_name
     )
-    remote_file = "natural_selection-{release_name}-py3-none-any.whl".format(
+    remote_file = "natural_selection-{release_name}.tar.gz".format(
         release_name=release_name
     )
 
-    print("Deploying [{local_file}] -> [{remote_file}]".format(local_file=local_file, remote_file=remote_file))
+    os.mkdir('deploy')
+    shutil.copy(local_file, f"deploy/{remote_file}")
 
-    # TODO move somewhere
+    print(f"Deploying [{local_file}] -> [{remote_file}]")
+
+    upload.main(['deploy/*', '-u', os.getenv('TWINE_USERNAME'), '-p', os.getenv('TWINE_PASSWORD')])
+
+    version['minor'] += 1
+    with open("version.json", "w") as f:
+        json.dump(version, f)
+
 
 
 def lock_and_gen_pipreq():
@@ -36,16 +53,19 @@ def delete_build():
     if sys.platform == "win32":
         os.system("RMDIR build /s /q")
         os.system("RMDIR natural_selection.egg-info /s /q")
+
     else:
         os.system("rm -rf build")
         os.system("rm -rf natural_selection.egg-info" )
 
+
 def delete_dist():
     if sys.platform == "win32":
         os.system("RMDIR -f dist /s /q")
+        os.system("RMDIR deploy /s /q")
     else:
         os.system("rm -rf dist")
-
+        os.system("rm -rf deploy" )
 
 def do_unit_tests(args):
     if args.unit:
@@ -115,7 +135,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--deploy",
         "-d",
-        help="Deploys the built package to ***",
+        help="Deploys the built package to PyPi",
         action="store_true",
     )
     parser.add_argument(
