@@ -5,7 +5,7 @@ import json
 with open("version.json", "r") as f:
     version = json.load(f)
 
-version_name = '{major}.{build}.{minor}'.format(**version)
+version_name = '{major}.{minor}.{patch}'.format(**version)
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -20,7 +20,7 @@ if os.path.isfile(os.path.join(here, 'requirements.txt')):
         if '-i http' in pipreq[0]:
             pipreq.pop(0)
 else:
-    pipreq = ['pyyaml']
+    pipreq = []
 
 
 setup(

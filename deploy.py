@@ -11,7 +11,7 @@ def copy_wheel(release_name):
     with open("version.json", "r") as f:
         version = json.load(f)
 
-    version_name = '{major}.{build}.{minor}'.format(**version)
+    version_name = '{major}.{minor}.{patch}'.format(**version)
 
 
     if release_name and release_name.lower() in ['master', 'test', 'development']:
@@ -31,7 +31,7 @@ def copy_wheel(release_name):
 
     upload.main(['deploy/*', '-u', os.getenv('TWINE_USERNAME'), '-p', os.getenv('TWINE_PASSWORD')])
 
-    version['minor'] += 1
+    version['patch'] += 1
     with open("version.json", "w") as f:
         json.dump(version, f)
 
