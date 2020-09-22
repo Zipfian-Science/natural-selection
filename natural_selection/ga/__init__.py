@@ -26,6 +26,16 @@ from natural_selection.ga.mutation import classic_mutate_function
 class Gene:
 
     def __init__(self, name, value, gene_max, gene_min, rand_type_func):
+        """
+        A simple class to encapsulate a simple gene.
+        Args:
+            name: Gene name
+            value: The value, could be any type
+            gene_max: Max value or None
+            gene_min: Min value or None
+            rand_type_func: A function to randomise the gene, taking the min and max as input
+            with signature:   func(gene_min, gene_max)
+        """
         self.name = name
         self.value = value
         self.gene_max = gene_max
@@ -33,6 +43,11 @@ class Gene:
         self.rand_type_func = rand_type_func
 
     def randomize(self):
+        """
+        Return a new gene with randomised value
+        Returns: Gene
+
+        """
         return Gene(
             self.name,
             self.rand_type_func(self.gene_min, self.gene_max),
@@ -48,12 +63,22 @@ class Gene:
 class Genome:
 
     def __init__(self, genes: list = None):
+        """
+        A class that encapsulates an ordered sequence of Gene objects
+        Args:
+            genes: list of initialised Gene objects
+        """
         if genes:
             self.genes = genes
         else:
             self.genes = list()
 
     def append(self, gene: Gene):
+        """
+        Simple appending of Gene type objects
+        Args:
+            gene: Gene
+        """
         assert isinstance(gene, Gene), 'Must be Gene type!'
         self.genes.append(gene)
 
@@ -90,6 +115,13 @@ class Genome:
 class Individual:
 
     def __init__(self, fitness_function, name=None, genome: Genome = None):
+        """
+        A class that encapsulates a single individual, with genetic code and a fitness evaluation function.
+        Args:
+            fitness_function: func with func(self.genome, **params) signature
+            name: Name
+            genome: A Genome object, initialised
+        """
         if name is None:
             name = str(uuid.uuid4())
         if genome is None:
@@ -102,21 +134,50 @@ class Individual:
         self.genetic_code = None
 
     def birthday(self, add=1):
+        """
+        Add to the age
+        Args:
+            add: int
+        """
         self.age += add
 
     def reset_fitness(self, fitness=None, reset_genetic_code=True):
+        """
+        Reset (or set) the fitness oof the individual
+        Args:
+            fitness: Value, default is None
+            reset_genetic_code: bool
+        """
         self.fitness = fitness
         if reset_genetic_code:
             self.genetic_code = None
 
-    def add_gene(self, gene):
+    def add_gene(self, gene : Gene):
+        """
+        Appends a gene to the genome
+        Args:
+            gene: Gene
+        """
         self.genome.append(gene)
 
-    def evaluate(self, params):
+    def evaluate(self, params : dict):
+        """
+        Run the fitness function with the given params
+        Args:
+            params: named dict of eval params
+
+        Returns: fitness
+
+        """
         self.fitness = self.fitness_function(self.genome, **params)
         return self.fitness
 
     def unique_genetic_code(self):
+        """
+        Gets the unique genetic code, generating if it is undefined
+        Returns: str
+
+        """
         if self.genetic_code is None:
             self.genetic_code = str(hashlib.md5(''.join(str(x) for x in self.genome).encode()).digest())
         return self.genetic_code
@@ -125,11 +186,24 @@ class Individual:
         return '({0}:{1})'.format(self.name, self.fitness)
 
 
-class EvolutionIsland:
+class SimpleIsland:
 
-    def __init__(self, function_params, selection_function=None, mate_function=None, mutate_function=None,
+    def __init__(self, function_params : dict, selection_function=None, mate_function=None, mutate_function=None,
                  crossover_prob_function=None, mutation_prob_function=None, clone_function=None,
                  verbose=True):
+        """
+        A simple Island to perform a Genetic Algorithm
+
+        Args:
+            function_params: The parameters for the fitness function
+            selection_function: function for selecting individuals for crossover and mutation
+            mate_function: function for crossover
+            mutate_function: function for mutation
+            crossover_prob_function: random probability function for crossover
+            mutation_prob_function: random probability function for mutation
+            clone_function: function for cloning
+            verbose: bool
+        """
         self.function_params = function_params
         self.unique_genome = []
         self.generation_info = []
@@ -153,17 +227,17 @@ class EvolutionIsland:
         if crossover_prob_function:
             self.crossover_prob = crossover_prob_function
         else:
-            self.crossover_prob = self._crossover_prob_function
+            self.crossover_prob = SimpleIsland._crossover_prob_function
 
         if mutation_prob_function:
             self.mutation_prob = mutation_prob_function
         else:
-            self.mutation_prob = self._mutation_prob_function
+            self.mutation_prob = SimpleIsland._mutation_prob_function
 
         if clone_function:
             self.clone = clone_function
         else:
-            self.clone = self._clone_function
+            self.clone = SimpleIsland._clone_function
 
         self.verbose = verbose
 
@@ -191,13 +265,16 @@ class EvolutionIsland:
                 self.population.append(i)
                 self.unique_genome.append(i.unique_genetic_code())
 
-    def _clone_function(self, island, population):
+    @staticmethod
+    def _clone_function(island, population):
         return copy.deepcopy(population)
 
-    def _mutation_prob_function(self, island, mutation_probability):
+    @staticmethod
+    def _mutation_prob_function(island, mutation_probability):
         return mutation_probability
 
-    def _crossover_prob_function(self, island, crossover_probability):
+    @staticmethod
+    def _crossover_prob_function(island, crossover_probability):
         return crossover_probability
 
     def evolve(self, starting_generation=0, n_generations=5, crossover_probability=0.5, mutation_probability=0.5,

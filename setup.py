@@ -43,8 +43,8 @@ setup(
         "": ["*.yaml",],
     },
     classifiers=[
-               # 'Intended Audience :: Researchers',
-               'Operating System :: OS Independent',
-               'Programming Language :: Python',
-               'Topic :: Utilities']
+            'Intended Audience :: Science/Research',
+            'Operating System :: OS Independent',
+            'Programming Language :: Python :: 3',
+            'Topic :: Scientific/Engineering :: Artificial Intelligence']
 )
