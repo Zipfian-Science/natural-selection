@@ -15,7 +15,7 @@ __status__ = "Development"
 
 import random
 
-def classic_mate_function(mother, father, prob):
+def classic_mate_function(island, mother, father, prob):
     size = min(len(mother.genome), len(father.genome))
     for i in range(size):
         if random.random() < prob:

@@ -15,7 +15,7 @@ __status__ = "Development"
 
 import random
 
-def classic_mutate_function(individual, prob):
+def classic_mutate_function(island, individual, prob):
     for i in range(len(individual.genome)):
         if random.random() < prob:
             individual.genome[i] = individual.genome[i].randomize()

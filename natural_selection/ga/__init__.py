@@ -17,7 +17,6 @@ import random
 import uuid
 import hashlib
 import copy
-import multiprocessing as mp
 
 from natural_selection.ga.selection import top_n_selection
 from natural_selection.ga.mating import classic_mate_function
@@ -186,7 +185,19 @@ class Individual:
         return '({0}:{1})'.format(self.name, self.fitness)
 
 
-class SimpleIsland:
+class Island:
+
+    @staticmethod
+    def _clone_function(island, population):
+        return copy.deepcopy(population)
+
+    @staticmethod
+    def _mutation_prob_function(island, mutation_probability):
+        return mutation_probability
+
+    @staticmethod
+    def _crossover_prob_function(island, crossover_probability):
+        return crossover_probability
 
     def __init__(self, function_params : dict, selection_function=None, mate_function=None, mutate_function=None,
                  crossover_prob_function=None, mutation_prob_function=None, clone_function=None,
@@ -227,17 +238,17 @@ class SimpleIsland:
         if crossover_prob_function:
             self.crossover_prob = crossover_prob_function
         else:
-            self.crossover_prob = SimpleIsland._crossover_prob_function
+            self.crossover_prob = Island._crossover_prob_function
 
         if mutation_prob_function:
             self.mutation_prob = mutation_prob_function
         else:
-            self.mutation_prob = SimpleIsland._mutation_prob_function
+            self.mutation_prob = Island._mutation_prob_function
 
         if clone_function:
             self.clone = clone_function
         else:
-            self.clone = SimpleIsland._clone_function
+            self.clone = Island._clone_function
 
         self.verbose = verbose
 
@@ -246,18 +257,33 @@ class SimpleIsland:
         self.children = []
 
     def create(self, adam, seed=42, population_size=8):
+        """
+        Starts the population by taking an initial individual as template and creating new ones from it.
+        Args:
+            adam: Individual
+            seed: random seed
+            population_size: int
+        """
         random.seed(seed)
 
-        for i in range(population_size):
+        for i in range(population_size-1):
             eve = Individual(adam.fitness_function, genome=Genome([x.randomize() for x in adam.genome]))
             self.population.append(eve)
 
-        self.population[0] = adam
+        self.population.append(adam)
 
         for popitem in self.population:
             popitem.evaluate(self.function_params)
+            self.unique_genome.append(popitem.unique_genetic_code())
 
     def import_migrants(self, migrants, reset_fitness=False):
+        """
+        Imports a list of individuals, with option to re-evaluate.
+        Skips the individual if the genetic code is already in the population
+        Args:
+            migrants: list
+            reset_fitness: bool
+        """
         for i in migrants:
             if not i.unique_genetic_code() in self.unique_genome:
                 if i.fitness is None or reset_fitness:
@@ -265,26 +291,28 @@ class SimpleIsland:
                 self.population.append(i)
                 self.unique_genome.append(i.unique_genetic_code())
 
-    @staticmethod
-    def _clone_function(island, population):
-        return copy.deepcopy(population)
-
-    @staticmethod
-    def _mutation_prob_function(island, mutation_probability):
-        return mutation_probability
-
-    @staticmethod
-    def _crossover_prob_function(island, crossover_probability):
-        return crossover_probability
-
     def evolve(self, starting_generation=0, n_generations=5, crossover_probability=0.5, mutation_probability=0.5,
-               mating_params=None, mutation_params=None, selection_params=None, multiproc=False):
+               mating_params={'prob':0.5}, mutation_params={'prob':0.2}, selection_params={'n':5}):
+        """
+        Starts the evolutionary run
+        Args:
+            starting_generation: int
+            n_generations: int
+            crossover_probability: initial crossover probability
+            mutation_probability: initial mutation probability
+            mating_params: dict of params for custom crossover function
+            mutation_params: dict of params for custom mutation function
+            selection_params: dict of params for custom selection function
+
+        Returns:
+            The fittest Individual found
+        """
 
         for g in range(starting_generation, starting_generation + n_generations):
             if self.verbose:
                 print('[{} started]'.format(g))
 
-            elites = self.selection(self.population, **selection_params)
+            elites = self.selection(island=self, population=self.population, **selection_params)
 
             elites = self.clone(self, elites)
 
@@ -292,7 +320,7 @@ class SimpleIsland:
 
             for child1, child2 in zip(elites[::2], elites[1::2]):
                 if random.random() < self.crossover_prob(self, crossover_probability):
-                    self.mate(child1, child2, **mating_params)
+                    self.mate(island=self, mother=child1, father=child2, **mating_params)
 
                     if self.verbose:
                         print('Mating!')
@@ -301,7 +329,7 @@ class SimpleIsland:
 
             for mutant in elites:
                 if random.random() < self.mutation_prob(self, mutation_probability):
-                    self.mutate(mutant, **mutation_params)
+                    self.mutate(island=self, individual=mutant, **mutation_params)
 
                     if self.verbose:
                         print('Mutating!')
@@ -310,26 +338,8 @@ class SimpleIsland:
 
             invalid_ind = [ind for ind in elites if ind.fitness is None]
 
-            if multiproc:
-                cpu_count = mp.cpu_count()
-                n = len(invalid_ind)
-
-                manager = mp.Manager()
-
-                fitted_pipelines = manager.list()
-
-                for i in range(0, n, cpu_count):
-                    jobs = list()
-                    for individual in invalid_ind[i:i + cpu_count]:
-                        p = mp.Process(target=individual.evaluate, args=(self.function_params))
-                        jobs.append(p)
-                        p.start()
-
-                    for proc in jobs:
-                        proc.join()
-            else:
-                for popitem in invalid_ind:
-                    popitem.evaluate(self.function_params)
+            for popitem in invalid_ind:
+                popitem.evaluate(self.function_params)
 
             for popitem in elites:
                 if not popitem.unique_genetic_code() in self.unique_genome:
@@ -389,7 +399,7 @@ class SimpleIsland:
             for i in self.population:
                 i.birthday()
 
-        best_ind = self.selection(self.population, 1)[0]
+        best_ind = top_n_selection(island=self, population=self.population, n=1)[0]
 
         if self.verbose:
             print("Best individual is %s, %s" % (best_ind.name, best_ind.fitness))

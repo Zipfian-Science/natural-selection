@@ -13,7 +13,7 @@ __maintainer__ = "Justin Hocking"
 __email__ = "justin.hocking@zipfian.science"
 __status__ = "Development"
 
-def top_n_selection(population, n):
+def top_n_selection(island, population, n):
     def sortFitness(val):
         return val.fitness
 
