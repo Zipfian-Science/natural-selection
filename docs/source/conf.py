@@ -11,6 +11,7 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import os
+import json
 import sys
 sys.path.insert(0, os.path.abspath('../..'))
 sys.setrecursionlimit(1500)
@@ -27,7 +28,12 @@ copyright = '2020, Zipfian Science'
 author = 'Zipfian Science'
 
 # The full version, including alpha/beta/rc tags
-release = 'alpha'
+with open("../../version.json", "r") as f:
+    release_version = json.load(f)
+
+# Need to take deployment version bumping into account
+release_version['patch'] -= 1
+release = '{major}.{minor}.{patch}'.format(**release_version)
 
 # -- General configuration ---------------------------------------------------
 
