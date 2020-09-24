@@ -4,12 +4,11 @@
 coverage_report/**
 requirements.txt
 .idea
-Pipfile*
 .env
 deploy/
 deploy/*
-docs/
-docs/*
+docs/build
+docs/build/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

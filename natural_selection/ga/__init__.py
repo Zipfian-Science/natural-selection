@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
-'''
-    Base classes for running classic GA experiments
-    @author Justin Hocking
-    @version 0.0.1
-'''
+"""Basic classes for running Genetic Algorithms.
+"""
 __author__ = "Justin Hocking"
 __copyright__ = "Copyright 2020, Zipfian Science"
 __credits__ = []
@@ -23,18 +20,19 @@ from natural_selection.ga.mating import classic_mate_function
 from natural_selection.ga.mutation import classic_mutate_function
 
 class Gene:
+    """
+    A simple class to encapsulate a simple gene.
+
+    Args:
+        name (str): Gene name.
+        value (any): The value, could be any type.
+        gene_max (numeric type): Max value or None.
+        gene_min (numeric type): Min value or None.
+        rand_type_func (func): A function to randomise the gene, taking the min and max as input with signature ``func(gene_min, gene_max)``.
+
+    """
 
     def __init__(self, name, value, gene_max, gene_min, rand_type_func):
-        """
-        A simple class to encapsulate a simple gene.
-        Args:
-            name: Gene name
-            value: The value, could be any type
-            gene_max: Max value or None
-            gene_min: Min value or None
-            rand_type_func: A function to randomise the gene, taking the min and max as input
-            with signature:   func(gene_min, gene_max)
-        """
         self.name = name
         self.value = value
         self.gene_max = gene_max
@@ -43,9 +41,10 @@ class Gene:
 
     def randomize(self):
         """
-        Return a new gene with randomised value
-        Returns: Gene
+        Return a new gene with randomised value.
 
+        Returns:
+            Gene: Newly created gene.
         """
         return Gene(
             self.name,
@@ -60,13 +59,13 @@ class Gene:
 
 
 class Genome:
+    """
+    A class that encapsulates an ordered sequence of Gene objects.
 
+    Args:
+        genes (list): list of initialised Gene objects.
+    """
     def __init__(self, genes: list = None):
-        """
-        A class that encapsulates an ordered sequence of Gene objects
-        Args:
-            genes: list of initialised Gene objects
-        """
         if genes:
             self.genes = genes
         else:
@@ -74,9 +73,10 @@ class Genome:
 
     def append(self, gene: Gene):
         """
-        Simple appending of Gene type objects
+        Simple appending of Gene type objects.
+
         Args:
-            gene: Gene
+            gene (Gene): Gene
         """
         assert isinstance(gene, Gene), 'Must be Gene type!'
         self.genes.append(gene)
@@ -112,15 +112,16 @@ class Genome:
 
 
 class Individual:
+    """
+    A class that encapsulates a single individual, with genetic code and a fitness evaluation function.
+
+    Args:
+        fitness_function (func): Function with ``func(self.genome, **params)`` signature
+        name (str): Name.
+        genome (Genome): A Genome object, initialised.
+    """
 
     def __init__(self, fitness_function, name=None, genome: Genome = None):
-        """
-        A class that encapsulates a single individual, with genetic code and a fitness evaluation function.
-        Args:
-            fitness_function: func with func(self.genome, **params) signature
-            name: Name
-            genome: A Genome object, initialised
-        """
         if name is None:
             name = str(uuid.uuid4())
         if genome is None:
@@ -134,18 +135,20 @@ class Individual:
 
     def birthday(self, add=1):
         """
-        Add to the age
+        Add to the age.
+
         Args:
-            add: int
+            add (int): Amount to age.
         """
         self.age += add
 
     def reset_fitness(self, fitness=None, reset_genetic_code=True):
         """
-        Reset (or set) the fitness oof the individual
+        Reset (or set) the fitness oof the individual.
+
         Args:
-            fitness: Value, default is None
-            reset_genetic_code: bool
+            fitness (any): Value, default is None.
+            reset_genetic_code (bool): Whether to reset the genetic code.
         """
         self.fitness = fitness
         if reset_genetic_code:
@@ -153,29 +156,32 @@ class Individual:
 
     def add_gene(self, gene : Gene):
         """
-        Appends a gene to the genome
+        Appends a gene to the genome.
+
         Args:
-            gene: Gene
+            gene (Gene): Gene to add.
         """
         self.genome.append(gene)
 
     def evaluate(self, params : dict):
         """
-        Run the fitness function with the given params
+        Run the fitness function with the given params.
+
         Args:
-            params: named dict of eval params
+            params (dict): Named dict of eval params.
 
-        Returns: fitness
-
+        Returns:
+            numeric: Fitness value.
         """
         self.fitness = self.fitness_function(self.genome, **params)
         return self.fitness
 
     def unique_genetic_code(self):
         """
-        Gets the unique genetic code, generating if it is undefined
-        Returns: str
+        Gets the unique genetic code, generating if it is undefined.
 
+        Returns:
+            str: Hash code.
         """
         if self.genetic_code is None:
             self.genetic_code = str(hashlib.md5(''.join(str(x) for x in self.genome).encode()).digest())
@@ -186,7 +192,19 @@ class Individual:
 
 
 class Island:
+    """
+    A simple Island to perform a Genetic Algorithm.
 
+    Args:
+        function_params (dict): The parameters for the fitness function.
+        selection_function (func): Function for selecting individuals for crossover and mutation.
+        mate_function (func): Function for crossover.
+        mutate_function (func): Function for mutation.
+        crossover_prob_function (func): Random probability function for crossover.
+        mutation_prob_function (func): Random probability function for mutation.
+        clone_function (func): Function for cloning.
+        verbose (bool): Print all information.
+    """
     @staticmethod
     def _clone_function(island, population):
         return copy.deepcopy(population)
@@ -202,19 +220,6 @@ class Island:
     def __init__(self, function_params : dict, selection_function=None, mate_function=None, mutate_function=None,
                  crossover_prob_function=None, mutation_prob_function=None, clone_function=None,
                  verbose=True):
-        """
-        A simple Island to perform a Genetic Algorithm
-
-        Args:
-            function_params: The parameters for the fitness function
-            selection_function: function for selecting individuals for crossover and mutation
-            mate_function: function for crossover
-            mutate_function: function for mutation
-            crossover_prob_function: random probability function for crossover
-            mutation_prob_function: random probability function for mutation
-            clone_function: function for cloning
-            verbose: bool
-        """
         self.function_params = function_params
         self.unique_genome = []
         self.generation_info = []
@@ -259,10 +264,11 @@ class Island:
     def create(self, adam, seed=42, population_size=8):
         """
         Starts the population by taking an initial individual as template and creating new ones from it.
+
         Args:
-            adam: Individual
-            seed: random seed
-            population_size: int
+            adam (Individual): Individual to clone from.
+            seed (int): Random seed.
+            population_size (int): Size of population.
         """
         random.seed(seed)
 
@@ -279,10 +285,11 @@ class Island:
     def import_migrants(self, migrants, reset_fitness=False):
         """
         Imports a list of individuals, with option to re-evaluate.
-        Skips the individual if the genetic code is already in the population
+        Skips the individual if the genetic code is already in the population.
+
         Args:
-            migrants: list
-            reset_fitness: bool
+            migrants (list): List of Individuals.
+            reset_fitness (bool): Reset the fitness of new members and evaluate them.
         """
         for i in migrants:
             if not i.unique_genetic_code() in self.unique_genome:
@@ -294,18 +301,19 @@ class Island:
     def evolve(self, starting_generation=0, n_generations=5, crossover_probability=0.5, mutation_probability=0.5,
                mating_params={'prob':0.5}, mutation_params={'prob':0.2}, selection_params={'n':5}):
         """
-        Starts the evolutionary run
+        Starts the evolutionary run.
+
         Args:
-            starting_generation: int
-            n_generations: int
-            crossover_probability: initial crossover probability
-            mutation_probability: initial mutation probability
-            mating_params: dict of params for custom crossover function
-            mutation_params: dict of params for custom mutation function
-            selection_params: dict of params for custom selection function
+            starting_generation (int): Starting generation.
+            n_generations (int): Number of generations to run.
+            crossover_probability (float): Initial crossover probability.
+            mutation_probability (float): Initial mutation probability.
+            mating_params (dict): Dict of params for custom crossover function.
+            mutation_params (dict): Dict of params for custom mutation function.
+            selection_params (dict): Dict of params for custom selection function.
 
         Returns:
-            The fittest Individual found
+            Individual: The fittest Individual found.
         """
 
         for g in range(starting_generation, starting_generation + n_generations):
