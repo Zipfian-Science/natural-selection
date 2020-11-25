@@ -1,7 +1,6 @@
 import copy
-from natural_selection.ga import Island
 
-def clone_function_classic(population : list, island : Island = None):
+def clone_function_classic(population : list, island=None):
     """
     Classic cloning function, making a deep copy of population list.
 

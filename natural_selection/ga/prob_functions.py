@@ -1,6 +1,4 @@
-from natural_selection.ga import Island
-
-def mutation_prob_function_classic(mutation_probability : float, island : Island = None) -> float:
+def mutation_prob_function_classic(mutation_probability : float, island=None) -> float:
     """
     Classic mutation probability function that just returns the given prob value.
 
@@ -14,7 +12,7 @@ def mutation_prob_function_classic(mutation_probability : float, island : Island
     return mutation_probability
 
 
-def crossover_prob_function_classic(crossover_probability : float, island : Island = None):
+def crossover_prob_function_classic(crossover_probability : float, island=None):
     """
     Classic crossover probability function that just returns the given prob value.
 

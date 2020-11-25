@@ -11,9 +11,7 @@ __email__ = "justin.hocking@zipfian.science"
 __status__ = "Development"
 
 
-from natural_selection.ga import Island
-
-def selection_function_classic(population : list, n : int, desc : bool = True, island : Island = None) -> list:
+def selection_function_classic(population : list, n : int, desc : bool = True, island=None) -> list:
     """
     A Classic top N selection function, sorted on fitness.
 

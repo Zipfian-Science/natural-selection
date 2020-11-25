@@ -7,7 +7,7 @@ Helper functions
 **************************
 .. contents:: Table of Contents
 
-Simple helper functions.
+Simple helper functions, amongst which cloning operations.
 
 Cloning probability
 =====================

@@ -11,9 +11,8 @@ __email__ = "justin.hocking@zipfian.science"
 __status__ = "Development"
 
 import random
-from natural_selection.ga import Island, Individual
 
-def mutatation_function_classic(individual : Individual, prob : float, island : Island = None) -> Individual:
+def mutatation_function_classic(individual, prob : float, island=None):
     """
     A Classic mutation function.
 

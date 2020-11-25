@@ -11,9 +11,8 @@ __email__ = "justin.hocking@zipfian.science"
 __status__ = "Development"
 
 import random
-from natural_selection.ga import Island, Individual
 
-def crossover_function_classic(mother : Individual, father : Individual, prob : float, island : Island = None) -> tuple:
+def crossover_function_classic(mother, father, prob : float, island=None) -> tuple:
     """
     A Classic crossover function.
 

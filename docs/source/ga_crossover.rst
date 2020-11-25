@@ -7,7 +7,7 @@ Crossover operatioons
 **************************
 .. contents:: Table of Contents
 
-Simple functions for encapsulating performing crossover operations.
+Simple functions for performing crossover operations.
 
 Crossover operators
 =====================
