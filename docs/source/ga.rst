@@ -9,7 +9,22 @@ Genetic Algorithms
 
 Simple classes for encapsulating Genetic Algorithms.
 
-Genetic Algorithms tools
+Genes
 ========================
-.. automodule:: natural_selection.ga.__init__
+.. autoclass:: natural_selection.ga.__init__.Gene
+   :members:
+
+Genomes
+========================
+.. autoclass:: natural_selection.ga.__init__.Genome
+   :members:
+
+Individuals
+========================
+.. autoclass:: natural_selection.ga.__init__.Individual
+   :members:
+
+Islands
+========================
+.. autoclass:: natural_selection.ga.__init__.Island
    :members:

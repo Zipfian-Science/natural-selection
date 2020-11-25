@@ -3,13 +3,13 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Mating and Crossover
+Helper functions
 **************************
 .. contents:: Table of Contents
 
-Simple functions for encapsulating performing crossover (or mating) operations.
+Simple helper functions.
 
-Mating operators
+Cloning probability
 =====================
-.. automodule:: natural_selection.ga.mating
-   :members:
+.. autofunction:: natural_selection.ga.helper_functions.clone_function_classic
+

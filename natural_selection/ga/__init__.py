@@ -13,26 +13,29 @@ __status__ = "Development"
 import random
 import uuid
 import hashlib
-import copy
+from typing import Callable, Any
 
-from natural_selection.ga.selection import top_n_selection
-from natural_selection.ga.mating import classic_mate_function
-from natural_selection.ga.mutation import classic_mutate_function
+
+from natural_selection.ga.selection import selection_function_classic
+from natural_selection.ga.crossover import crossover_function_classic
+from natural_selection.ga.mutation import mutatation_function_classic
+from natural_selection.ga.prob_functions import crossover_prob_function_classic, mutation_prob_function_classic
+from natural_selection.ga.helper_functions import clone_function_classic
 
 class Gene:
     """
     A simple class to encapsulate a simple gene.
 
     Args:
-        name (str): Gene name.
-        value (any): The value, could be any type.
-        gene_max (numeric type): Max value or None.
-        gene_min (numeric type): Min value or None.
-        rand_type_func (func): A function to randomise the gene, taking the min and max as input with signature ``func(gene_min, gene_max)``.
+        name (str): Gene name. The gene name also acts as a compatibility reference.
+        value (Any): The value, could be any type.
+        gene_max (Any, numeric type): Max value or None.
+        gene_min (Any, numeric type): Min value or None.
+        rand_type_func (Callable): A function to randomise the gene, taking the min and max as input with signature ``func(gene_min, gene_max)``.
 
     """
 
-    def __init__(self, name, value, gene_max, gene_min, rand_type_func):
+    def __init__(self, name : str, value : Any, gene_max : Any, gene_min : Any, rand_type_func: Callable):
         self.name = name
         self.value = value
         self.gene_max = gene_max
@@ -116,12 +119,13 @@ class Individual:
     A class that encapsulates a single individual, with genetic code and a fitness evaluation function.
 
     Args:
-        fitness_function (func): Function with ``func(self.genome, **params)`` signature
+        fitness_function (Callable): Function with ``func(self.genome, **params)`` signature
         name (str): Name.
         genome (Genome): A Genome object, initialised.
+        species_type (str) : A unique string to identify the species type, for preventing cross polluting.
     """
 
-    def __init__(self, fitness_function, name=None, genome: Genome = None):
+    def __init__(self, fitness_function : Callable, name : str = None, genome: Genome = None, species_type : str = None):
         if name is None:
             name = str(uuid.uuid4())
         if genome is None:
@@ -132,8 +136,12 @@ class Individual:
         self.fitness = None
         self.age = 0
         self.genetic_code = None
+        if species_type:
+            self.species_type = species_type
+        else:
+            self.species_type = "DEFAULT_SPECIES"
 
-    def birthday(self, add=1):
+    def birthday(self, add : int = 1):
         """
         Add to the age.
 
@@ -142,13 +150,13 @@ class Individual:
         """
         self.age += add
 
-    def reset_fitness(self, fitness=None, reset_genetic_code=True):
+    def reset_fitness(self, fitness : Any = None, reset_genetic_code : bool = True):
         """
         Reset (or set) the fitness oof the individual.
 
         Args:
-            fitness (any): Value, default is None.
-            reset_genetic_code (bool): Whether to reset the genetic code.
+            fitness (Any): Value, default is None.
+            reset_genetic_code (bool): Whether to reset the genetic code. (default = True)
         """
         self.fitness = fitness
         if reset_genetic_code:
@@ -163,7 +171,7 @@ class Individual:
         """
         self.genome.append(gene)
 
-    def evaluate(self, params : dict):
+    def evaluate(self, params : dict) -> Any:
         """
         Run the fitness function with the given params.
 
@@ -176,7 +184,7 @@ class Individual:
         self.fitness = self.fitness_function(self.genome, **params)
         return self.fitness
 
-    def unique_genetic_code(self):
+    def unique_genetic_code(self) -> str:
         """
         Gets the unique genetic code, generating if it is undefined.
 
@@ -197,29 +205,20 @@ class Island:
 
     Args:
         function_params (dict): The parameters for the fitness function.
-        selection_function (func): Function for selecting individuals for crossover and mutation.
-        mate_function (func): Function for crossover.
-        mutate_function (func): Function for mutation.
-        crossover_prob_function (func): Random probability function for crossover.
-        mutation_prob_function (func): Random probability function for mutation.
-        clone_function (func): Function for cloning.
+        selection_function (Callable): Function for selecting individuals for crossover and mutation.
+        crossover_function (Callable): Function for crossover.
+        mutate_function (Callable): Function for mutation.
+        crossover_prob_function (Callable): Random probability function for crossover.
+        mutation_prob_function (Callable): Random probability function for mutation.
+        clone_function (Callable): Function for cloning.
         verbose (bool): Print all information.
+        logging_function (Callable): Function for custom message logging, such as server logging.
     """
-    @staticmethod
-    def _clone_function(island, population):
-        return copy.deepcopy(population)
 
-    @staticmethod
-    def _mutation_prob_function(island, mutation_probability):
-        return mutation_probability
-
-    @staticmethod
-    def _crossover_prob_function(island, crossover_probability):
-        return crossover_probability
-
-    def __init__(self, function_params : dict, selection_function=None, mate_function=None, mutate_function=None,
-                 crossover_prob_function=None, mutation_prob_function=None, clone_function=None,
-                 verbose=True):
+    def __init__(self, function_params : dict, selection_function : Callable = None, crossover_function : Callable = None,
+                 mutate_function : Callable = None, crossover_prob_function : Callable = None,
+                 mutation_prob_function : Callable = None, clone_function : Callable = None, verbose : bool = True,
+                 logging_function : Callable = None):
         self.function_params = function_params
         self.unique_genome = []
         self.generation_info = []
@@ -228,49 +227,54 @@ class Island:
         if selection_function:
             self.selection = selection_function
         else:
-            self.selection = top_n_selection
+            self.selection = selection_function_classic
 
-        if mate_function:
-            self.mate = mate_function
+        if crossover_function:
+            self.crossover = crossover_function
         else:
-            self.mate = classic_mate_function
+            self.crossover = crossover_function_classic
 
         if mutate_function:
             self.mutate = mutate_function
         else:
-            self.mutate = classic_mutate_function
+            self.mutate = mutatation_function_classic
 
         if crossover_prob_function:
             self.crossover_prob = crossover_prob_function
         else:
-            self.crossover_prob = Island._crossover_prob_function
+            self.crossover_prob = crossover_prob_function_classic
 
         if mutation_prob_function:
             self.mutation_prob = mutation_prob_function
         else:
-            self.mutation_prob = Island._mutation_prob_function
+            self.mutation_prob = mutation_prob_function_classic
 
         if clone_function:
             self.clone = clone_function
         else:
-            self.clone = Island._clone_function
+            self.clone = clone_function_classic
+
+        self.logging_function = logging_function
 
         self.verbose = verbose
 
-        self.elite_list = []
-        self.mutants = []
-        self.children = []
+        self.elite_list = list()
+        self.mutants = list()
+        self.children = list()
+        self.species_type = "DEFAULT_SPECIES"
 
-    def create(self, adam, seed=42, population_size=8):
+    def create(self, adam : Individual, seed : int = 42, population_size : int = 8):
         """
         Starts the population by taking an initial individual as template and creating new ones from it.
 
         Args:
             adam (Individual): Individual to clone from.
-            seed (int): Random seed.
+            seed (int): Random seed (default = 42).
             population_size (int): Size of population.
         """
         random.seed(seed)
+
+        self.species_type = adam.species_type
 
         for i in range(population_size-1):
             eve = Individual(adam.fitness_function, genome=Genome([x.randomize() for x in adam.genome]))
@@ -282,24 +286,29 @@ class Island:
             popitem.evaluate(self.function_params)
             self.unique_genome.append(popitem.unique_genetic_code())
 
-    def import_migrants(self, migrants, reset_fitness=False):
+    def import_migrants(self, migrants : list, reset_fitness : bool = False, species_check : bool = True):
         """
         Imports a list of individuals, with option to re-evaluate.
         Skips the individual if the genetic code is already in the population.
 
         Args:
             migrants (list): List of Individuals.
-            reset_fitness (bool): Reset the fitness of new members and evaluate them.
+            reset_fitness (bool): Reset the fitness of new members and evaluate them (default = False).
+            species_check (bool): Safely check that imported members are compatible with population  (default = True).
         """
         for i in migrants:
+            if species_check:
+                if i.species_type != self.species_type:
+                    continue
             if not i.unique_genetic_code() in self.unique_genome:
                 if i.fitness is None or reset_fitness:
                     i.evaluate(self.function_params)
                 self.population.append(i)
                 self.unique_genome.append(i.unique_genetic_code())
 
-    def evolve(self, starting_generation=0, n_generations=5, crossover_probability=0.5, mutation_probability=0.5,
-               mating_params={'prob':0.5}, mutation_params={'prob':0.2}, selection_params={'n':5}):
+    def evolve(self, starting_generation : int = 0, n_generations : int = 5, crossover_probability : float = 0.5,
+               mutation_probability : float = 0.5, crossover_params : dict = None, mutation_params : dict = None,
+               selection_params : dict = None) -> Individual:
         """
         Starts the evolutionary run.
 
@@ -308,39 +317,51 @@ class Island:
             n_generations (int): Number of generations to run.
             crossover_probability (float): Initial crossover probability.
             mutation_probability (float): Initial mutation probability.
-            mating_params (dict): Dict of params for custom crossover function.
-            mutation_params (dict): Dict of params for custom mutation function.
-            selection_params (dict): Dict of params for custom selection function.
+            crossover_params (dict): Dict of params for custom crossover function (default = None).
+            mutation_params (dict): Dict of params for custom mutation function (default = None).
+            selection_params (dict): Dict of params for custom selection function (default = None).
 
         Returns:
             Individual: The fittest Individual found.
         """
 
+        if crossover_params:
+            _crossover_params = crossover_params
+        else:
+            _crossover_params = {'prob':0.5}
+
+        if mutation_params:
+            _mutation_params = mutation_params
+        else:
+            _mutation_params = {'prob':0.2}
+
+        if selection_params:
+            _selection_params = selection_params
+        else:
+            _selection_params = {'n':5}
+
         for g in range(starting_generation, starting_generation + n_generations):
-            if self.verbose:
-                print('[{} started]'.format(g))
+            self._verbose_logging('[{} started]'.format(g))
 
-            elites = self.selection(island=self, population=self.population, **selection_params)
+            elites = self.selection(island=self, population=self.population, **_selection_params)
 
-            elites = self.clone(self, elites)
+            elites = self.clone(population=elites, island=self)
 
             self.elite_list.extend(elites)
 
             for child1, child2 in zip(elites[::2], elites[1::2]):
-                if random.random() < self.crossover_prob(self, crossover_probability):
-                    self.mate(island=self, mother=child1, father=child2, **mating_params)
+                if random.random() < self.crossover_prob(crossover_probability=crossover_probability, island=self):
+                    self.crossover(island=self, mother=child1, father=child2, **_crossover_params)
 
-                    if self.verbose:
-                        print('Mating!')
+                    self._verbose_logging('Crossover: {0} + {1}'.format(child1.name, child2.name))
 
                     self.children.extend([child1, child2])
 
             for mutant in elites:
-                if random.random() < self.mutation_prob(self, mutation_probability):
-                    self.mutate(island=self, individual=mutant, **mutation_params)
+                if random.random() < self.mutation_prob(mutation_probability=mutation_probability, island=self):
+                    self.mutate(island=self, individual=mutant, **_mutation_params)
 
-                    if self.verbose:
-                        print('Mutating!')
+                    self._verbose_logging('Mutating: {}'.format(mutant.name))
 
                     self.mutants.append(mutant)
 
@@ -407,9 +428,14 @@ class Island:
             for i in self.population:
                 i.birthday()
 
-        best_ind = top_n_selection(island=self, population=self.population, n=1)[0]
+        best_ind = selection_function_classic(island=self, population=self.population, n=1)[0]
 
-        if self.verbose:
-            print("Best individual is %s, %s" % (best_ind.name, best_ind.fitness))
+        self._verbose_logging("Best individual is {0}, {1}".format(best_ind.name, best_ind.fitness))
 
         return best_ind
+
+    def _verbose_logging(self, message):
+        if self.verbose:
+            print(message)
+            if self.logging_function:
+                self.logging_function(message)

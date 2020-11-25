@@ -10,14 +10,18 @@ __maintainer__ = "Justin Hocking"
 __email__ = "justin.hocking@zipfian.science"
 __status__ = "Development"
 
-def top_n_selection(island, population, n):
+
+from natural_selection.ga import Island
+
+def selection_function_classic(population : list, n : int, desc : bool = True, island : Island = None) -> list:
     """
     A Classic top N selection function, sorted on fitness.
 
     Args:
-        island (Island): The Island calling the method.
         population (list): A list of Individuals.
         n (int): Number to select.
+        desc (bool): In descending order (default = True).
+        island (Island): The Island calling the method (optional, default = None).
 
     Returns:
         list: Top N Individuals.
@@ -25,6 +29,6 @@ def top_n_selection(island, population, n):
     def sortFitness(val):
         return val.fitness
 
-    population.sort(key=sortFitness, reverse=True)
+    population.sort(key=sortFitness, reverse=desc)
 
     return population[0:n]

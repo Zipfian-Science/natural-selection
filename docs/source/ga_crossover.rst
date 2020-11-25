@@ -3,12 +3,12 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Selection
+Crossover operatioons
 **************************
 .. contents:: Table of Contents
 
-Simple functions for encapsulating performing population selection.
+Simple functions for encapsulating performing crossover operations.
 
-Selection operators
+Crossover operators
 =====================
-.. autofunction:: natural_selection.ga.selection.selection_function_classic
+.. autofunction:: natural_selection.ga.crossover.crossover_function_classic

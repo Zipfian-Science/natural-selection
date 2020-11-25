@@ -11,16 +11,17 @@ __email__ = "justin.hocking@zipfian.science"
 __status__ = "Development"
 
 import random
+from natural_selection.ga import Island, Individual
 
-def classic_mate_function(island, mother, father, prob):
+def crossover_function_classic(mother : Individual, father : Individual, prob : float, island : Island = None) -> tuple:
     """
-    A Classic mating function.
+    A Classic crossover function.
 
     Args:
-        island (Island): The Island calling the method.
         mother (Individual): Individual object containing a Genome.
         father (Individual): Individual object containing a Genome.
         prob (float): The probability of swapping genes.
+        island (Island): The Island calling the method (optional, default = None).
 
     Returns:
         tuple: Two new Individuals.

@@ -11,15 +11,16 @@ __email__ = "justin.hocking@zipfian.science"
 __status__ = "Development"
 
 import random
+from natural_selection.ga import Island, Individual
 
-def classic_mutate_function(island, individual, prob):
+def mutatation_function_classic(individual : Individual, prob : float, island : Island = None) -> Individual:
     """
     A Classic mutation function.
 
     Args:
-        island (Island): The Island calling the method.
         individual: Individual object containing a Genome.
         prob: The probability of swapping genes.
+        island (Island): The Island calling the method (optional, default = None).
 
     Returns:
         Individual: The newly mutated individual.
