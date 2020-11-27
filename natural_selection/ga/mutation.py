@@ -26,7 +26,7 @@ def mutatation_function_classic(individual, prob : float, island=None):
     """
     for i in range(len(individual.genome)):
         if random.random() < prob:
-            individual.genome[i] = individual.genome[i].randomize()
+            individual.genome[i].randomize()
             individual.reset_fitness()
 
     return individual

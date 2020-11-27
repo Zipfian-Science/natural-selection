@@ -44,6 +44,12 @@ class Gene:
 
     def randomize(self):
         """
+        Sets a random value gene with randomised value.
+        """
+        self.value = self.rand_type_func(self.gene_min, self.gene_max)
+
+    def randomize_new(self):
+        """
         Return a new gene with randomised value.
 
         Returns:
@@ -277,7 +283,7 @@ class Island:
         self.species_type = adam.species_type
 
         for i in range(population_size-1):
-            eve = Individual(adam.fitness_function, genome=Genome([x.randomize() for x in adam.genome]))
+            eve = Individual(adam.fitness_function, genome=Genome([x.randomize_new() for x in adam.genome]))
             self.population.append(eve)
 
         self.population.append(adam)
