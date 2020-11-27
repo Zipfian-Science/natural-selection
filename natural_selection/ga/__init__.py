@@ -142,6 +142,7 @@ class Individual:
         self.fitness = None
         self.age = 0
         self.genetic_code = None
+        self.history = list()
         if species_type:
             self.species_type = species_type
         else:
@@ -149,7 +150,7 @@ class Individual:
 
     def birthday(self, add : int = 1):
         """
-        Add to the age.
+        Add to the age. This is for keeping track of how many generations an individual has "lived" through.
 
         Args:
             add (int): Amount to age.
@@ -188,6 +189,7 @@ class Individual:
             numeric: Fitness value.
         """
         self.fitness = self.fitness_function(self.genome, **params)
+        self.history.append({"age" : self.age, "fitness" : self.fitness, "genome" : str(self.genome)})
         return self.fitness
 
     def unique_genetic_code(self) -> str:
@@ -312,7 +314,7 @@ class Island:
                 self.population.append(i)
                 self.unique_genome.append(i.unique_genetic_code())
 
-    def evolve(self, starting_generation : int = 0, n_generations : int = 5, crossover_probability : float = 0.5,
+    def evolve_generational(self, starting_generation : int = 0, n_generations : int = 5, crossover_probability : float = 0.5,
                mutation_probability : float = 0.5, crossover_params : dict = None, mutation_params : dict = None,
                selection_params : dict = None) -> Individual:
         """
@@ -344,101 +346,158 @@ class Island:
         if selection_params:
             _selection_params = selection_params
         else:
-            _selection_params = {'n':5}
+            _selection_params = {'n':5, 'desc':True}
 
         for g in range(starting_generation, starting_generation + n_generations):
             self._verbose_logging('[{} started]'.format(g))
 
-            elites = self.selection(island=self, population=self.population, **_selection_params)
-
-            elites = self.clone(population=elites, island=self)
-
-            self.elite_list.extend(elites)
-
-            for child1, child2 in zip(elites[::2], elites[1::2]):
-                if random.random() < self.crossover_prob(crossover_probability=crossover_probability, island=self):
-                    self.crossover(island=self, mother=child1, father=child2, **_crossover_params)
-
-                    self._verbose_logging('Crossover: {0} + {1}'.format(child1.name, child2.name))
-
-                    self.children.extend([child1, child2])
-
-            for mutant in elites:
-                if random.random() < self.mutation_prob(mutation_probability=mutation_probability, island=self):
-                    self.mutate(island=self, individual=mutant, **_mutation_params)
-
-                    self._verbose_logging('Mutating: {}'.format(mutant.name))
-
-                    self.mutants.append(mutant)
-
-            invalid_ind = [ind for ind in elites if ind.fitness is None]
-
-            for popitem in invalid_ind:
-                popitem.evaluate(self.function_params)
-
-            for popitem in elites:
-                if not popitem.unique_genetic_code() in self.unique_genome:
-                    self.population.append(popitem)
-                    self.unique_genome.append(popitem.unique_genetic_code())
-
-            population_fitnesses = [ind.fitness for ind in self.population]
-            elite_fitnesses = [ind.fitness for ind in elites]
-
-            population_length = len(self.population)
-            population_mean = sum(population_fitnesses) / population_length
-            population_sum2 = sum(x * x for x in population_fitnesses)
-            population_std = abs(population_sum2 / population_length - population_mean ** 2) ** 0.5
-
-            self.generation_info.append(
-                {
-                    'stat': 'population',
-                    'n': g,
-                    'pop_len': population_length,
-                    'fitness_mean': population_mean,
-                    'fitness_std': population_std,
-                    'fitness_min': min(population_fitnesses),
-                    'fitness_max': max(population_fitnesses),
-                }
-            )
-
-            elite_length = len(elites)
-            elite_mean = sum(elite_fitnesses) / elite_length
-            elite_sum2 = sum(x * x for x in elite_fitnesses)
-            elite_std = abs(elite_sum2 / elite_length - elite_mean ** 2) ** 0.5
-
-            self.generation_info.append(
-                {
-                    'stat': 'elites',
-                    'n': g,
-                    'pop_len': elite_length,
-                    'fitness_mean': elite_mean,
-                    'fitness_std': elite_std,
-                    'fitness_min': min(elite_fitnesses),
-                    'fitness_max': max(elite_fitnesses),
-                }
-            )
-
-            if self.verbose:
-                print('Generation fitness:')
-                print('\t= Min %s' % min(population_fitnesses))
-                print('\t= Max %s' % max(population_fitnesses))
-                print('\t= Avg %s' % population_mean)
-                print('\t= Std %s' % population_std)
-                print('')
-                print('Elite fitness:')
-                print('\t= Min %s' % min(elite_fitnesses))
-                print('\t= Max %s' % max(elite_fitnesses))
-                print('\t= Avg %s' % elite_mean)
-                print('\t= Std %s' % elite_std)
-
-            for i in self.population:
-                i.birthday()
+            self.__evolutionary_engine(g=g, selection_params=_selection_params,
+                                       crossover_probability=crossover_probability,
+                                       mutation_probability=mutation_probability, crossover_params=_crossover_params,
+                                       mutation_params=_mutation_params)
 
         best_ind = selection_function_classic(island=self, population=self.population, n=1)[0]
 
         self._verbose_logging("Best individual is {0}, {1}".format(best_ind.name, best_ind.fitness))
 
         return best_ind
+
+    def evolve_criterion(self, criterion_function : Callable, criterion_params : dict, crossover_probability : float = 0.5,
+               mutation_probability : float = 0.5, crossover_params : dict = None, mutation_params : dict = None,
+               selection_params : dict = None) -> Individual:
+        """
+        Starts the evolutionary run and evaluates until the criterion_func returns true.
+
+        Args:
+            criterion_function (Callable): A function to evaluate if the desired criterion has been met.
+            criterion_params (dict): Function parameters for criterion.
+            crossover_probability (float): Initial crossover probability.
+            mutation_probability (float): Initial mutation probability.
+            crossover_params (dict): Dict of params for custom crossover function (default = None).
+            mutation_params (dict): Dict of params for custom mutation function (default = None).
+            selection_params (dict): Dict of params for custom selection function (default = None).
+
+        Returns:
+            Individual: The fittest Individual found.
+        """
+
+        if crossover_params:
+            _crossover_params = crossover_params
+        else:
+            _crossover_params = {'prob':0.5}
+
+        if mutation_params:
+            _mutation_params = mutation_params
+        else:
+            _mutation_params = {'prob':0.2}
+
+        if selection_params:
+            _selection_params = selection_params
+        else:
+            _selection_params = {'n':5, 'desc':True}
+
+        g = 0
+        while not criterion_function(island=self, **criterion_params):
+            g += 1
+            self._verbose_logging('[{} started]'.format(g))
+
+            self.__evolutionary_engine(g=g, selection_params=_selection_params, crossover_probability=crossover_probability,
+                                        mutation_probability=mutation_probability, crossover_params=_crossover_params,
+                                        mutation_params=_mutation_params)
+
+        best_ind = selection_function_classic(island=self, population=self.population, n=1)[0]
+
+        self._verbose_logging("Best individual is {0}, {1}".format(best_ind.name, best_ind.fitness))
+
+        return best_ind
+
+    def __evolutionary_engine(self, g, selection_params, crossover_probability, mutation_probability, crossover_params, mutation_params):
+        elites = self.clone(population=self.population, island=self)
+
+        elites = self.selection(island=self, population=elites, **selection_params)
+
+        self.elite_list.extend(elites)
+
+        for child1, child2 in zip(elites[::2], elites[1::2]):
+            if random.random() < self.crossover_prob(crossover_probability=crossover_probability, island=self):
+                self.crossover(island=self, mother=child1, father=child2, **crossover_params)
+
+                self._verbose_logging('Crossover: {0} + {1}'.format(child1.name, child2.name))
+
+                self.children.extend([child1, child2])
+
+        for mutant in elites:
+            if random.random() < self.mutation_prob(mutation_probability=mutation_probability, island=self):
+                self.mutate(island=self, individual=mutant, **mutation_params)
+
+                self._verbose_logging('Mutating: {}'.format(mutant.name))
+
+                self.mutants.append(mutant)
+
+        invalid_ind = [ind for ind in elites if ind.fitness is None]
+
+        for popitem in invalid_ind:
+            popitem.evaluate(self.function_params)
+
+        for popitem in elites:
+            if not popitem.unique_genetic_code() in self.unique_genome:
+                self.population.append(popitem)
+                self.unique_genome.append(popitem.unique_genetic_code())
+
+        population_fitnesses = [ind.fitness for ind in self.population]
+        elite_fitnesses = [ind.fitness for ind in elites]
+
+        population_length = len(self.population)
+        population_mean = sum(population_fitnesses) / population_length
+        population_sum2 = sum(x * x for x in population_fitnesses)
+        population_std = abs(population_sum2 / population_length - population_mean ** 2) ** 0.5
+
+        self.generation_info.append(
+            {
+                'stat': 'population',
+                'n': g,
+                'pop_len': population_length,
+                'fitness_mean': population_mean,
+                'fitness_std': population_std,
+                'fitness_min': min(population_fitnesses),
+                'fitness_max': max(population_fitnesses),
+            }
+        )
+
+        elite_length = len(elites)
+        elite_mean = sum(elite_fitnesses) / elite_length
+        elite_sum2 = sum(x * x for x in elite_fitnesses)
+        elite_std = abs(elite_sum2 / elite_length - elite_mean ** 2) ** 0.5
+
+        self.generation_info.append(
+            {
+                'stat': 'elites',
+                'n': g,
+                'pop_len': elite_length,
+                'fitness_mean': elite_mean,
+                'fitness_std': elite_std,
+                'fitness_min': min(elite_fitnesses),
+                'fitness_max': max(elite_fitnesses),
+            }
+        )
+
+        if self.verbose:
+            print('Generation fitness:')
+            print('\t= Min %s' % min(population_fitnesses))
+            print('\t= Max %s' % max(population_fitnesses))
+            print('\t= Avg %s' % population_mean)
+            print('\t= Std %s' % population_std)
+            print('')
+            print('Elite fitness:')
+            print('\t= Min %s' % min(elite_fitnesses))
+            print('\t= Max %s' % max(elite_fitnesses))
+            print('\t= Avg %s' % elite_mean)
+            print('\t= Std %s' % elite_std)
+
+        for i in self.population:
+            i.birthday()
+
+        self.generation_count = g
 
     def _verbose_logging(self, message):
         if self.verbose:
