@@ -42,6 +42,6 @@ class TestSimpleIsland(unittest.TestCase):
 
         self.assertEquals(len(self.life.population), 6)
 
-    def test_import_evolution(self):
+    def test_evolve_generational(self):
         self.life.create(self.ind, population_size=5)
-        self.life.evolve()
+        self.life.evolve_generational()

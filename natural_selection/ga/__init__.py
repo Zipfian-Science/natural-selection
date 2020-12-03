@@ -12,11 +12,10 @@ __status__ = "Development"
 
 import random
 import uuid
-import hashlib
 from typing import Callable, Any
 
 
-from natural_selection.ga.selection import selection_function_classic
+from natural_selection.ga.selection import selection_function_classic, selection_function_parents_classic
 from natural_selection.ga.crossover import crossover_function_classic
 from natural_selection.ga.mutation import mutatation_function_classic
 from natural_selection.ga.prob_functions import crossover_prob_function_classic, mutation_prob_function_classic
@@ -126,27 +125,54 @@ class Individual:
 
     Args:
         fitness_function (Callable): Function with ``func(self.genome, **params)`` signature
-        name (str): Name.
+        name (str): Name (default = None).
         genome (Genome): A Genome object, initialised.
         species_type (str) : A unique string to identify the species type, for preventing cross polluting.
     """
 
     def __init__(self, fitness_function : Callable, name : str = None, genome: Genome = None, species_type : str = None):
         if name is None:
-            name = str(uuid.uuid4())
+            self.name = str(uuid.uuid4())
+        else:
+            self.name = name
         if genome is None:
-            genome = Genome()
-        self.name = name
-        self.genome = genome
+            self.genome = Genome()
+        else:
+            self.genome = genome
         self.fitness_function = fitness_function
         self.fitness = None
         self.age = 0
         self.genetic_code = None
         self.history = list()
+        self.parents = list()
         if species_type:
             self.species_type = species_type
         else:
             self.species_type = "DEFAULT_SPECIES"
+
+    def register_parent_names(self, parents : list, reset_parent_name_list : bool = True):
+        """
+        In keeping lineage of family lines, the names of parents are kept track of.
+
+        Args:
+            parents (list): A list of Individuals of the parents.
+        """
+        if reset_parent_name_list:
+            self.parents = list()
+        for parent in parents:
+            self.parents.append(parent.name)
+
+    def reset_name(self, name : str = None):
+        """
+        A function to reset the name of an individual, helping to keep linage of families.
+
+        Args:
+            name (str): Name (default = None).
+        """
+        if name is None:
+            self.name = str(uuid.uuid4())
+        else:
+            self.name = name
 
     def birthday(self, add : int = 1):
         """
@@ -189,7 +215,7 @@ class Individual:
             numeric: Fitness value.
         """
         self.fitness = self.fitness_function(self.genome, **params)
-        self.history.append({"age" : self.age, "fitness" : self.fitness, "genome" : str(self.genome)})
+        self.history.append({"name" : self.name, "age" : self.age, "fitness" : self.fitness, "genome" : str(self.genome)})
         return self.fitness
 
     def unique_genetic_code(self) -> str:
@@ -200,7 +226,7 @@ class Individual:
             str: Hash code.
         """
         if self.genetic_code is None:
-            self.genetic_code = str(hashlib.md5(''.join(str(x) for x in self.genome).encode()).digest())
+            self.genetic_code = str(self.genome)
         return self.genetic_code
 
     def __str__(self) -> str:
@@ -214,6 +240,7 @@ class Island:
     Args:
         function_params (dict): The parameters for the fitness function.
         selection_function (Callable): Function for selecting individuals for crossover and mutation.
+        parent_selection (Callable): Function for selecting parents for crossover.
         crossover_function (Callable): Function for crossover.
         mutate_function (Callable): Function for mutation.
         crossover_prob_function (Callable): Random probability function for crossover.
@@ -221,21 +248,28 @@ class Island:
         clone_function (Callable): Function for cloning.
         verbose (bool): Print all information.
         logging_function (Callable): Function for custom message logging, such as server logging.
+        force_genetic_diversity (bool): Only add new offspring to the population if they have a unique genome (default = True).
     """
 
-    def __init__(self, function_params : dict, selection_function : Callable = None, crossover_function : Callable = None,
-                 mutate_function : Callable = None, crossover_prob_function : Callable = None,
-                 mutation_prob_function : Callable = None, clone_function : Callable = None, verbose : bool = True,
-                 logging_function : Callable = None):
+    def __init__(self, function_params : dict, selection_function : Callable = None, parent_selection : Callable = None,
+                 crossover_function : Callable = None, mutate_function : Callable = None,
+                 crossover_prob_function : Callable = None, mutation_prob_function : Callable = None,
+                 clone_function : Callable = None, verbose : bool = True, logging_function : Callable = None,
+                 force_genetic_diversity : bool = True):
         self.function_params = function_params
-        self.unique_genome = []
-        self.generation_info = []
-        self.population = []
+        self.unique_genome = list()
+        self.generation_info = list()
+        self.population = list()
 
         if selection_function:
             self.selection = selection_function
         else:
             self.selection = selection_function_classic
+
+        if parent_selection:
+            self.parent_selection = parent_selection
+        else:
+            self.parent_selection = selection_function_parents_classic
 
         if crossover_function:
             self.crossover = crossover_function
@@ -263,10 +297,11 @@ class Island:
             self.clone = clone_function_classic
 
         self.logging_function = logging_function
+        self.force_genetic_diversity = force_genetic_diversity
 
         self.verbose = verbose
 
-        self.elite_list = list()
+        self.elites = list()
         self.mutants = list()
         self.children = list()
         self.species_type = "DEFAULT_SPECIES"
@@ -349,7 +384,7 @@ class Island:
             _selection_params = {'n':5, 'desc':True}
 
         for g in range(starting_generation, starting_generation + n_generations):
-            self._verbose_logging('[{} started]'.format(g))
+            self._verbose_logging('Generation {} started'.format(g))
 
             self.__evolutionary_engine(g=g, selection_params=_selection_params,
                                        crossover_probability=crossover_probability,
@@ -399,7 +434,7 @@ class Island:
         g = 0
         while not criterion_function(island=self, **criterion_params):
             g += 1
-            self._verbose_logging('[{} started]'.format(g))
+            self._verbose_logging('Generation {} started'.format(g))
 
             self.__evolutionary_engine(g=g, selection_params=_selection_params, crossover_probability=crossover_probability,
                                         mutation_probability=mutation_probability, crossover_params=_crossover_params,
@@ -412,37 +447,60 @@ class Island:
         return best_ind
 
     def __evolutionary_engine(self, g, selection_params, crossover_probability, mutation_probability, crossover_params, mutation_params):
-        elites = self.clone(population=self.population, island=self)
 
-        elites = self.selection(island=self, population=elites, **selection_params)
+        elites = self.selection(island=self,
+                                population=self.clone(population=self.population, island=self),
+                                **selection_params)
 
-        self.elite_list.extend(elites)
+        self.elites.append({'generation' : g, 'elites' : elites})
 
-        for child1, child2 in zip(elites[::2], elites[1::2]):
-            if random.random() < self.crossover_prob(crossover_probability=crossover_probability, island=self):
-                self.crossover(island=self, mother=child1, father=child2, **crossover_params)
+        # Children are strictly copies or new objects seeing as the have a lineage and parents
+        generation_children = list()
+        for parents in self.parent_selection(population=elites, island=self):
+            if self.crossover_prob(crossover_probability=crossover_probability, island=self):
 
-                self._verbose_logging('Crossover: {0} + {1}'.format(child1.name, child2.name))
+                self._verbose_logging('Crossover: {0}'.format([str(p) for p in parents]))
 
-                self.children.extend([child1, child2])
+                children = self.crossover(island=self,
+                                          individuals=self.clone(population=parents, island=self),
+                                          **crossover_params)
 
-        for mutant in elites:
-            if random.random() < self.mutation_prob(mutation_probability=mutation_probability, island=self):
-                self.mutate(island=self, individual=mutant, **mutation_params)
+                for child in children:
+                    child.reset_name()
+                    child.register_parent_names(parents)
+                    child.age = 0
+                    child.reset_fitness()
+
+                generation_children.extend(children)
+
+        self.children.append({'generation' : g, 'children' : generation_children})
+
+        # Mutants are not strictly copied but rather only modified seeing as the are part of the children list
+        generation_mutants = list()
+        for mutant in generation_children:
+            if self.mutation_prob(mutation_probability=mutation_probability, island=self):
+                mutated = self.mutate(island=self, individual=mutant, **mutation_params)
 
                 self._verbose_logging('Mutating: {}'.format(mutant.name))
+                mutated.reset_fitness()
+                generation_mutants.append(mutated)
 
-                self.mutants.append(mutant)
+        self.mutants.append({'generation': g, 'mutants': generation_mutants})
 
-        invalid_ind = [ind for ind in elites if ind.fitness is None]
+        untested_individuals = [ind for ind in generation_children if ind.fitness is None]
 
-        for popitem in invalid_ind:
-            popitem.evaluate(self.function_params)
+        for new_untested_individual in untested_individuals:
+            new_untested_individual.evaluate(self.function_params)
+            if self.force_genetic_diversity:
+                # If we want a diverse gene pool, this must be true
+                if not new_untested_individual.unique_genetic_code() in self.unique_genome:
+                    self.population.append(new_untested_individual)
+                    self.unique_genome.append(new_untested_individual.unique_genetic_code())
+            else:
+                # Else, add it effectively allowing "twins" to exist
+                self.population.append(new_untested_individual)
+                self.unique_genome.append(new_untested_individual.unique_genetic_code())
 
-        for popitem in elites:
-            if not popitem.unique_genetic_code() in self.unique_genome:
-                self.population.append(popitem)
-                self.unique_genome.append(popitem.unique_genetic_code())
 
         population_fitnesses = [ind.fitness for ind in self.population]
         elite_fitnesses = [ind.fitness for ind in elites]
@@ -455,7 +513,7 @@ class Island:
         self.generation_info.append(
             {
                 'stat': 'population',
-                'n': g,
+                'generation': g,
                 'pop_len': population_length,
                 'fitness_mean': population_mean,
                 'fitness_std': population_std,
@@ -463,6 +521,8 @@ class Island:
                 'fitness_max': max(population_fitnesses),
             }
         )
+
+        self._verbose_logging(self.generation_info[-1])
 
         elite_length = len(elites)
         elite_mean = sum(elite_fitnesses) / elite_length
@@ -472,7 +532,7 @@ class Island:
         self.generation_info.append(
             {
                 'stat': 'elites',
-                'n': g,
+                'generation': g,
                 'pop_len': elite_length,
                 'fitness_mean': elite_mean,
                 'fitness_std': elite_std,
@@ -481,18 +541,7 @@ class Island:
             }
         )
 
-        if self.verbose:
-            print('Generation fitness:')
-            print('\t= Min %s' % min(population_fitnesses))
-            print('\t= Max %s' % max(population_fitnesses))
-            print('\t= Avg %s' % population_mean)
-            print('\t= Std %s' % population_std)
-            print('')
-            print('Elite fitness:')
-            print('\t= Min %s' % min(elite_fitnesses))
-            print('\t= Max %s' % max(elite_fitnesses))
-            print('\t= Avg %s' % elite_mean)
-            print('\t= Std %s' % elite_std)
+        self._verbose_logging(self.generation_info[-1])
 
         for i in self.population:
             i.birthday()
@@ -502,5 +551,5 @@ class Island:
     def _verbose_logging(self, message):
         if self.verbose:
             print(message)
-            if self.logging_function:
-                self.logging_function(message)
+        if self.logging_function:
+            self.logging_function(message)
