@@ -12,9 +12,9 @@ __status__ = "Development"
 
 import random
 
-def mutatation_function_classic(individual, prob : float, island=None):
+def mutation_function_classic(individual, prob : float, island=None):
     """
-    A Classic mutation function.
+    A Classic mutation function, changes a gene of the given individual based on the `prob` strength of mutation.
 
     Args:
         individual: Individual object containing a Genome.
@@ -26,7 +26,6 @@ def mutatation_function_classic(individual, prob : float, island=None):
     """
     for i in range(len(individual.genome)):
         if random.random() < prob:
-            individual.genome[i] = individual.genome[i].randomize()
-            individual.reset_fitness()
+            individual.genome[i].randomize()
 
     return individual

@@ -8,6 +8,6 @@ class TestGene(unittest.TestCase):
         g = Gene("test", 3, 10, 1, random.randint)
         self.assertEquals(str(g), '(test:3)')
 
-        g_2 = g.randomize()
+        g_2 = g.randomize_new()
 
         self.assertNotEqual(g, g_2)

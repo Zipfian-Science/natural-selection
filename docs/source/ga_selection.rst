@@ -12,3 +12,7 @@ Simple functions for encapsulating performing population selection.
 Selection operators
 =====================
 .. autofunction:: natural_selection.ga.selection.selection_function_classic
+
+Parent selction
+=====================
+.. autofunction:: natural_selection.ga.selection.selection_function_parents_classic
