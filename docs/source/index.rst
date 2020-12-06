@@ -61,7 +61,7 @@ Then simply create an experiment:
    isolated_island.create(adam, population_size=5)
 
    # And finally, we let the randomness of life do its thing: optimise
-   best_individual = isolated_island.evolve(n_generations=5)
+   best_individual = isolated_island.evolve_generational(n_generations=5)
 
    # After running for a few generations, we have an individual with the highest fitness
    fitness = best_individual.fitness
