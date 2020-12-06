@@ -14,7 +14,8 @@ import random
 
 def crossover_function_classic(individuals : list, prob : float, island=None) -> list:
     """
-    A Classic crossover function.
+    A Classic crossover function, taking a list of 2 individuals and swapping positional genes based on the `prob` strength of crossover.
+    Returns these two individuals with modified genomes.
 
     Args:
         individuals (list): A list (length of 2) of Individuals to perform crossover.

@@ -17,7 +17,7 @@ from typing import Callable, Any
 
 from natural_selection.ga.selection import selection_function_classic, selection_function_parents_classic
 from natural_selection.ga.crossover import crossover_function_classic
-from natural_selection.ga.mutation import mutatation_function_classic
+from natural_selection.ga.mutation import mutation_function_classic
 from natural_selection.ga.prob_functions import crossover_prob_function_classic, mutation_prob_function_classic
 from natural_selection.ga.helper_functions import clone_function_classic
 
@@ -124,10 +124,10 @@ class Individual:
     A class that encapsulates a single individual, with genetic code and a fitness evaluation function.
 
     Args:
-        fitness_function (Callable): Function with ``func(self.genome, **params)`` signature
-        name (str): Name (default = None).
-        genome (Genome): A Genome object, initialised.
-        species_type (str) : A unique string to identify the species type, for preventing cross polluting.
+        fitness_function (Callable): Function with ``func(genome, island, **params)`` signature
+        name (str): Name for keeping track of lineage (default = None).
+        genome (Genome): A Genome object, initialised (default = None).
+        species_type (str) : A unique string to identify the species type, for preventing cross polluting (default = None).
     """
 
     def __init__(self, fitness_function : Callable, name : str = None, genome: Genome = None, species_type : str = None):
@@ -188,7 +188,7 @@ class Individual:
         Reset (or set) the fitness oof the individual.
 
         Args:
-            fitness (Any): Value, default is None.
+            fitness (Any): New fitness value (default = None).
             reset_genetic_code (bool): Whether to reset the genetic code. (default = True)
         """
         self.fitness = fitness
@@ -204,18 +204,19 @@ class Individual:
         """
         self.genome.append(gene)
 
-    def evaluate(self, params : dict) -> Any:
+    def evaluate(self, params : dict, island=None) -> Any:
         """
         Run the fitness function with the given params.
 
         Args:
             params (dict): Named dict of eval params.
+            island (Island): Pass the Island for advanced fitness functions based on Island properties and populations.
 
         Returns:
             numeric: Fitness value.
         """
-        self.fitness = self.fitness_function(self.genome, **params)
-        self.history.append({"name" : self.name, "age" : self.age, "fitness" : self.fitness, "genome" : str(self.genome)})
+        self.fitness = self.fitness_function(genome=self.genome, island=island, **params)
+        self.history.append({"name" : self.name, "age" : self.age, "fitness" : self.fitness, "genome" : self.unique_genetic_code})
         return self.fitness
 
     def unique_genetic_code(self) -> str:
@@ -223,7 +224,7 @@ class Individual:
         Gets the unique genetic code, generating if it is undefined.
 
         Returns:
-            str: Hash code.
+            str: String name of genome.
         """
         if self.genetic_code is None:
             self.genetic_code = str(self.genome)
@@ -235,19 +236,27 @@ class Individual:
 
 class Island:
     """
-    A simple Island to perform a Genetic Algorithm.
+    A simple Island to perform a Genetic Algorithm. By default the selection, mutation, crossover, and probability functions
+    default to the classic functions:
+    - `natural_selection.ga.selection.selection_function_classic`
+    - `natural_selection.ga.selection.selection_function_parents_classic`
+    - `natural_selection.ga.crossover.crossover_function_classic`
+    - `natural_selection.ga.mutation.mutation_function_classic`
+    - `natural_selection.ga.prob_functions.crossover_prob_function_classic`
+    - `natural_selection.ga.prob_functions.mutation_prob_function_classic`
+    - `natural_selection.ga.helper_functions.clone_function_classic`
 
     Args:
         function_params (dict): The parameters for the fitness function.
-        selection_function (Callable): Function for selecting individuals for crossover and mutation.
-        parent_selection (Callable): Function for selecting parents for crossover.
-        crossover_function (Callable): Function for crossover.
-        mutate_function (Callable): Function for mutation.
-        crossover_prob_function (Callable): Random probability function for crossover.
-        mutation_prob_function (Callable): Random probability function for mutation.
-        clone_function (Callable): Function for cloning.
-        verbose (bool): Print all information.
-        logging_function (Callable): Function for custom message logging, such as server logging.
+        selection_function (Callable): Function for selecting individuals for crossover and mutation (default = None).
+        parent_selection (Callable): Function for selecting parents for crossover (default = None).
+        crossover_function (Callable): Function for crossover (default = None).
+        mutate_function (Callable): Function for mutation (default = None).
+        crossover_prob_function (Callable): Random probability function for crossover (default = None).
+        mutation_prob_function (Callable): Random probability function for mutation (default = None).
+        clone_function (Callable): Function for cloning (default = None).
+        verbose (bool): Print all information (default = None).
+        logging_function (Callable): Function for custom message logging, such as server logging (default = None).
         force_genetic_diversity (bool): Only add new offspring to the population if they have a unique genome (default = True).
     """
 
@@ -279,7 +288,7 @@ class Island:
         if mutate_function:
             self.mutate = mutate_function
         else:
-            self.mutate = mutatation_function_classic
+            self.mutate = mutation_function_classic
 
         if crossover_prob_function:
             self.crossover_prob = crossover_prob_function
@@ -306,16 +315,16 @@ class Island:
         self.children = list()
         self.species_type = "DEFAULT_SPECIES"
 
-    def create(self, adam : Individual, seed : int = 42, population_size : int = 8):
+    def create(self, adam : Individual, random_seed : int = 42, population_size : int = 8):
         """
         Starts the population by taking an initial individual as template and creating new ones from it.
 
         Args:
             adam (Individual): Individual to clone from.
-            seed (int): Random seed (default = 42).
+            random_seed (int): Random seed (default = 42).
             population_size (int): Size of population.
         """
-        random.seed(seed)
+        random.seed(random_seed)
 
         self.species_type = adam.species_type
 
@@ -329,25 +338,34 @@ class Island:
             popitem.evaluate(self.function_params)
             self.unique_genome.append(popitem.unique_genetic_code())
 
-    def import_migrants(self, migrants : list, reset_fitness : bool = False, species_check : bool = True):
+    def import_migrants(self, migrants : list, reset_fitness : bool = False, species_check : bool = True,
+                        force_genetic_diversity : bool = True):
         """
-        Imports a list of individuals, with option to re-evaluate.
+        Imports a list of individuals, with option to re-evaluate them.
         Skips the individual if the genetic code is already in the population.
 
         Args:
             migrants (list): List of Individuals.
             reset_fitness (bool): Reset the fitness of new members and evaluate them (default = False).
             species_check (bool): Safely check that imported members are compatible with population  (default = True).
+            force_genetic_diversity (bool): Only add migrants to the population if they have a unique genome (default = True).
         """
         for i in migrants:
             if species_check:
                 if i.species_type != self.species_type:
                     continue
-            if not i.unique_genetic_code() in self.unique_genome:
+            if force_genetic_diversity:
+                if not i.unique_genetic_code() in self.unique_genome:
+                    if i.fitness is None or reset_fitness:
+                        i.evaluate(self.function_params)
+                    self.population.append(i)
+                    self.unique_genome.append(i.unique_genetic_code())
+            else:
                 if i.fitness is None or reset_fitness:
                     i.evaluate(self.function_params)
                 self.population.append(i)
                 self.unique_genome.append(i.unique_genetic_code())
+
 
     def evolve_generational(self, starting_generation : int = 0, n_generations : int = 5, crossover_probability : float = 0.5,
                mutation_probability : float = 0.5, crossover_params : dict = None, mutation_params : dict = None,
@@ -490,7 +508,7 @@ class Island:
         untested_individuals = [ind for ind in generation_children if ind.fitness is None]
 
         for new_untested_individual in untested_individuals:
-            new_untested_individual.evaluate(self.function_params)
+            new_untested_individual.evaluate(island=self, params=self.function_params)
             if self.force_genetic_diversity:
                 # If we want a diverse gene pool, this must be true
                 if not new_untested_individual.unique_genetic_code() in self.unique_genome:

@@ -36,11 +36,11 @@ def selection_function_parents_classic(population : list, island=None):
     Simple function to select two parents at a time, sequentially.
 
     Args:
-        population:
-        island:
+        population (list): A list of Individuals, specifically the selected "elites".
+        island (Island): The Island calling the method (optional, default = None).
 
-    Returns:
-
+    Yields:
+        list: Containing the two individuals selected for crossover.
     """
     for parent_1, parent_2 in zip(population[::2], population[1::2]):
         yield [parent_1, parent_2]

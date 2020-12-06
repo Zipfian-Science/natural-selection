@@ -5,7 +5,7 @@ from natural_selection.ga import Gene, Genome, Individual
 class TestIndividual(unittest.TestCase):
 
     def setUp(self) -> None:
-        self.fitness = lambda gen, x, y: gen[0].value * x + y
+        self.fitness = lambda genome, island, x, y: genome[0].value * x + y
         g_1 = Gene("test", 3, 10, 1, random.randint)
         g_2 = Gene("test_other", 4, 10, 1, random.randint)
         gen = Genome([g_1, g_2])
