@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Crossover operatioons
+Crossover operations
 **************************
 .. contents:: Table of Contents
 
@@ -11,4 +11,6 @@ Simple functions for performing crossover operations.
 
 Crossover operators
 =====================
-.. autofunction:: natural_selection.ga.crossover.crossover_function_classic
+.. autofunction:: natural_selection.genetic_algorithms.operators.crossover.crossover_two_uniform
+
+.. autofunction:: natural_selection.genetic_algorithms.operators.crossover.crossover_two_n_point

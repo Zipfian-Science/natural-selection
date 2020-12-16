@@ -1,6 +1,6 @@
 import unittest
 import random
-from natural_selection.ga import Gene
+from natural_selection.genetic_algorithms import Gene
 
 class TestGene(unittest.TestCase):
 

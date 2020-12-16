@@ -15,17 +15,17 @@ Genes
 The most atomic part of a GA experiment is the gene. These easily encapsulate the direct encoding
 of genes, along with the genome. These are built for direct encoding approaches.
 
-.. autoclass:: natural_selection.ga.__init__.Gene
+.. autoclass:: natural_selection.genetic_algorithms.__init__.Gene
    :members:
 
-Genomes
+Chromosomes
 ========================
-.. autoclass:: natural_selection.ga.__init__.Genome
+.. autoclass:: natural_selection.genetic_algorithms.__init__.Chromosome
    :members:
 
 Individuals
 ========================
-.. autoclass:: natural_selection.ga.__init__.Individual
+.. autoclass:: natural_selection.genetic_algorithms.__init__.Individual
    :members:
 
 Islands
@@ -34,5 +34,5 @@ Islands
 Islands are the main evolutionary engines that drive the process. The can be customised with different
 selection, crossover, and mutation functions, giving the experimentor more flexibility when creating experiments.
 
-.. autoclass:: natural_selection.ga.__init__.Island
+.. autoclass:: natural_selection.genetic_algorithms.__init__.Island
    :members:

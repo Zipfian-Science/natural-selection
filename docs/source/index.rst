@@ -33,25 +33,25 @@ Then import the tools:
 
 .. code-block:: python
 
-    from natural_selection.ga import Gene, Genome, Individual, Island
+    from natural_selection.genetic_algorithms import Gene, Chromosome, Individual, Island
 
 Then simply create an experiment:
 
 .. code-block:: python
 
    import random
-   from natural_selection.ga import Gene, Genome, Individual, Island
+   from natural_selection.genetic_algorithms import Gene, Chromosome, Individual, Island
 
    # Create a gene
    g_1 = Gene(name="test_int", value=3, gene_max=10, gene_min=1, rand_type_func=random.randint)
    g_2 = Gene(name="test_real", value=0.5, gene_max=1.0, gene_min=0.1, rand_type_func=random.random)
 
    # Add a list of genes to a genome
-   gen = Genome([g_1, g_2])
+   gen = Chromosome([g_1, g_2])
 
    # Next, create an individual to carry these genes and evaluate them
    fitness_function = lambda gen, x, y: gen[0].value * x + y
-   adam = Individual(fitness_function, name="Adam", genome=gen)
+   adam = Individual(fitness_function, name="Adam", chromosome=gen)
 
    # Now we can create an island for running the evolutionary process
    # Notice the fitness function parameters are given here.
@@ -61,11 +61,11 @@ Then simply create an experiment:
    isolated_island.create(adam, population_size=5)
 
    # And finally, we let the randomness of life do its thing: optimise
-   best_individual = isolated_island.evolve_generational(n_generations=5)
+   best_individual = isolated_island.evolve(n_generations=5)
 
    # After running for a few generations, we have an individual with the highest fitness
    fitness = best_individual.fitness
-   genes = best_individual.genome
+   genes = best_individual.chromosome
 
    for gene in genes:
       print(gene.name, gene.value)

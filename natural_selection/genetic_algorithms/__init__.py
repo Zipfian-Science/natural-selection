@@ -15,11 +15,11 @@ import uuid
 from typing import Callable, Any
 
 
-from natural_selection.ga.selection import selection_function_classic, selection_function_parents_classic
-from natural_selection.ga.crossover import crossover_function_classic
-from natural_selection.ga.mutation import mutation_function_classic
-from natural_selection.ga.prob_functions import crossover_prob_function_classic, mutation_prob_function_classic
-from natural_selection.ga.helper_functions import clone_function_classic
+from natural_selection.genetic_algorithms.operators.selection import selection_elites_top_n, selection_parents_two
+from natural_selection.genetic_algorithms.operators.crossover import crossover_two_uniform
+from natural_selection.genetic_algorithms.operators.mutation import mutation_randomize
+from natural_selection.genetic_algorithms.utils.probability_functions import crossover_prob_function_classic, mutation_prob_function_classic
+from natural_selection.genetic_algorithms.utils import clone_classic
 
 class Gene:
     """
@@ -66,7 +66,7 @@ class Gene:
         return '({0}:{1})'.format(self.name, self.value)
 
 
-class Genome:
+class Chromosome:
     """
     A class that encapsulates an ordered sequence of Gene objects.
 
@@ -124,21 +124,21 @@ class Individual:
     A class that encapsulates a single individual, with genetic code and a fitness evaluation function.
 
     Args:
-        fitness_function (Callable): Function with ``func(genome, island, **params)`` signature
+        fitness_function (Callable): Function with ``func(Chromosome, island, **params)`` signature
         name (str): Name for keeping track of lineage (default = None).
-        genome (Genome): A Genome object, initialised (default = None).
+        chromosome (Chromosome): A Chromosome object, initialised (default = None).
         species_type (str) : A unique string to identify the species type, for preventing cross polluting (default = None).
     """
 
-    def __init__(self, fitness_function : Callable, name : str = None, genome: Genome = None, species_type : str = None):
+    def __init__(self, fitness_function : Callable, name : str = None, chromosome: Chromosome = None, species_type : str = None):
         if name is None:
             self.name = str(uuid.uuid4())
         else:
             self.name = name
-        if genome is None:
-            self.genome = Genome()
+        if chromosome is None:
+            self.chromosome = Chromosome()
         else:
-            self.genome = genome
+            self.chromosome = chromosome
         self.fitness_function = fitness_function
         self.fitness = None
         self.age = 0
@@ -197,12 +197,12 @@ class Individual:
 
     def add_gene(self, gene : Gene):
         """
-        Appends a gene to the genome.
+        Appends a gene to the chromosome.
 
         Args:
             gene (Gene): Gene to add.
         """
-        self.genome.append(gene)
+        self.chromosome.append(gene)
 
     def evaluate(self, params : dict, island=None) -> Any:
         """
@@ -215,8 +215,8 @@ class Individual:
         Returns:
             numeric: Fitness value.
         """
-        self.fitness = self.fitness_function(genome=self.genome, island=island, **params)
-        self.history.append({"name" : self.name, "age" : self.age, "fitness" : self.fitness, "genome" : self.unique_genetic_code})
+        self.fitness = self.fitness_function(chromosome=self.chromosome, island=island, **params)
+        self.history.append({"name" : self.name, "age" : self.age, "fitness" : self.fitness, "chromosome" : self.unique_genetic_code})
         return self.fitness
 
     def unique_genetic_code(self) -> str:
@@ -224,10 +224,10 @@ class Individual:
         Gets the unique genetic code, generating if it is undefined.
 
         Returns:
-            str: String name of genome.
+            str: String name of Chromosome.
         """
         if self.genetic_code is None:
-            self.genetic_code = str(self.genome)
+            self.genetic_code = str(self.chromosome)
         return self.genetic_code
 
     def __str__(self) -> str:
@@ -248,62 +248,42 @@ class Island:
 
     Args:
         function_params (dict): The parameters for the fitness function.
-        selection_function (Callable): Function for selecting individuals for crossover and mutation (default = None).
+        elite_selection (Callable): Function for selecting individuals for crossover and mutation (default = None).
         parent_selection (Callable): Function for selecting parents for crossover (default = None).
         crossover_function (Callable): Function for crossover (default = None).
-        mutate_function (Callable): Function for mutation (default = None).
+        mutation_function (Callable): Function for mutation (default = None).
         crossover_prob_function (Callable): Random probability function for crossover (default = None).
         mutation_prob_function (Callable): Random probability function for mutation (default = None).
         clone_function (Callable): Function for cloning (default = None).
         verbose (bool): Print all information (default = None).
         logging_function (Callable): Function for custom message logging, such as server logging (default = None).
-        force_genetic_diversity (bool): Only add new offspring to the population if they have a unique genome (default = True).
+        force_genetic_diversity (bool): Only add new offspring to the population if they have a unique chromosome (default = True).
     """
 
-    def __init__(self, function_params : dict, selection_function : Callable = None, parent_selection : Callable = None,
-                 crossover_function : Callable = None, mutate_function : Callable = None,
-                 crossover_prob_function : Callable = None, mutation_prob_function : Callable = None,
-                 clone_function : Callable = None, verbose : bool = True, logging_function : Callable = None,
+    def __init__(self, function_params : dict,
+                 elite_selection : Callable = selection_elites_top_n,
+                 parent_selection : Callable = selection_parents_two,
+                 crossover_function : Callable = crossover_two_uniform,
+                 mutation_function : Callable = mutation_randomize,
+                 crossover_prob_function : Callable = crossover_prob_function_classic,
+                 mutation_prob_function : Callable = mutation_prob_function_classic,
+                 clone_function : Callable = clone_classic,
+                 verbose : bool = True,
+                 logging_function : Callable = None,
                  force_genetic_diversity : bool = True):
         self.function_params = function_params
         self.unique_genome = list()
         self.generation_info = list()
         self.population = list()
 
-        if selection_function:
-            self.selection = selection_function
-        else:
-            self.selection = selection_function_classic
 
-        if parent_selection:
-            self.parent_selection = parent_selection
-        else:
-            self.parent_selection = selection_function_parents_classic
-
-        if crossover_function:
-            self.crossover = crossover_function
-        else:
-            self.crossover = crossover_function_classic
-
-        if mutate_function:
-            self.mutate = mutate_function
-        else:
-            self.mutate = mutation_function_classic
-
-        if crossover_prob_function:
-            self.crossover_prob = crossover_prob_function
-        else:
-            self.crossover_prob = crossover_prob_function_classic
-
-        if mutation_prob_function:
-            self.mutation_prob = mutation_prob_function
-        else:
-            self.mutation_prob = mutation_prob_function_classic
-
-        if clone_function:
-            self.clone = clone_function
-        else:
-            self.clone = clone_function_classic
+        self.elite_selection = elite_selection
+        self.parent_selection = parent_selection
+        self.crossover = crossover_function
+        self.mutation = mutation_function
+        self.crossover_prob = crossover_prob_function
+        self.mutation_prob = mutation_prob_function
+        self.clone = clone_function
 
         self.logging_function = logging_function
         self.force_genetic_diversity = force_genetic_diversity
@@ -314,8 +294,11 @@ class Island:
         self.mutants = list()
         self.children = list()
         self.species_type = "DEFAULT_SPECIES"
+        self.generation_count = 0
 
-    def create(self, adam : Individual, random_seed : int = 42, population_size : int = 8):
+    def create(self, adam : Individual,
+               random_seed : int = 42,
+               population_size : int = 8):
         """
         Starts the population by taking an initial individual as template and creating new ones from it.
 
@@ -329,7 +312,7 @@ class Island:
         self.species_type = adam.species_type
 
         for i in range(population_size-1):
-            eve = Individual(adam.fitness_function, genome=Genome([x.randomize_new() for x in adam.genome]))
+            eve = Individual(adam.fitness_function, chromosome=Chromosome([x.randomize_new() for x in adam.chromosome]))
             self.population.append(eve)
 
         self.population.append(adam)
@@ -338,7 +321,9 @@ class Island:
             popitem.evaluate(self.function_params)
             self.unique_genome.append(popitem.unique_genetic_code())
 
-    def import_migrants(self, migrants : list, reset_fitness : bool = False, species_check : bool = True,
+    def import_migrants(self, migrants : list,
+                        reset_fitness : bool = False,
+                        species_check : bool = True,
                         force_genetic_diversity : bool = True):
         """
         Imports a list of individuals, with option to re-evaluate them.
@@ -348,7 +333,7 @@ class Island:
             migrants (list): List of Individuals.
             reset_fitness (bool): Reset the fitness of new members and evaluate them (default = False).
             species_check (bool): Safely check that imported members are compatible with population  (default = True).
-            force_genetic_diversity (bool): Only add migrants to the population if they have a unique genome (default = True).
+            force_genetic_diversity (bool): Only add migrants to the population if they have a unique chromosome (default = True).
         """
         for i in migrants:
             if species_check:
@@ -367,9 +352,15 @@ class Island:
                 self.unique_genome.append(i.unique_genetic_code())
 
 
-    def evolve_generational(self, starting_generation : int = 0, n_generations : int = 5, crossover_probability : float = 0.5,
-               mutation_probability : float = 0.5, crossover_params : dict = None, mutation_params : dict = None,
-               selection_params : dict = None) -> Individual:
+    def evolve(self, starting_generation : int = 0,
+                            n_generations : int = 5,
+                            crossover_probability : float = 0.5,
+                            mutation_probability : float = 0.5,
+                            crossover_params : dict = None,
+                            mutation_params : dict = None,
+                            selection_params : dict = None,
+                            criterion_function : Callable = None,
+                            criterion_params : dict = None) -> Individual:
         """
         Starts the evolutionary run.
 
@@ -381,6 +372,8 @@ class Island:
             crossover_params (dict): Dict of params for custom crossover function (default = None).
             mutation_params (dict): Dict of params for custom mutation function (default = None).
             selection_params (dict): Dict of params for custom selection function (default = None).
+            criterion_function (Callable): A function to evaluate if the desired criterion has been met (default = None).
+            criterion_params (dict): Function parameters for criterion (default = None).
 
         Returns:
             Individual: The fittest Individual found.
@@ -401,86 +394,51 @@ class Island:
         else:
             _selection_params = {'n':5, 'desc':True}
 
-        for g in range(starting_generation, starting_generation + n_generations):
+        if criterion_function:
+            g_func = criterion_function
+        else:
+            g_func = lambda island: island.generation_count >= starting_generation + n_generations - 1
+            criterion_params = {}
+
+        g = starting_generation
+        while not g_func(island=self, **criterion_params):
             self._verbose_logging('Generation {} started'.format(g))
 
             self.__evolutionary_engine(g=g, selection_params=_selection_params,
                                        crossover_probability=crossover_probability,
-                                       mutation_probability=mutation_probability, crossover_params=_crossover_params,
+                                       mutation_probability=mutation_probability,
+                                       crossover_params=_crossover_params,
                                        mutation_params=_mutation_params)
-
-        best_ind = selection_function_classic(island=self, population=self.population, n=1)[0]
-
-        self._verbose_logging("Best individual is {0}, {1}".format(best_ind.name, best_ind.fitness))
-
-        return best_ind
-
-    def evolve_criterion(self, criterion_function : Callable, criterion_params : dict, crossover_probability : float = 0.5,
-               mutation_probability : float = 0.5, crossover_params : dict = None, mutation_params : dict = None,
-               selection_params : dict = None) -> Individual:
-        """
-        Starts the evolutionary run and evaluates until the criterion_func returns true.
-
-        Args:
-            criterion_function (Callable): A function to evaluate if the desired criterion has been met.
-            criterion_params (dict): Function parameters for criterion.
-            crossover_probability (float): Initial crossover probability.
-            mutation_probability (float): Initial mutation probability.
-            crossover_params (dict): Dict of params for custom crossover function (default = None).
-            mutation_params (dict): Dict of params for custom mutation function (default = None).
-            selection_params (dict): Dict of params for custom selection function (default = None).
-
-        Returns:
-            Individual: The fittest Individual found.
-        """
-
-        if crossover_params:
-            _crossover_params = crossover_params
-        else:
-            _crossover_params = {'prob':0.5}
-
-        if mutation_params:
-            _mutation_params = mutation_params
-        else:
-            _mutation_params = {'prob':0.2}
-
-        if selection_params:
-            _selection_params = selection_params
-        else:
-            _selection_params = {'n':5, 'desc':True}
-
-        g = 0
-        while not criterion_function(island=self, **criterion_params):
             g += 1
-            self._verbose_logging('Generation {} started'.format(g))
 
-            self.__evolutionary_engine(g=g, selection_params=_selection_params, crossover_probability=crossover_probability,
-                                        mutation_probability=mutation_probability, crossover_params=_crossover_params,
-                                        mutation_params=_mutation_params)
-
-        best_ind = selection_function_classic(island=self, population=self.population, n=1)[0]
+        best_ind = selection_elites_top_n(island=self, individuals=self.population, n=1)[0]
 
         self._verbose_logging("Best individual is {0}, {1}".format(best_ind.name, best_ind.fitness))
 
         return best_ind
 
-    def __evolutionary_engine(self, g, selection_params, crossover_probability, mutation_probability, crossover_params, mutation_params):
+    def __evolutionary_engine(self, g,
+                              selection_params,
+                              crossover_probability,
+                              mutation_probability,
+                              crossover_params,
+                              mutation_params):
 
-        elites = self.selection(island=self,
-                                population=self.clone(population=self.population, island=self),
-                                **selection_params)
+        elites = self.elite_selection(island=self,
+                                      individuals=self.clone(individuals=self.population, island=self),
+                                      **selection_params)
 
         self.elites.append({'generation' : g, 'elites' : elites})
 
         # Children are strictly copies or new objects seeing as the have a lineage and parents
         generation_children = list()
-        for parents in self.parent_selection(population=elites, island=self):
+        for parents in self.parent_selection(individuals=elites, island=self):
             if self.crossover_prob(crossover_probability=crossover_probability, island=self):
 
                 self._verbose_logging('Crossover: {0}'.format([str(p) for p in parents]))
 
                 children = self.crossover(island=self,
-                                          individuals=self.clone(population=parents, island=self),
+                                          individuals=self.clone(individuals=parents, island=self),
                                           **crossover_params)
 
                 for child in children:
@@ -497,7 +455,7 @@ class Island:
         generation_mutants = list()
         for mutant in generation_children:
             if self.mutation_prob(mutation_probability=mutation_probability, island=self):
-                mutated = self.mutate(island=self, individual=mutant, **mutation_params)
+                mutated = self.mutation(island=self, individual=mutant, **mutation_params)
 
                 self._verbose_logging('Mutating: {}'.format(mutant.name))
                 mutated.reset_fitness()

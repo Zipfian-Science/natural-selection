@@ -1,15 +1,15 @@
 import unittest
 import random
-from natural_selection.ga import Gene, Genome, Individual
+from natural_selection.genetic_algorithms import Gene, Chromosome, Individual
 
 class TestIndividual(unittest.TestCase):
 
     def setUp(self) -> None:
-        self.fitness = lambda genome, island, x, y: genome[0].value * x + y
+        self.fitness = lambda chromosome, island, x, y: chromosome[0].value * x + y
         g_1 = Gene("test", 3, 10, 1, random.randint)
         g_2 = Gene("test_other", 4, 10, 1, random.randint)
-        gen = Genome([g_1, g_2])
-        self.ind = Individual(self.fitness, name="Adam", genome=gen)
+        gen = Chromosome([g_1, g_2])
+        self.ind = Individual(self.fitness, name="Adam", chromosome=gen)
 
     def test_birthday(self):
         self.assertEquals(self.ind.age, 0)
@@ -33,7 +33,7 @@ class TestIndividual(unittest.TestCase):
 
     def test_add_gene(self):
         self.ind.add_gene(Gene("test_other_2", 4, 10, 1, random.randint))
-        self.assertEquals(len(self.ind.genome), 3)
+        self.assertEquals(len(self.ind.chromosome), 3)
 
     def test_evaluate(self):
         f = self.ind.evaluate({'x' : 2, 'y' : 5})
