@@ -11,4 +11,4 @@ Simple functions for encapsulating performing mutation operations.
 
 Mutation operators
 =====================
-.. autofunction:: natural_selection.ga.mutation.mutation_function_classic
+.. autofunction:: natural_selection.genetic_algorithms.operators.mutation.mutation_randomize

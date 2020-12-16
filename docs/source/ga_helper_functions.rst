@@ -9,7 +9,7 @@ Helper functions
 
 Simple helper functions, amongst which cloning operations.
 
-Cloning probability
+Cloning functions
 =====================
-.. autofunction:: natural_selection.ga.helper_functions.clone_function_classic
+.. autofunction:: natural_selection.genetic_algorithms.utils.clone_classic
 

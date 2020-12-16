@@ -1,6 +1,6 @@
 import random
 
-def mutation_prob_function_classic(mutation_probability : float, island=None) -> float:
+def mutation_prob_function_classic(mutation_probability : float = 0.2, island=None) -> float:
     """
     Classic mutation probability function that evaluates whether a random float is less than the mutation probability.
 
@@ -17,7 +17,7 @@ def mutation_prob_function_classic(mutation_probability : float, island=None) ->
         return False
 
 
-def crossover_prob_function_classic(crossover_probability : float, island=None):
+def crossover_prob_function_classic(crossover_probability : float = 0.5, island=None):
     """
     Classic crossover probability function that evaluates whether a random float is less than the crossover probability.
 

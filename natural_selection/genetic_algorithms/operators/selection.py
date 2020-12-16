@@ -10,13 +10,15 @@ __maintainer__ = "Justin Hocking"
 __email__ = "justin.hocking@zipfian.science"
 __status__ = "Development"
 
+def selection_elites_tournament(individuals : list, n : int, desc : bool = True, island=None) -> list:
+    raise NotImplemented("Not yet there, but soon!")
 
-def selection_function_classic(population : list, n : int, desc : bool = True, island=None) -> list:
+def selection_elites_top_n(individuals : list, n : int, desc : bool = True, island=None) -> list:
     """
     A Classic top N selection function, sorted on fitness.
 
     Args:
-        population (list): A list of Individuals.
+        individuals (list): A list of Individuals.
         n (int): Number to select.
         desc (bool): In descending order (default = True).
         island (Island): The Island calling the method (optional, default = None).
@@ -27,20 +29,23 @@ def selection_function_classic(population : list, n : int, desc : bool = True, i
     def sortFitness(val):
         return val.fitness
 
-    population.sort(key=sortFitness, reverse=desc)
+    individuals.sort(key=sortFitness, reverse=desc)
 
-    return population[0:n]
+    return individuals[0:n]
 
-def selection_function_parents_classic(population : list, island=None):
+def selection_parents_two(individuals : list, island=None):
     """
     Simple function to select two parents at a time, sequentially.
 
     Args:
-        population (list): A list of Individuals, specifically the selected "elites".
+        individuals (list): A list of Individuals, specifically the selected "elites".
         island (Island): The Island calling the method (optional, default = None).
 
     Yields:
         list: Containing the two individuals selected for crossover.
     """
-    for parent_1, parent_2 in zip(population[::2], population[1::2]):
+    for parent_1, parent_2 in zip(individuals[::2], individuals[1::2]):
         yield [parent_1, parent_2]
+
+def selection_survivors(individuals : list, n : int, desc : bool = True, island=None) -> list:
+    raise NotImplemented("Not yet there, but soon!")

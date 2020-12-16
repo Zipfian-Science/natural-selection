@@ -9,10 +9,10 @@ Selection
 
 Simple functions for encapsulating performing population selection.
 
-Selection operators
+Elites selection
 =====================
-.. autofunction:: natural_selection.ga.selection.selection_function_classic
+.. autofunction:: natural_selection.genetic_algorithms.operators.selection.selection_elites_top_n
 
-Parent selction
+Parent selection
 =====================
-.. autofunction:: natural_selection.ga.selection.selection_function_parents_classic
+.. autofunction:: natural_selection.genetic_algorithms.operators.selection.selection_parents_two
