@@ -79,6 +79,6 @@ for gene in genes:
 
 ## Release
 
-- Date: {release_date}
-- Version: {version_number}
+- Date: {pypi_metdata_release_date}
+- Version: {pypi_metdata_version_number}
 
