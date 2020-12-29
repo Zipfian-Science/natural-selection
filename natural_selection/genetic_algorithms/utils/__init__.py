@@ -12,3 +12,15 @@ def clone_classic(individuals : list, island=None):
         list: Carbon copy of population.
     """
     return copy.deepcopy(individuals)
+
+class GeneticAlgorithmError(Exception):
+
+    def __init__(self, message : str, exit : bool = False):
+        self.message = message
+        if exit:
+            print(f"GeneticAlgorithmError: {self.message}")
+            quit(1)
+
+
+    def __str__(self):
+        return f"GeneticAlgorithmError: {self.message}"
