@@ -26,6 +26,6 @@ def mutation_randomize(individual, prob : float = 0.2, island=None):
     """
     for i in range(len(individual.chromosome)):
         if random.random() < prob:
-            individual.chromosome[i].randomize()
+            individual.chromosome[i].randomise()
 
     return individual

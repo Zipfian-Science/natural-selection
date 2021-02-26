@@ -10,8 +10,17 @@ __maintainer__ = "Justin Hocking"
 __email__ = "justin.hocking@zipfian.science"
 __status__ = "Development"
 
-def selection_elites_tournament(individuals : list, n : int, desc : bool = True, island=None) -> list:
-    raise NotImplemented("Not yet there, but soon!")
+from numpy import random
+
+def selection_elites_tournament(individuals : list, n : int, tournament_size : int = 5, island=None) -> list:
+    elites = []
+    for i in range(n):
+        selection = selection_elites_random(individuals, tournament_size)
+        elites.append(selection_elites_top_n(selection, 1))
+    return elites
+
+def selection_elites_random(individuals : list, n : int, island=None) -> list:
+    return random.choice(individuals, size=n)
 
 def selection_elites_top_n(individuals : list, n : int, desc : bool = True, island=None) -> list:
     """
@@ -32,20 +41,3 @@ def selection_elites_top_n(individuals : list, n : int, desc : bool = True, isla
     individuals.sort(key=sortFitness, reverse=desc)
 
     return individuals[0:n]
-
-def selection_parents_two(individuals : list, island=None):
-    """
-    Simple function to select two parents at a time, sequentially.
-
-    Args:
-        individuals (list): A list of Individuals, specifically the selected "elites".
-        island (Island): The Island calling the method (optional, default = None).
-
-    Yields:
-        list: Containing the two individuals selected for crossover.
-    """
-    for parent_1, parent_2 in zip(individuals[::2], individuals[1::2]):
-        yield [parent_1, parent_2]
-
-def selection_survivors(individuals : list, n : int, desc : bool = True, island=None) -> list:
-    raise NotImplemented("Not yet there, but soon!")

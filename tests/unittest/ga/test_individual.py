@@ -1,13 +1,13 @@
 import unittest
-import random
 from natural_selection.genetic_algorithms import Gene, Chromosome, Individual
+from natural_selection.genetic_algorithms.utils.random_functions import random_int
 
 class TestIndividual(unittest.TestCase):
 
     def setUp(self) -> None:
         self.fitness = lambda chromosome, island, x, y: chromosome[0].value * x + y
-        g_1 = Gene("test", 3, 10, 1, random.randint)
-        g_2 = Gene("test_other", 4, 10, 1, random.randint)
+        g_1 = Gene(name="test", value=3, gene_max=10, gene_min=1, randomise_function=random_int)
+        g_2 = Gene(name="test_other", value=4, gene_max=10, gene_min=1, randomise_function=random_int)
         gen = Chromosome([g_1, g_2])
         self.ind = Individual(self.fitness, name="Adam", chromosome=gen)
 
@@ -32,7 +32,7 @@ class TestIndividual(unittest.TestCase):
         self.assertIsNone(self.ind.genetic_code)
 
     def test_add_gene(self):
-        self.ind.add_gene(Gene("test_other_2", 4, 10, 1, random.randint))
+        self.ind.add_gene(Gene(name="test", value=3, gene_max=10, gene_min=1, randomise_function=random_int))
         self.assertEquals(len(self.ind.chromosome), 3)
 
     def test_evaluate(self):
