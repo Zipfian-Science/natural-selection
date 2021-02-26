@@ -32,8 +32,8 @@ class Gene:
         randomise_function (Callable): A function to randomise the gene, taking the min and max as input with signature ``func(self)``.
         gene_max (Any, numeric type): Max value for random number generator (default = None).
         gene_min (Any, numeric type): Min value for random number generator (default = None).
-        mu (Any, numeric type): Mean value of distribution to sample from (default = None).
-        sig (Any, numeric type): Std. Dev. value of distribution to sample from (default = None).
+        mu (Any, numeric type): Mean value of distribution to sample from (default = 0).
+        sig (Any, numeric type): Std. Dev. value of distribution to sample from (default = 1).
         choices (Iterable): List of choices, categorical or not, to randomly choose from (default = None).
         gene_properties (dict): For custom random functions, extra params may be given (default = None).
 
@@ -45,8 +45,8 @@ class Gene:
                  randomise_function: Callable,
                  gene_max : Any = None,
                  gene_min : Any = None,
-                 mu : Any = None,
-                 sig: Any = None,
+                 mu : Any = 0,
+                 sig: Any = 1,
                  choices : Iterable  = None,
                  gene_properties : dict = None):
         self.name = name
@@ -76,15 +76,15 @@ class Gene:
             Gene: Newly created gene.
         """
         return Gene(
-            self.name,
-            self.randomise_function(gene=self),
-            self.gene_max,
-            self.gene_min,
-            self.randomise_function,
-            self.mu,
-            self.sig,
-            self.choices,
-            self.__gene_properties
+            name=self.name,
+            value=self.randomise_function(gene=self),
+            randomise_function=self.randomise_function,
+            gene_max=self.gene_max,
+            gene_min=self.gene_min,
+            mu=self.mu,
+            sig=self.sig,
+            choices=self.choices,
+            gene_properties=self.__gene_properties
         )
 
     def add_new_property(self, key : str, value : Any):
@@ -339,11 +339,78 @@ class Island:
         self.species_type = "DEFAULT_SPECIES"
         self.generation_count = 0
 
-    def create(self, adam : Individual,
+    def create_gene(self,
+                 name : str,
+                 value : Any,
+                 randomise_function: Callable,
+                 gene_max : Any = None,
+                 gene_min : Any = None,
+                 mu : Any = None,
+                 sig: Any = None,
+                 choices : Iterable  = None,
+                 gene_properties : dict = None):
+        """
+        Wrapping function to create a new Gene. Useful when writing new initialisation functions. See Gene class.
+
+        Args:
+            name (str): Gene name. The gene name also acts as a compatibility reference.
+            value (Any): The value, could be any type.
+            randomise_function (Callable): A function to randomise the gene, taking the min and max as input with signature ``func(self)``.
+            gene_max (Any, numeric type): Max value for random number generator (default = None).
+            gene_min (Any, numeric type): Min value for random number generator (default = None).
+            mu (Any, numeric type): Mean value of distribution to sample from (default = None).
+            sig (Any, numeric type): Std. Dev. value of distribution to sample from (default = None).
+            choices (Iterable): List of choices, categorical or not, to randomly choose from (default = None).
+            gene_properties (dict): For custom random functions, extra params may be given (default = None).
+        Returns:
+            gene: A new Gene object.
+        """
+        return Gene(name, value, randomise_function, gene_max, gene_min, mu, sig, choices, gene_properties)
+
+    def create_chromosome(self,
+                          genes: list = None,
+                          gene_verify_func : Callable = None):
+        """
+        Wrapping function to create a new Chromosome. Useful when writing new initialisation functions. See Chromosome class.
+
+        Args:
+            genes (list): list of initialised Gene objects.
+            gene_verify_func (Callable): A function to verify gene compatibility `func(gene,loc,chromosome)` (default = None).
+
+        Returns:
+            chromosome: A new Chromosome.
+        """
+        return Chromosome(genes, gene_verify_func)
+
+    def create_individual(self,
+                          fitness_function : Callable,
+                          name : str = None,
+                          chromosome: Chromosome = None,
+                          species_type : str = None,
+                          add_to_population : bool = False):
+        """
+        Wrapping function to create a new Individual. Useful when writing new initialisation functions. See Individual class.
+
+        Args:
+            fitness_function (Callable): Function with ``func(Chromosome, island, **params)`` signature
+            name (str): Name for keeping track of lineage (default = None).
+            chromosome (Chromosome): A Chromosome object, initialised (default = None).
+            species_type (str) : A unique string to identify the species type, for preventing cross polluting (default = None).
+            add_to_population (bool): Add this new individual to the population (default = False).
+
+        Returns:
+            individual: A new Individual.
+        """
+        ind = Individual(fitness_function, name, chromosome, species_type)
+        if add_to_population:
+            self.population.append(ind)
+        return ind
+
+    def initialise(self, adam : Individual,
                population_size: int = 8,
                random_seed : int = 42,
                initialisation_function : Callable = initialise_population_random,
-               initialisation_params : dict = None,
+               initialisation_params : dict = {},
                evaluate_population : bool = True
                ):
         """
@@ -445,6 +512,16 @@ class Island:
         else:
             _elite_selection_params = {'n':5, 'desc':True}
 
+        if parent_selection_params:
+            _parent_selection_params = parent_selection_params
+        else:
+            _parent_selection_params = {}
+
+        if survivor_selection_params:
+            _survivor_selection_params = survivor_selection_params
+        else:
+            _survivor_selection_params = {}
+
         if criterion_function:
             g_func = criterion_function
         else:
@@ -457,8 +534,8 @@ class Island:
 
             self.__evolutionary_engine(g=g,
                                        elite_selection_params=_elite_selection_params,
-                                       parent_selection_params=parent_selection_params,
-                                       survivor_selection_params=survivor_selection_params,
+                                       parent_selection_params=_parent_selection_params,
+                                       survivor_selection_params=_survivor_selection_params,
                                        crossover_probability=crossover_probability,
                                        mutation_probability=mutation_probability,
                                        crossover_params=_crossover_params,
