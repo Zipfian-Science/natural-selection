@@ -34,6 +34,8 @@ class Gene:
         gene_min (Any, numeric type): Min value for random number generator (default = None).
         mu (Any, numeric type): Mean value of distribution to sample from (default = 0).
         sig (Any, numeric type): Std. Dev. value of distribution to sample from (default = 1).
+        step_lower_bound (Any, numeric type): For uniform stepping functions, defines lower bound of range (default = -1.0).
+        step_upper_bound (Any, numeric type): For uniform stepping functions, defines upper bound of range (default = 1.0).
         choices (Iterable): List of choices, categorical or not, to randomly choose from (default = None).
         gene_properties (dict): For custom random functions, extra params may be given (default = None).
 
@@ -47,6 +49,8 @@ class Gene:
                  gene_min : Any = None,
                  mu : Any = 0,
                  sig: Any = 1,
+                 step_lower_bound : Any = -1.0,
+                 step_upper_bound: Any = 1.0,
                  choices : Iterable  = None,
                  gene_properties : dict = None):
         self.name = name
@@ -55,6 +59,8 @@ class Gene:
         self.gene_min = gene_min
         self.mu = mu
         self.sig = sig
+        self.step_lower_bound = step_lower_bound
+        self.step_upper_bound = step_upper_bound
         self.choices = choices
         self.randomise_function = randomise_function
         self.__gene_properties = gene_properties
