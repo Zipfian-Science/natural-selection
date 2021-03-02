@@ -286,14 +286,7 @@ class Individual:
 class Island:
     """
     A simple Island to perform a Genetic Algorithm. By default the selection, mutation, crossover, and probability functions
-    default to the classic functions:
-    - `natural_selection.ga.selection.selection_function_classic`
-    - `natural_selection.ga.selection.selection_function_parents_classic`
-    - `natural_selection.ga.crossover.crossover_function_classic`
-    - `natural_selection.ga.mutation.mutation_function_classic`
-    - `natural_selection.ga.prob_functions.crossover_prob_function_classic`
-    - `natural_selection.ga.prob_functions.mutation_prob_function_classic`
-    - `natural_selection.ga.helper_functions.clone_function_classic`
+    default to the classic functions.
 
     Args:
         function_params (dict): The parameters for the fitness function.
