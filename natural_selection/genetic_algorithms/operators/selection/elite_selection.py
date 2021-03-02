@@ -16,11 +16,11 @@ def selection_elites_tournament(individuals : list, n : int, tournament_size : i
     elites = []
     for i in range(n):
         selection = selection_elites_random(individuals, tournament_size)
-        elites.append(selection_elites_top_n(selection, 1))
+        elites.extend(selection_elites_top_n(selection, 1))
     return elites
 
 def selection_elites_random(individuals : list, n : int, island=None) -> list:
-    return random.choice(individuals, size=n)
+    return random.choice(individuals, size=n).tolist()
 
 def selection_elites_top_n(individuals : list, n : int, desc : bool = True, island=None) -> list:
     """

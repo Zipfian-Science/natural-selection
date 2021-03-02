@@ -135,16 +135,22 @@ class Chromosome:
             raise GeneticAlgorithmError(message="Added gene did not pass compatibility tests!")
         self.genes.append(gene)
 
-    def __setitem__(self, index: int, gene: Gene):
-        assert isinstance(gene, Gene), 'Must be Gene type!'
-        assert index < len(self.genes), 'Index Out of bounds!'
+    def __setitem__(self, index, gene):
+        if isinstance(index, slice):
+            assert index.start < len(self.genes), 'Index Out of bounds!'
+        else:
+            assert isinstance(gene, Gene), 'Must be Gene type!'
+            assert index < len(self.genes), 'Index Out of bounds!'
 
         if not self.gene_verify_func(gene=gene, loc=index, chromosome=self):
             raise GeneticAlgorithmError("Index set gene did not pass compatibility tests!")
         self.genes[index] = gene
 
-    def __getitem__(self, index: int) -> Gene:
-        assert index < len(self.genes), 'Index Out of bounds!'
+    def __getitem__(self, index) -> Gene:
+        if isinstance(index, slice):
+            assert index.start < len(self.genes), 'Index Out of bounds!'
+        else:
+            assert index < len(self.genes), 'Index Out of bounds!'
 
         return self.genes[index]
 
