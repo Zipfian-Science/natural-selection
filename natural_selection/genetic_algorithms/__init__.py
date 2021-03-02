@@ -34,6 +34,8 @@ class Gene:
         gene_min (Any, numeric type): Min value for random number generator (default = None).
         mu (Any, numeric type): Mean value of distribution to sample from (default = 0).
         sig (Any, numeric type): Std. Dev. value of distribution to sample from (default = 1).
+        step_lower_bound (Any, numeric type): For uniform stepping functions, defines lower bound of range (default = -1.0).
+        step_upper_bound (Any, numeric type): For uniform stepping functions, defines upper bound of range (default = 1.0).
         choices (Iterable): List of choices, categorical or not, to randomly choose from (default = None).
         gene_properties (dict): For custom random functions, extra params may be given (default = None).
 
@@ -47,6 +49,8 @@ class Gene:
                  gene_min : Any = None,
                  mu : Any = 0,
                  sig: Any = 1,
+                 step_lower_bound : Any = -1.0,
+                 step_upper_bound: Any = 1.0,
                  choices : Iterable  = None,
                  gene_properties : dict = None):
         self.name = name
@@ -55,6 +59,8 @@ class Gene:
         self.gene_min = gene_min
         self.mu = mu
         self.sig = sig
+        self.step_lower_bound = step_lower_bound
+        self.step_upper_bound = step_upper_bound
         self.choices = choices
         self.randomise_function = randomise_function
         self.__gene_properties = gene_properties
@@ -129,16 +135,22 @@ class Chromosome:
             raise GeneticAlgorithmError(message="Added gene did not pass compatibility tests!")
         self.genes.append(gene)
 
-    def __setitem__(self, index: int, gene: Gene):
-        assert isinstance(gene, Gene), 'Must be Gene type!'
-        assert index < len(self.genes), 'Index Out of bounds!'
+    def __setitem__(self, index, gene):
+        if isinstance(index, slice):
+            assert index.start < len(self.genes), 'Index Out of bounds!'
+        else:
+            assert isinstance(gene, Gene), 'Must be Gene type!'
+            assert index < len(self.genes), 'Index Out of bounds!'
 
         if not self.gene_verify_func(gene=gene, loc=index, chromosome=self):
             raise GeneticAlgorithmError("Index set gene did not pass compatibility tests!")
         self.genes[index] = gene
 
-    def __getitem__(self, index: int) -> Gene:
-        assert index < len(self.genes), 'Index Out of bounds!'
+    def __getitem__(self, index) -> Gene:
+        if isinstance(index, slice):
+            assert index.start < len(self.genes), 'Index Out of bounds!'
+        else:
+            assert index < len(self.genes), 'Index Out of bounds!'
 
         return self.genes[index]
 
@@ -280,14 +292,7 @@ class Individual:
 class Island:
     """
     A simple Island to perform a Genetic Algorithm. By default the selection, mutation, crossover, and probability functions
-    default to the classic functions:
-    - `natural_selection.ga.selection.selection_function_classic`
-    - `natural_selection.ga.selection.selection_function_parents_classic`
-    - `natural_selection.ga.crossover.crossover_function_classic`
-    - `natural_selection.ga.mutation.mutation_function_classic`
-    - `natural_selection.ga.prob_functions.crossover_prob_function_classic`
-    - `natural_selection.ga.prob_functions.mutation_prob_function_classic`
-    - `natural_selection.ga.helper_functions.clone_function_classic`
+    default to the classic functions.
 
     Args:
         function_params (dict): The parameters for the fitness function.

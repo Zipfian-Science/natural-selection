@@ -23,3 +23,9 @@ def selection_parents_two(individuals : list, island=None):
     """
     for parent_1, parent_2 in zip(individuals[::2], individuals[1::2]):
         yield [parent_1, parent_2]
+
+def selection_parents_two_shuffled(individuals : list, island=None):
+    raise NotImplementedError("Future implementation")
+
+def selection_parents_n_gram(individuals : list, n : int = 2,island=None):
+    raise NotImplementedError("Future implementation")

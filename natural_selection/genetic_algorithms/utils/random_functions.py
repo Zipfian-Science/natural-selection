@@ -3,35 +3,40 @@ from numpy import random
 def random_int(gene):
     return random.randint(low=gene.gene_min, high=gene.gene_max)
 
+def random_int_step(gene):
+    stepped_value = random.randint(low=gene.step_lower_bound, high=gene.step_upper_bound)
+
+    while stepped_value > gene.gene_max or stepped_value < gene.gene_min:
+        stepped_value = random.randint(low=gene.step_lower_bound, high=gene.step_upper_bound)
+
+    return stepped_value
+
 def random_gaussian(gene):
-    # Set to mean and std of the gene if available, else, standard normal used
-    if 'mu' in gene.__dict__:
-        mu = gene.mu
-    else:
-        mu = 0
-    if 'sig' in gene.__dict__:
-        sig = gene.sig
-    else:
-        sig = 1
-    return random.normal(loc=mu, scale=sig)
+    stepped_value = random.normal(loc=gene.mu, scale=gene.sig)
+
+    while stepped_value > gene.gene_max or stepped_value < gene.gene_min:
+        stepped_value = random.normal(loc=gene.mu, scale=gene.sig)
+
+    return stepped_value
 
 def random_uniform(gene):
     return random.uniform(low=gene.gene_min, high=gene.gene_max)
 
 def random_gaussian_step(gene):
-    # Set to mean and std of the gene if available, else, standard normal used
-    if 'mu' in gene.__dict__:
-        mu = gene.mu
-    else:
-        mu = 0
-    if 'sig' in gene.__dict__:
-        sig = gene.sig
-    else:
-        sig = 1
-    return gene.value + random.normal(loc=mu, scale=sig)
+    stepped_value = gene.value + random.normal(loc=gene.mu, scale=gene.sig)
+
+    while stepped_value > gene.gene_max or stepped_value < gene.gene_min:
+        stepped_value = gene.value + random.normal(loc=gene.mu, scale=gene.sig)
+
+    return stepped_value
 
 def random_uniform_step(gene):
-    return gene.value + random.uniform(low=gene.gene_min, high=gene.gene_max)
+    stepped_value = gene.value + random.uniform(low=gene.step_lower_bound, high=gene.step_upper_bound)
+
+    while stepped_value > gene.gene_max or stepped_value < gene.gene_min:
+        stepped_value = gene.value + random.uniform(low=gene.step_lower_bound, high=gene.step_upper_bound)
+
+    return stepped_value
 
 def random_choice(gene):
 
