@@ -112,6 +112,20 @@ class Chromosome:
         genes (list): list of initialised Gene objects.
         gene_verify_func (Callable): A function to verify gene compatibility `func(gene,loc,chromosome)` (default = None).
     """
+
+    def __default_gene_verify_func(self, gene, loc, chromosome):
+        """
+        Needed to make objects pickle-able.
+        Args:
+            gene (Gene): Gene being inserted.
+            loc (int): Index of gene.
+            chromosome (Chromosome): The given "self".
+
+        Returns:
+            bool: Whether gene insertion is allowed or not.
+        """
+        return True
+
     def __init__(self, genes: list = None, gene_verify_func : Callable = None):
         if genes:
             self.genes = genes
@@ -121,7 +135,7 @@ class Chromosome:
         if gene_verify_func:
             self.gene_verify_func = gene_verify_func
         else:
-            self.gene_verify_func = lambda gene, loc, chromosome: True
+            self.gene_verify_func = self.__default_gene_verify_func
 
     def append(self, gene: Gene):
         """
@@ -270,8 +284,18 @@ class Individual:
             numeric: Fitness value.
         """
         self.fitness = self.fitness_function(chromosome=self.chromosome, island=island, **params)
-        self.history.append({"name" : self.name, "age" : self.age, "fitness" : self.fitness,
-                             "chromosome" : self.unique_genetic_code, "parents" : self.parents})
+
+        stamp = { "name": self.name,
+                  "age": self.age,
+                  "fitness": self.fitness,
+                  "chromosome": self.unique_genetic_code(),
+                  "parents": self.parents,
+         }
+
+        if island:
+            stamp["island_generation" ] = island.generation_count
+
+        self.history.append(stamp)
         return self.fitness
 
     def unique_genetic_code(self) -> str:
@@ -439,7 +463,7 @@ class Island:
 
         if evaluate_population:
             for popitem in self.population:
-                popitem.evaluate(self.function_params)
+                popitem.evaluate(self.function_params, island=self)
                 self.unique_genome.append(popitem.unique_genetic_code())
 
     def import_migrants(self, migrants : list,
@@ -463,7 +487,7 @@ class Island:
             if force_genetic_diversity:
                 if not i.unique_genetic_code() in self.unique_genome:
                     if i.fitness is None or reset_fitness:
-                        i.evaluate(self.function_params)
+                        i.evaluate(self.function_params, island=self)
                     self.population.append(i)
                     self.unique_genome.append(i.unique_genetic_code())
             else:
@@ -527,14 +551,17 @@ class Island:
         else:
             _survivor_selection_params = {}
 
+        def _default_criterion_function(island):
+            return island.generation_count < starting_generation + n_generations - 1
+
         if criterion_function:
             g_func = criterion_function
         else:
-            g_func = lambda island: island.generation_count >= starting_generation + n_generations - 1
+            g_func = _default_criterion_function
             criterion_params = {}
 
         g = starting_generation
-        while not g_func(island=self, **criterion_params):
+        while g_func(island=self, **criterion_params):
             self._verbose_logging('Generation {} started'.format(g))
 
             self.__evolutionary_engine(g=g,
