@@ -12,7 +12,7 @@ __status__ = "Development"
 
 def selection_parents_two(individuals : list, island=None):
     """
-    Simple function to select two parents at a time, sequentially.
+    Simple function to select two parents at a time, sequentially. Parental selection always yields.
 
     Args:
         individuals (list): A list of Individuals, specifically the selected "elites".

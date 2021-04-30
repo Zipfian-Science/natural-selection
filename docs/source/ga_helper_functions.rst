@@ -7,9 +7,13 @@ Helper functions
 **************************
 .. contents:: Table of Contents
 
-Simple helper functions, amongst which cloning operations.
+Simple helper functions and classes, amongst which cloning operations.
 
 Cloning functions
 =====================
 .. autofunction:: natural_selection.genetic_algorithms.utils.clone_classic
 
+General Error Class
+========================
+.. autoclass:: natural_selection.genetic_algorithms.utils.GeneticAlgorithmError
+   :members:

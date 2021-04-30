@@ -2,10 +2,10 @@
 """Basic classes for running Genetic Algorithms.
 """
 __author__ = "Justin Hocking"
-__copyright__ = "Copyright 2020, Zipfian Science"
+__copyright__ = "Copyright 2021, Zipfian Science"
 __credits__ = []
 __license__ = ""
-__version__ = "0.0.1"
+__version__ = "0.1.0"
 __maintainer__ = "Justin Hocking"
 __email__ = "justin.hocking@zipfian.science"
 __status__ = "Development"
@@ -29,7 +29,7 @@ class Gene:
     Args:
         name (str): Gene name. The gene name also acts as a compatibility reference.
         value (Any): The value, could be any type.
-        randomise_function (Callable): A function to randomise the gene, taking the min and max as input with signature ``func(self)``.
+        randomise_function (Callable): A function to randomise the gene, taking the gene (`self`) as input with signature ``func(self)``.
         gene_max (Any, numeric type): Max value for random number generator (default = None).
         gene_min (Any, numeric type): Min value for random number generator (default = None).
         mu (Any, numeric type): Mean value of distribution to sample from (default = 0).
@@ -107,6 +107,9 @@ class Gene:
 class Chromosome:
     """
     A class that encapsulates an ordered sequence of Gene objects.
+
+    Note:
+        gene_verify_func should take the gene, index of gene, and chromosome (`self`) as parameters.
 
     Args:
         genes (list): list of initialised Gene objects.
@@ -196,6 +199,13 @@ class Individual:
         name (str): Name for keeping track of lineage (default = None).
         chromosome (Chromosome): A Chromosome object, initialised (default = None).
         species_type (str) : A unique string to identify the species type, for preventing cross polluting (default = None).
+
+    Attributes:
+        fitness (Numeric): The fitness score after evaluation.
+        age (int): How many generations was the individual alive.
+        genetic_code (str): String representation of Chromosome.
+        history (list): List of dicts of every evaluation.
+        parents (list): List of strings of parent names.
     """
 
     def __init__(self, fitness_function : Callable, name : str = None, chromosome: Chromosome = None, species_type : str = None):
@@ -327,9 +337,19 @@ class Island:
         crossover_prob_function (Callable): Random probability function for crossover (default = None).
         mutation_prob_function (Callable): Random probability function for mutation (default = None).
         clone_function (Callable): Function for cloning (default = None).
+        random_seed (int): Random seed for random and Numpy generators, set to None for no seed (default = 42).
         verbose (bool): Print all information (default = None).
         logging_function (Callable): Function for custom message logging, such as server logging (default = None).
         force_genetic_diversity (bool): Only add new offspring to the population if they have a unique chromosome (default = True).
+
+    Attributes:
+        unique_genome (list): List of unique chromosomes.
+        generation_info (list): List of dicts detailing info for every generation.
+        population (list): The full population of members.
+        elites (list): All elites selected during the run.
+        mutants (list): All mutants created during the run.
+        children (list): All children created during the run.
+        generation_count (int): The current generation number.
     """
 
     def __init__(self, function_params : dict,
@@ -340,6 +360,7 @@ class Island:
                  crossover_prob_function : Callable = crossover_prob_function_classic,
                  mutation_prob_function : Callable = mutation_prob_function_classic,
                  clone_function : Callable = clone_classic,
+                 random_seed: int = 42,
                  verbose : bool = True,
                  logging_function : Callable = None,
                  force_genetic_diversity : bool = True):
@@ -361,12 +382,18 @@ class Island:
         self.force_genetic_diversity = force_genetic_diversity
 
         self.verbose = verbose
-
+        self.random_seed = random_seed
         self.elites = list()
         self.mutants = list()
         self.children = list()
         self.species_type = "DEFAULT_SPECIES"
         self.generation_count = 0
+
+        # Set python random seed, as well as Numpy seed.
+        if random_seed:
+            random.seed(random_seed)
+            from numpy.random import seed as np_seed
+            np_seed(random_seed)
 
     def create_gene(self,
                  name : str,
@@ -437,7 +464,6 @@ class Island:
 
     def initialise(self, adam : Individual,
                population_size: int = 8,
-               random_seed : int = 42,
                initialisation_function : Callable = initialise_population_random,
                initialisation_params : dict = {},
                evaluate_population : bool = True
@@ -448,13 +474,10 @@ class Island:
         Args:
             adam (Individual): Individual to clone from.
             population_size (int): Size of population.
-            random_seed (int): Random seed (default = 42).
             initialisation_function (Callable): A function for randomly creating new individuals from the given adam.
             initialisation_params (dict): Custom params for custom initialisation functions.
             evaluate_population (bool): Evaluate the newly created population (default = True).
         """
-        random.seed(random_seed)
-
         self.species_type = adam.species_type
 
         self.initialise = initialisation_function
