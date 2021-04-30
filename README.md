@@ -35,8 +35,21 @@ Python tools for creating and running Evolutionary Algorithm (EA) experiments.
 ```
 natural_selection
    |
-   |- ga
+   |- genetic_algorithms
+   |   |- operators
+   |   |   |- selection
+   |   |   |   |- elite_selection
+   |   |   |   |- parent_selection
+   |   |   |   |- survivor_selection
+   |   |   |   
+   |   |   |- crossover
+   |   |   |- initialisation
+   |   |   |- mutation
    |   |
+   |   |- utils
+   |       |- criteria_stopping
+   |       |- probability_functions
+   |       |- random_functions
    |   
    |- depoly.py
    |- run_tests.py
@@ -148,4 +161,4 @@ $ git rebase master
 This is rather crucial to keep the repository clean. When any artefacts or files are created during development that don’t relate to run time code, please add these to the `.gitignore` file so that they are not added automatically. With that said, please commit the .gitignore file itself!
 
 
-© [Zipfian Science](https://zipfian.science) 2020
+© [Zipfian Science](https://zipfian.science) 2021

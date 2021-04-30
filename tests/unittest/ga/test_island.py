@@ -51,5 +51,5 @@ class TestSimpleIsland(unittest.TestCase):
         self.assertEquals(len(self.life.population), 6)
 
     def test_evolve_generational(self):
-        self.life.initialise(self.ind, population_size=5, random_seed=72)
+        self.life.initialise(self.ind, population_size=5)
         self.life.evolve(crossover_params={'n_points' : 2})

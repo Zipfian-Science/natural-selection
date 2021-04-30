@@ -13,8 +13,10 @@ Natural Selection
    ga_crossover
    ga_selection
    ga_mutation
+   ga_initialisation
 
    ga_prob_functions
+   ga_random_functions
    ga_helper_functions
 
 Evolutionary Algorithm tools in Python
@@ -34,17 +36,18 @@ Then import the tools:
 .. code-block:: python
 
     from natural_selection.genetic_algorithms import Gene, Chromosome, Individual, Island
+    from natural_selection.genetic_algorithms.utils.random_functions import random_int, random_gaussian
 
 Then simply create an experiment:
 
 .. code-block:: python
 
-   import random
    from natural_selection.genetic_algorithms import Gene, Chromosome, Individual, Island
+   from natural_selection.genetic_algorithms.utils.random_functions import random_int, random_gaussian
 
    # Create a gene
-   g_1 = Gene(name="test_int", value=3, gene_max=10, gene_min=1, rand_type_func=random.randint)
-   g_2 = Gene(name="test_real", value=0.5, gene_max=1.0, gene_min=0.1, rand_type_func=random.random)
+   g_1 = Gene(name="test_int", value=3, gene_max=10, gene_min=1, randomise_function=random_int)
+   g_2 = Gene(name="test_real", value=0.5, gene_max=1.0, gene_min=0.1, randomise_function=random_gaussian)
 
    # Add a list of genes to a genome
    gen = Chromosome([g_1, g_2])
@@ -55,10 +58,13 @@ Then simply create an experiment:
 
    # Now we can create an island for running the evolutionary process
    # Notice the fitness function parameters are given here.
-   isolated_island = Island(function_params={'x': 0.5, 'y' : 0.2})
+   params = dict()
+   params['x'] = 0.5
+   params['y'] = 0.2
+   isolated_island = Island(function_params=params)
 
    # Using a single individual, we can create a new population
-   isolated_island.create(adam, population_size=5)
+   isolated_island.initialise(adam, population_size=5)
 
    # And finally, we let the randomness of life do its thing: optimise
    best_individual = isolated_island.evolve(n_generations=5)
@@ -68,7 +74,7 @@ Then simply create an experiment:
    genes = best_individual.chromosome
 
    for gene in genes:
-      print(gene.name, gene.value)
+     print(gene.name, gene.value)
 
 Indices and tables
 ==================

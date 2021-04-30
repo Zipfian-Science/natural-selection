@@ -21,7 +21,7 @@ if os.path.isfile(long_description_file):
         long_description = f.read()
         long_description = long_description.format(pypi_metdata_release_date=datetime.today().strftime('%Y-%m-%d'), pypi_metdata_version_number=version_name)
 else:
-    long_description = "It's Pickle Rick!"
+    long_description = "EA for Python!"
 
 if os.path.isfile(os.path.join(here, 'requirements.txt')):
     with open(os.path.join(here, 'requirements.txt'), encoding='utf-8') as f:

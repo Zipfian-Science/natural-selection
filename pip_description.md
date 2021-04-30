@@ -42,12 +42,12 @@ $ pip install natural-selection
 ## And use
 
 ```python
-import random
 from natural_selection.genetic_algorithms import Gene, Chromosome, Individual, Island
+from natural_selection.genetic_algorithms.utils.random_functions import random_int, random_gaussian
 
 # Create a gene
-g_1 = Gene(name="test_int", value=3, gene_max=10, gene_min=1, rand_type_func=random.randint)
-g_2 = Gene(name="test_real", value=0.5, gene_max=1.0, gene_min=0.1, rand_type_func=random.random)
+g_1 = Gene(name="test_int", value=3, gene_max=10, gene_min=1, randomise_function=random_int)
+g_2 = Gene(name="test_real", value=0.5, gene_max=1.0, gene_min=0.1, randomise_function=random_gaussian)
 
 # Add a list of genes to a genome
 gen = Chromosome([g_1, g_2])
@@ -61,10 +61,10 @@ adam = Individual(fitness_function, name="Adam", chromosome=gen)
 params = dict()
 params['x'] = 0.5
 params['y'] = 0.2
-isolated_island = Island(function_params=)
+isolated_island = Island(function_params=params)
 
 # Using a single individual, we can create a new population
-isolated_island.create(adam, population_size=5)
+isolated_island.initialise(adam, population_size=5)
 
 # And finally, we let the randomness of life do its thing: optimise
 best_individual = isolated_island.evolve(n_generations=5)

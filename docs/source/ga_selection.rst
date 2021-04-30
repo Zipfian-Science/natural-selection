@@ -11,8 +11,16 @@ Simple functions for encapsulating performing population selection.
 
 Elites selection
 =====================
+.. autofunction:: natural_selection.genetic_algorithms.operators.selection.selection_elites_tournament
+
+.. autofunction:: natural_selection.genetic_algorithms.operators.selection.selection_elites_random
+
 .. autofunction:: natural_selection.genetic_algorithms.operators.selection.selection_elites_top_n
 
 Parent selection
 =====================
 .. autofunction:: natural_selection.genetic_algorithms.operators.selection.selection_parents_two
+
+Survivor selection
+=====================
+.. autofunction:: natural_selection.genetic_algorithms.operators.selection.selection_survivors
