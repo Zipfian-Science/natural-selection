@@ -1,5 +1,6 @@
 import unittest
 from natural_selection.genetic_programs.primitives import OperatorAdd, OperatorSub, OperatorMul, OperatorDiv, Operator
+import natural_selection.genetic_programs.primitives as op
 from natural_selection.genetic_programs import Node
 
 class TestNode(unittest.TestCase):
@@ -127,3 +128,12 @@ class TestNode(unittest.TestCase):
         n_8 = Node(terminal_value=42)
 
         self.assertEquals(str(n_8), "42")
+
+    def test_return_node(self):
+        x = Node(label='x',terminal_value=True)
+        n = Node(operator=op.OperatorReturn(), children=[x])
+
+        value = n(x=42)
+
+        self.assertEquals(value, 42)
+        self.assertEquals(str(n), "return(x)")

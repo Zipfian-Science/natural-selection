@@ -12,14 +12,14 @@ __status__ = "Development"
 
 from typing import List
 
-from natural_selection.genetic_programs.primitives import Operator
+import natural_selection.genetic_programs.primitives as op
 
 class Node:
 
     def __init__(self, label : str = None,
                  arity : int = 1,
-                 operator : Operator = None,
-                 terminal_value = None,
+                 operator : op.Operator = None,
+                 terminal_value = False,
                  children : List = None):
         if label:
             self.label = label
@@ -59,10 +59,19 @@ class Node:
 
 class GeneticProgram:
 
-    def __init__(self, operators, terminals, max_depth : int):
+    def __init__(self,
+                 name : str,
+                 operators : List[op.Operator],
+                 terminals : List,
+                 max_depth : int):
+        self.name = name
         self.operators = operators
         self.terminals = terminals
         self.max_depth = max_depth
+        self.root_node = Node(label=name,arity=1, operator=op.OperatorReturn())
+
+    def __call__(self, **kwargs):
+        return self.root_node(**kwargs)
 
     def create_node_with_children(self, parent: Node, current_depth: int) -> Node:
         current_depth += 1
@@ -85,60 +94,5 @@ class GeneticProgram:
         return parent
 
     def create_node(self) -> Node:
-        op_type = self.random_generator.choice(self.operators)
-        root = Node(label=op_type,arity=0,index=0, op_type=op_type)
+        pass
 
-        if root.op_type == "if":
-            root.arity = 3
-        else:
-            root.arity = 2
-
-        return self.create_node_with_children(root, 1)
-
-    def calculate(op, args):
-        if op == "+":
-            return args[0] + args[1]
-        elif op == "-":
-            return args[0] - args[1]
-        elif op == "*":
-            return args[0] * args[1]
-        elif op == "/":
-            if args[1] == 0:
-                return 1
-            else:
-                return int(args[0]) / args[1]
-        elif op == "<":
-            if args[0] < args[1]:
-                return 1
-            else:
-                return 0
-        elif op == ">":
-            if args[0] > args[1]:
-                return 1
-            else:
-                return 0
-        elif op == "==":
-            if args[0] == args[1]:
-                return 1
-            else:
-                return 0
-        elif op == "!=":
-            if args[0] != args[1]:
-                return 1
-            else:
-                return 0
-        elif op == ">=":
-            if args[0] >= args[1]:
-                return 1
-            else:
-                return 0
-        elif op == "and":
-            if args[0] == 1 and args[1] == 1:
-                return 1
-            else:
-                return 0
-        else:
-            if args[0] <= args[1]:
-                return 1
-            else:
-                return 0
