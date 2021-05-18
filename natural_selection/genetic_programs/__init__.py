@@ -10,7 +10,7 @@ __maintainer__ = "Justin Hocking"
 __email__ = "justin.hocking@zipfian.science"
 __status__ = "Development"
 
-from typing import List
+from typing import List, Union
 
 import natural_selection.genetic_programs.primitives as op
 
@@ -19,7 +19,8 @@ class Node:
     def __init__(self, label : str = None,
                  arity : int = 1,
                  operator : op.Operator = None,
-                 terminal_value = False,
+                 is_terminal = False,
+                 terminal_value = None,
                  children : List = None):
         if label:
             self.label = label
@@ -29,6 +30,7 @@ class Node:
             self.label = str(terminal_value)
         self.arity = arity
         self.operator = operator
+        self.is_terminal = is_terminal
         self.terminal_value = terminal_value
         if children:
             self.children = children
@@ -36,7 +38,7 @@ class Node:
             self.children = [None] * self.arity
 
     def __call__(self, **kwargs):
-        if self.terminal_value:
+        if self.is_terminal:
             if self.label in kwargs.keys():
                 return kwargs[self.label]
             return self.terminal_value
@@ -44,7 +46,7 @@ class Node:
             return self.operator.exec([x(**kwargs) for x in self.children])
 
     def __str__(self):
-        if self.terminal_value:
+        if self.is_terminal:
             return self.label
         else:
             return f"{self.label}({', '.join([str(x) for x in self.children])})"
@@ -62,7 +64,7 @@ class GeneticProgram:
     def __init__(self,
                  name : str,
                  operators : List[op.Operator],
-                 terminals : List,
+                 terminals : List[Union[str,int,float]],
                  max_depth : int):
         self.name = name
         self.operators = operators
