@@ -19,6 +19,10 @@ Natural Selection
    ga_random_functions
    ga_helper_functions
 
+   gp
+   gp_initialisation
+   gp_helper_functions
+
 Evolutionary Algorithm tools in Python
 ======================================
 

@@ -11,13 +11,34 @@ __email__ = "justin.hocking@zipfian.science"
 __status__ = "Development"
 
 import uuid
-from typing import List, Union, Any
+from typing import List, Union, Any, Callable
 
 import natural_selection.genetic_programs.functions as op
 from natural_selection.genetic_programs.utils import GeneticProgramError
 
 
 class Node:
+    """
+    Basic class for building Node trees. A node can be either a terminal or a parent.
+    When initialised as a terminal node, `is_terminal` has to be set to True and either a `label` or a `terminal_value` has to be set.
+    When setting a `terminal_value`, the terminal is a literal, constant value.
+
+    Example: n = Node(is_terminal=True, terminal_value=42).
+
+    On only setting a `label`, the terminal is treated as a variable passed on through the function.
+
+    Example: n = Node(is_terminal=True, label='x').
+
+    Setting the arity is optional for when no children nodes are added.
+
+    Args:
+        label (str): Optionally set the label, only used for variable terminals (default = None).
+        arity (int): Optionally set the function arity, the norm being 2 for functions (default = 1).
+        operator (Operator): If the node is a function, set the operator (default = None).
+        is_terminal (bool): Explicitly define if the node is a terminal (default = None).
+        terminal_value (Any): Only set if the node is terminal and a constant value (default = None).
+        children (list): Add a list of child nodes, list length must match arity (default = None).
+    """
 
     def __init__(self, label : str = None,
                  arity : int = 1,
@@ -37,6 +58,7 @@ class Node:
         self.terminal_value = terminal_value
         if children:
             self.children = children
+            self.arity = len(children)
         else:
             self.children = [None] * self.arity
 
@@ -128,15 +150,36 @@ class Node:
         return deepest
 
 class GeneticProgram:
+    """
+    A class that encapsulates a single genetic program, with node tree and a fitness evaluation function.
+
+    Args:
+        fitness_function (Callable): Function with ``func(Node, island, **params)`` signature.
+        operators (list): List of all operators that nodes can be constructed from.
+        terminals (list): List of all terminals that can be included in the node tree, can be numeric or strings for variables.
+        max_depth (int): Maximum depth that node tree can grow.
+        name (str): Name for keeping track of lineage (default = None).
+        species_type (str) : A unique string to identify the species type, for preventing cross polluting (default = None).
+
+    Attributes:
+        fitness (Numeric): The fitness score after evaluation.
+        age (int): How many generations was the individual alive.
+        genetic_code (str): String representation of node tree.
+        history (list): List of dicts of every evaluation.
+        parents (list): List of strings of parent names.
+    """
 
     def __init__(self,
-                 name : str,
-                 fitness_function,
+                 fitness_function: Callable,
                  operators : List[op.Operator],
                  terminals : List[Union[str,int,float]],
                  max_depth : int,
-                 species_type):
-        self.name = name
+                 name: str = None,
+                 species_type : str = None):
+        if name is None:
+            self.name = str(uuid.uuid4())
+        else:
+            self.name = name
         self.operators = operators
         self.terminals = terminals
         self.max_depth = max_depth
@@ -163,7 +206,7 @@ class GeneticProgram:
         In keeping lineage of family lines, the names of parents are kept track of.
 
         Args:
-            parents (list): A list of Individuals of the parents.
+            parents (list): A list of GeneticProgram of the parents.
         """
         if reset_parent_name_list:
             self.parents = list()
@@ -173,7 +216,7 @@ class GeneticProgram:
 
     def reset_name(self, name: str = None):
         """
-        A function to reset the name of an individual, helping to keep linage of families.
+        A function to reset the name of a program, helping to keep linage of families.
 
         Args:
             name (str): Name (default = None).
@@ -186,7 +229,7 @@ class GeneticProgram:
 
     def birthday(self, add: int = 1):
         """
-        Add to the age. This is for keeping track of how many generations an individual has "lived" through.
+        Add to the age. This is for keeping track of how many generations a program has "lived" through.
 
         Args:
             add (int): Amount to age.
@@ -196,7 +239,7 @@ class GeneticProgram:
 
     def reset_fitness(self, fitness: Any = None, reset_genetic_code: bool = True):
         """
-        Reset (or set) the fitness oof the individual.
+        Reset (or set) the fitness of the program.
 
         Args:
             fitness (Any): New fitness value (default = None).

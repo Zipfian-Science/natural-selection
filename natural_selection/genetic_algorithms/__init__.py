@@ -210,7 +210,7 @@ class Individual:
     A class that encapsulates a single individual, with genetic code and a fitness evaluation function.
 
     Args:
-        fitness_function (Callable): Function with ``func(Chromosome, island, **params)`` signature
+        fitness_function (Callable): Function with ``func(Chromosome, island, **params)`` signature.
         name (str): Name for keeping track of lineage (default = None).
         chromosome (Chromosome): A Chromosome object, initialised (default = None).
         species_type (str) : A unique string to identify the species type, for preventing cross polluting (default = None).
@@ -278,7 +278,7 @@ class Individual:
 
     def reset_fitness(self, fitness : Any = None, reset_genetic_code : bool = True):
         """
-        Reset (or set) the fitness oof the individual.
+        Reset (or set) the fitness of the individual.
 
         Args:
             fitness (Any): New fitness value (default = None).
