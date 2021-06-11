@@ -9,19 +9,8 @@ Natural Selection
    :maxdepth: 3
    :caption: Contents:
 
-   ga
-   ga_crossover
-   ga_selection
-   ga_mutation
-   ga_initialisation
-
-   ga_prob_functions
-   ga_random_functions
-   ga_helper_functions
-
-   gp
-   gp_initialisation
-   gp_helper_functions
+   ga_main_page
+   gp_main_page
 
 Evolutionary Algorithm tools in Python
 ======================================

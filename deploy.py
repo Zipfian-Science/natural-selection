@@ -120,20 +120,21 @@ def main(args):
         delete_build()
         delete_dist()
 
-    # All went well!
-    with open("version.json", "r") as f:
-        version = json.load(f)
+    if args.deploy:
+        # All went well!
+        with open("version.json", "r") as f:
+            version = json.load(f)
 
-    version['patch'] += 1
-    with open("version.json", "w") as f:
-        json.dump(version, f)
+        version['patch'] += 1
+        with open("version.json", "w") as f:
+            json.dump(version, f)
 
-    with open("natural_selection/__init__.py", "r") as f:
-        lines = f.readlines()
-        lines[0] = "__version__ = '{major}.{minor}.{patch}'\n".format(**version)
-    if lines:
-        with open("natural_selection/__init__.py", "w") as f:
-            f.writelines(lines)
+        with open("natural_selection/__init__.py", "r") as f:
+            lines = f.readlines()
+            lines[0] = "__version__ = '{major}.{minor}.{patch}'\n".format(**version)
+        if lines:
+            with open("natural_selection/__init__.py", "w") as f:
+                f.writelines(lines)
 
 
 if __name__ == "__main__":
