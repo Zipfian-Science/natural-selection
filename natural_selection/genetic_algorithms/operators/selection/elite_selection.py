@@ -14,8 +14,8 @@ from numpy import random
 
 def selection_elites_tournament(individuals : list, n : int, tournament_size : int = 5, island=None) -> list:
     """
-    Classic tournament selection. Given a number of selection rounds (`n`), select a random list of individuals of `tournament_size`
-    and select the top individual from the random selection.
+    Classic tournament selection. Given a number of selection rounds (`n`), select a random list of individuals of `tournament_size` and select the top individual from the random selection.
+
     Args:
         individuals (list): A list of Individuals.
         n (int): The number of tournaments to run, effectively the number of selected individuals to return.
@@ -34,6 +34,7 @@ def selection_elites_tournament(individuals : list, n : int, tournament_size : i
 def selection_elites_random(individuals : list, n : int, island=None) -> list:
     """
     Completely random selection.
+
     Args:
         individuals (list): A list of Individuals.
         n (int): Number to select.

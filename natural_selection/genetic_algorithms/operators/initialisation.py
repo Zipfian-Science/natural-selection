@@ -1,6 +1,7 @@
 def initialise_population_random(adam, n : int, island=None):
     """
     Classic random initialisation function to create a pool of `n` individuals from a starting Individual `adam`.
+
     Args:
         adam (Individual): An individual already initialised with a chromosome.
         n (int): Population size.
