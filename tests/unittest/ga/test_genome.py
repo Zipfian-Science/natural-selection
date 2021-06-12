@@ -41,7 +41,12 @@ class TestGenome(unittest.TestCase):
         gen = Chromosome([g_1, g_2])
 
         self.assertEquals(len(gen), 2)
-        self.assertEquals(str(gen), '(test:3)-(test_other:4)')
+        self.assertEquals(str(gen), 'Chromosome(Gene(test:3)-Gene(test_other:4))')
 
         for g in gen:
             self.assertIsInstance(g, Gene)
+
+        r = repr(gen)
+        s = str(gen)
+
+        self.assertNotEqual(r,s)

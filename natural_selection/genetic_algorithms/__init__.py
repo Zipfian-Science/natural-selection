@@ -101,7 +101,16 @@ class Gene:
         self.__dict__.update({key: value})
 
     def __str__(self) -> str:
-        return '({0}:{1})'.format(self.name, self.value)
+        return f'Gene({self.name}:{self.value})'
+
+    def __repr__(self):
+        start_str = f'Gene({self.name}:{self.value}:{self.gene_max}:{self.gene_min}:{self.mu}:{self.sig}:{self.step_lower_bound}:{self.step_upper_bound}'
+        if self.choices:
+            for c in self.choices:
+                start_str = f'{start_str}:{str(c)}'
+        start_str = f'{start_str}:{str(self.randomise_function)}'
+        start_str = f'{start_str}:{str(self.__gene_properties)})'
+        return  start_str
 
 
 class Chromosome:
@@ -187,7 +196,13 @@ class Chromosome:
         return len(self.genes)
 
     def __str__(self) -> str:
-        return '-'.join(['({0}:{1})'.format(t.name, str(t.value)) for t in self.genes])
+        start_str = '-'.join([str(t) for t in self.genes])
+        return f'Chromosome({start_str})'
+
+    def __repr__(self):
+        start_str = '-'.join([repr(t) for t in self.genes])
+        start_str = f'Chromosome({start_str})'
+        return start_str
 
 
 class Individual:
@@ -195,7 +210,7 @@ class Individual:
     A class that encapsulates a single individual, with genetic code and a fitness evaluation function.
 
     Args:
-        fitness_function (Callable): Function with ``func(Chromosome, island, **params)`` signature
+        fitness_function (Callable): Function with ``func(Chromosome, island, **params)`` signature.
         name (str): Name for keeping track of lineage (default = None).
         chromosome (Chromosome): A Chromosome object, initialised (default = None).
         species_type (str) : A unique string to identify the species type, for preventing cross polluting (default = None).
@@ -263,7 +278,7 @@ class Individual:
 
     def reset_fitness(self, fitness : Any = None, reset_genetic_code : bool = True):
         """
-        Reset (or set) the fitness oof the individual.
+        Reset (or set) the fitness of the individual.
 
         Args:
             fitness (Any): New fitness value (default = None).
@@ -298,7 +313,7 @@ class Individual:
         stamp = { "name": self.name,
                   "age": self.age,
                   "fitness": self.fitness,
-                  "chromosome": self.unique_genetic_code(),
+                  "chromosome": str(self.chromosome),
                   "parents": self.parents,
          }
 
@@ -316,12 +331,67 @@ class Individual:
             str: String name of Chromosome.
         """
         if self.genetic_code is None:
-            self.genetic_code = str(self.chromosome)
+            self.genetic_code = repr(self.chromosome)
         return self.genetic_code
 
     def __str__(self) -> str:
-        return '({0}:{1})'.format(self.name, self.fitness)
+        return f'Individual({self.name}:{self.fitness})'
 
+    def __repr__(self) -> str:
+        genetic_code = self.unique_genetic_code()
+        return f'Individual({self.name}:{self.fitness}:{self.age}:{self.species_type}:{genetic_code})'
+
+    def __eq__(self, other):
+        if isinstance(other, Individual):
+            return self.unique_genetic_code() == other.unique_genetic_code()
+        else:
+            raise GeneticAlgorithmError(message=f'Can not compare {type(other)}')
+
+    def __ne__(self, other):
+        if isinstance(other, Individual):
+            return self.unique_genetic_code() != other.unique_genetic_code()
+        else:
+            raise GeneticAlgorithmError(message=f'Can not compare {type(other)}')
+
+    def __lt__(self, other):
+        if isinstance(other, Individual):
+            return self.fitness < other.fitness
+        elif isinstance(other, int):
+            return self.fitness < other
+        elif isinstance(other, float):
+            return self.fitness < other
+        else:
+            raise GeneticAlgorithmError(message=f'Can not compare {type(other)}')
+
+    def __le__(self, other):
+        if isinstance(other, Individual):
+            return self.fitness <= other.fitness
+        elif isinstance(other, int):
+            return self.fitness <= other
+        elif isinstance(other, float):
+            return self.fitness <= other
+        else:
+            raise GeneticAlgorithmError(message=f'Can not compare {type(other)}')
+
+    def __gt__(self, other):
+        if isinstance(other, Individual):
+            return self.fitness > other.fitness
+        elif isinstance(other, int):
+            return self.fitness > other
+        elif isinstance(other, float):
+            return self.fitness > other
+        else:
+            raise GeneticAlgorithmError(message=f'Can not compare {type(other)}')
+
+    def __ge__(self, other):
+        if isinstance(other, Individual):
+            return self.fitness >= other.fitness
+        elif isinstance(other, int):
+            return self.fitness >= other
+        elif isinstance(other, float):
+            return self.fitness >= other
+        else:
+            raise GeneticAlgorithmError(message=f'Can not compare {type(other)}')
 
 class Island:
     """

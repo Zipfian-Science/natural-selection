@@ -3,6 +3,7 @@ from numpy import random
 def random_int(gene):
     """
     Random integer from range.
+
     Args:
         gene (Gene): A gene with a set `gene_min` and `gene_max`.
 
@@ -37,6 +38,7 @@ def random_int_step(gene):
 def random_gaussian(gene):
     """
     Random float from gaussian dist.
+
     Args:
         gene (Gene): A gene with a set `mu` and `sig`.
 
@@ -53,6 +55,7 @@ def random_gaussian(gene):
 def random_uniform(gene):
     """
     Random float from uniform dist.
+
     Args:
         gene (Gene): A gene with a set `gene_min` and `gene_max`.
 
@@ -110,6 +113,7 @@ def random_uniform_step(gene):
 def random_choice(gene):
     """
     Randomly select a object, such as strings, from a list. Gene must have defined `choices` list.
+
     Args:
         gene (Gene): A gene with a set `choices` list.
 
