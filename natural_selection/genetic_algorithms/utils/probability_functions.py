@@ -1,4 +1,4 @@
-import random
+from numpy import random
 
 def mutation_prob_function_classic(mutation_probability : float = 0.2, island=None) -> float:
     """
@@ -11,7 +11,7 @@ def mutation_prob_function_classic(mutation_probability : float = 0.2, island=No
     Returns:
         bool: Returns whether to perform mutation.
     """
-    if random.random() < mutation_probability:
+    if random.uniform(low=0, high=1) < mutation_probability:
         return True
     else:
         return False
@@ -28,7 +28,7 @@ def crossover_prob_function_classic(crossover_probability : float = 0.5, island=
     Returns:
         bool: Returns whether to perform crossover.
     """
-    if random.random() < crossover_probability:
+    if random.uniform(low=0, high=1) < crossover_probability:
         return True
     else:
         return False

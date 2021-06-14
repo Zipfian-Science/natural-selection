@@ -535,7 +535,7 @@ class Island:
     def initialise(self, adam : Individual,
                population_size: int = 8,
                initialisation_function : Callable = initialise_population_random,
-               initialisation_params : dict = {},
+               initialisation_params : dict = None,
                evaluate_population : bool = True
                ):
         """
@@ -545,14 +545,19 @@ class Island:
             adam (Individual): Individual to clone from.
             population_size (int): Size of population.
             initialisation_function (Callable): A function for randomly creating new individuals from the given adam.
-            initialisation_params (dict): Custom params for custom initialisation functions.
+            initialisation_params (dict): Custom params for custom initialisation functions (default = None).
             evaluate_population (bool): Evaluate the newly created population (default = True).
         """
         self.species_type = adam.species_type
 
         self.initialise = initialisation_function
 
-        self.population = self.initialise(adam=adam, n=population_size, island=self, **initialisation_params)
+        if initialisation_params:
+            _initialisation_params = initialisation_params
+        else:
+            _initialisation_params = {}
+
+        self.population = self.initialise(adam=adam, n=population_size, island=self, **_initialisation_params)
 
         if evaluate_population:
             for popitem in self.population:
@@ -593,7 +598,7 @@ class Island:
     def evolve(self, starting_generation : int = 0,
                             n_generations : int = 5,
                             crossover_probability : float = 0.5,
-                            mutation_probability : float = 0.5,
+                            mutation_probability : float = 0.25,
                             crossover_params : dict = None,
                             mutation_params : dict = None,
                             elite_selection_params : dict = None,
@@ -605,10 +610,10 @@ class Island:
         Starts the evolutionary run.
 
         Args:
-            starting_generation (int): Starting generation.
-            n_generations (int): Number of generations to run.
-            crossover_probability (float): Initial crossover probability.
-            mutation_probability (float): Initial mutation probability.
+            starting_generation (int): Starting generation (default = 0).
+            n_generations (int): Number of generations to run (default = 5).
+            crossover_probability (float): Initial crossover probability (default = 0.5).
+            mutation_probability (float): Initial mutation probability (default = 0.25).
             crossover_params (dict): Dict of params for custom crossover function (default = None).
             mutation_params (dict): Dict of params for custom mutation function (default = None).
             selection_params (dict): Dict of params for custom selection function (default = None).
@@ -622,17 +627,17 @@ class Island:
         if crossover_params:
             _crossover_params = crossover_params
         else:
-            _crossover_params = {'prob':0.5}
+            _crossover_params = {}
 
         if mutation_params:
             _mutation_params = mutation_params
         else:
-            _mutation_params = {'prob':0.2}
+            _mutation_params = {}
 
         if elite_selection_params:
             _elite_selection_params = elite_selection_params
         else:
-            _elite_selection_params = {'n':5, 'desc':True}
+            _elite_selection_params = {}
 
         if parent_selection_params:
             _parent_selection_params = parent_selection_params

@@ -18,8 +18,8 @@ def mutation_randomize(individual, prob : float = 0.2, island=None):
 
     Args:
         individual: Individual object containing a Genome.
-        prob: The probability of randomizing genes.
-        island (Island): The Island calling the method (optional, default = None).
+        prob: The probability of randomizing genes (default = 0.2).
+        island (Island): The Island calling the method (default = None).
 
     Returns:
         Individual: The newly mutated individual.
