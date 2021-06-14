@@ -6,7 +6,8 @@
 Natural Selection
 **************************
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
+   :numbered:
    :caption: Contents:
 
    ga_main_page
@@ -15,23 +16,31 @@ Natural Selection
 Evolutionary Algorithm tools in Python
 ======================================
 
-This is a Python package for creating easy EA experiments, containing easy to use functions and classes for setting up and running Genetic Algorithms.
-Future work will include Genetic Programming (GP) as well as Grammatical Evolution (GE).
+A Python package for creating easy EA experiments, containing easy to use functions and classes for setting up and
+running Genetic Algorithms and Genetic Programs. Natural Selection is built on minimal dependencies, only requiring
+``numpy`` for random functions.
 
 Starting
 =====================
-At the command line::
+
+Installation
+---------------------
+
+Using pip::
 
     pip install natural-selection
 
-Then import the tools:
+Usage
+---------------------
+
+Import the tools:
 
 .. code-block:: python
 
     from natural_selection.genetic_algorithms import Gene, Chromosome, Individual, Island
     from natural_selection.genetic_algorithms.utils.random_functions import random_int, random_gaussian
 
-Then simply create an experiment:
+Then simply create a GA experiment:
 
 .. code-block:: python
 
@@ -46,7 +55,7 @@ Then simply create an experiment:
    gen = Chromosome([g_1, g_2])
 
    # Next, create an individual to carry these genes and evaluate them
-   fitness_function = lambda gen, x, y: gen[0].value * x + y
+   fitness_function = lambda island, gen, x, y: gen[0].value * x + y
    adam = Individual(fitness_function, name="Adam", chromosome=gen)
 
    # Now we can create an island for running the evolutionary process

@@ -13,7 +13,9 @@ Cloning functions
 =====================
 .. autofunction:: natural_selection.genetic_algorithms.utils.clone_classic
 
-General Error Class
+.. _General GA Error Class:
+
+General GA Error Class
 ========================
 .. autoclass:: natural_selection.genetic_algorithms.utils.GeneticAlgorithmError
    :members:

@@ -9,6 +9,8 @@ Selection
 
 Simple functions for encapsulating performing population selection.
 
+.. _Elites selection:
+
 Elites selection
 =====================
 .. autofunction:: natural_selection.genetic_algorithms.operators.selection.selection_elites_tournament

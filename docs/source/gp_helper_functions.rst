@@ -9,7 +9,9 @@ Helper functions
 
 Simple helper functions and classes, amongst which cloning operations.
 
-General Error Class
+.. _General GP Error Class:
+
+General GP Error Class
 ========================
 .. autoclass:: natural_selection.genetic_programs.utils.GeneticProgramError
    :members:
