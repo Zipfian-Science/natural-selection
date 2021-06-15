@@ -20,7 +20,7 @@ def selection_elites_tournament(individuals : list, n : int = 4, tournament_size
         individuals (list): A list of Individuals.
         n (int): The number of tournaments to run, effectively the number of selected individuals to return (default = 4).
         tournament_size (int): The number of random individuals to select during each tournament (default = 5).
-        island (Island): The Island calling the method (optional, default = None).
+        island (Island): The Island calling the method (default = None).
 
     Returns:
         list: Top n Individuals from tournaments.
@@ -38,7 +38,7 @@ def selection_elites_random(individuals : list, n : int = 4, island=None) -> lis
     Args:
         individuals (list): A list of Individuals.
         n (int): Number to select (default = 4).
-        island (Island): The Island calling the method (optional, default = None).
+        island (Island): The Island calling the method (default = None).
 
     Returns:
         list: Random n Individuals.
@@ -53,7 +53,7 @@ def selection_elites_top_n(individuals : list, n : int = 4, desc : bool = True, 
         individuals (list): A list of Individuals.
         n (int): Number to select (default = 4).
         desc (bool): In descending order (default = True).
-        island (Island): The Island calling the method (optional, default = None).
+        island (Island): The Island calling the method (default = None).
 
     Returns:
         list: Top n Individuals.

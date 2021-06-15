@@ -23,6 +23,12 @@ Parent selection
 =====================
 .. autofunction:: natural_selection.genetic_algorithms.operators.selection.selection_parents_two
 
+.. autofunction:: natural_selection.genetic_algorithms.operators.selection.selection_parents_two_shuffled
+
+.. autofunction:: natural_selection.genetic_algorithms.operators.selection.selection_parents_n_gram
+
 Survivor selection
 =====================
-.. autofunction:: natural_selection.genetic_algorithms.operators.selection.selection_survivors
+.. autofunction:: natural_selection.genetic_algorithms.operators.selection.selection_survivors_all
+
+.. autofunction:: natural_selection.genetic_algorithms.operators.selection.selection_survivors_random
