@@ -443,7 +443,7 @@ class Island:
         self.generation_info = list()
         self.population = list()
 
-        self.initialise = initialisation_function
+        self._initialise = initialisation_function
         self.elite_selection = elite_selection
         self.parent_selection = parent_selection
         self.crossover = crossover_function
@@ -558,7 +558,7 @@ class Island:
         else:
             _initialisation_params = {}
 
-        self.population = self.initialise(adam=adam, n=population_size, island=self, **_initialisation_params)
+        self.population = self._initialise(adam=adam, n=population_size, island=self, **_initialisation_params)
 
         if evaluate_population:
             for popitem in self.population:
