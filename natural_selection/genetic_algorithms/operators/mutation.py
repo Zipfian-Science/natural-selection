@@ -17,8 +17,8 @@ def mutation_randomize(individual, prob : float = 0.2, island=None):
     A Classic mutation function, changes a gene of the given individual based on the `prob` strength of mutation.
 
     Args:
-        individual: Individual object containing a Genome.
-        prob: The probability of randomizing genes (default = 0.2).
+        individual (Individual): Individual object containing a Genome.
+        prob (float): The probability of randomizing genes (default = 0.2).
         island (Island): The Island calling the method (default = None).
 
     Returns:

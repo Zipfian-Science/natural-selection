@@ -88,7 +88,7 @@ Chromosomes will be used in individuals in the next step.
 Gene verification
 ------------------------
 
-Custom gene verification functions can be added to preform logical checks when changing genes, through mutation.
+Custom gene verification functions can be added to preform logical checks when changing genes, through crossover.
 
 .. code-block:: python
 
