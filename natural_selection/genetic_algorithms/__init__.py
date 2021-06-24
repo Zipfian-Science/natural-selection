@@ -16,7 +16,7 @@ from typing import Callable, Any, Iterable
 
 
 from natural_selection.genetic_algorithms.operators.initialisation import initialise_population_random
-from natural_selection.genetic_algorithms.operators.selection import selection_elites_top_n, selection_parents_two
+from natural_selection.genetic_algorithms.operators.selection import selection_elites_top_n, selection_parents_two, selection_survivors_all
 from natural_selection.genetic_algorithms.operators.crossover import crossover_two_uniform
 from natural_selection.genetic_algorithms.operators.mutation import mutation_randomize
 from natural_selection.genetic_algorithms.utils.probability_functions import crossover_prob_function_classic, mutation_prob_function_classic
@@ -401,12 +401,14 @@ class Island:
     Args:
         function_params (dict): The parameters for the fitness function.
         elite_selection (Callable): Function for selecting individuals for crossover and mutation (default = None).
+        initialisation_function (Callable): A function for randomly creating new individuals from the given adam.
         parent_selection (Callable): Function for selecting parents for crossover (default = None).
         crossover_function (Callable): Function for crossover (default = None).
         mutation_function (Callable): Function for mutation (default = None).
         crossover_prob_function (Callable): Random probability function for crossover (default = None).
         mutation_prob_function (Callable): Random probability function for mutation (default = None).
         clone_function (Callable): Function for cloning (default = None).
+        survivor_selection_function (Callable): Function for selecting survivors (default = None).
         random_seed (int): Random seed for random and Numpy generators, set to None for no seed (default = 42).
         verbose (bool): Print all information (default = None).
         logging_function (Callable): Function for custom message logging, such as server logging (default = None).
@@ -423,12 +425,14 @@ class Island:
     """
 
     def __init__(self, function_params : dict,
+                 initialisation_function: Callable = initialise_population_random,
                  elite_selection : Callable = selection_elites_top_n,
                  parent_selection : Callable = selection_parents_two,
                  crossover_function : Callable = crossover_two_uniform,
                  mutation_function : Callable = mutation_randomize,
                  crossover_prob_function : Callable = crossover_prob_function_classic,
                  mutation_prob_function : Callable = mutation_prob_function_classic,
+                 survivor_selection_function: Callable = selection_survivors_all,
                  clone_function : Callable = clone_classic,
                  random_seed: int = 42,
                  verbose : bool = True,
@@ -439,7 +443,7 @@ class Island:
         self.generation_info = list()
         self.population = list()
 
-
+        self._initialise = initialisation_function
         self.elite_selection = elite_selection
         self.parent_selection = parent_selection
         self.crossover = crossover_function
@@ -447,6 +451,7 @@ class Island:
         self.crossover_prob = crossover_prob_function
         self.mutation_prob = mutation_prob_function
         self.clone = clone_function
+        self.survivor_selection = survivor_selection_function
 
         self.logging_function = logging_function
         self.force_genetic_diversity = force_genetic_diversity
@@ -534,8 +539,7 @@ class Island:
 
     def initialise(self, adam : Individual,
                population_size: int = 8,
-               initialisation_function : Callable = initialise_population_random,
-               initialisation_params : dict = {},
+               initialisation_params : dict = None,
                evaluate_population : bool = True
                ):
         """
@@ -544,15 +548,17 @@ class Island:
         Args:
             adam (Individual): Individual to clone from.
             population_size (int): Size of population.
-            initialisation_function (Callable): A function for randomly creating new individuals from the given adam.
-            initialisation_params (dict): Custom params for custom initialisation functions.
+            initialisation_params (dict): Custom params for custom initialisation functions (default = None).
             evaluate_population (bool): Evaluate the newly created population (default = True).
         """
         self.species_type = adam.species_type
 
-        self.initialise = initialisation_function
+        if initialisation_params:
+            _initialisation_params = initialisation_params
+        else:
+            _initialisation_params = {}
 
-        self.population = self.initialise(adam=adam, n=population_size, island=self, **initialisation_params)
+        self.population = self._initialise(adam=adam, n=population_size, island=self, **_initialisation_params)
 
         if evaluate_population:
             for popitem in self.population:
@@ -593,7 +599,7 @@ class Island:
     def evolve(self, starting_generation : int = 0,
                             n_generations : int = 5,
                             crossover_probability : float = 0.5,
-                            mutation_probability : float = 0.5,
+                            mutation_probability : float = 0.25,
                             crossover_params : dict = None,
                             mutation_params : dict = None,
                             elite_selection_params : dict = None,
@@ -605,10 +611,10 @@ class Island:
         Starts the evolutionary run.
 
         Args:
-            starting_generation (int): Starting generation.
-            n_generations (int): Number of generations to run.
-            crossover_probability (float): Initial crossover probability.
-            mutation_probability (float): Initial mutation probability.
+            starting_generation (int): Starting generation (default = 0).
+            n_generations (int): Number of generations to run (default = 5).
+            crossover_probability (float): Initial crossover probability (default = 0.5).
+            mutation_probability (float): Initial mutation probability (default = 0.25).
             crossover_params (dict): Dict of params for custom crossover function (default = None).
             mutation_params (dict): Dict of params for custom mutation function (default = None).
             selection_params (dict): Dict of params for custom selection function (default = None).
@@ -622,17 +628,17 @@ class Island:
         if crossover_params:
             _crossover_params = crossover_params
         else:
-            _crossover_params = {'prob':0.5}
+            _crossover_params = {}
 
         if mutation_params:
             _mutation_params = mutation_params
         else:
-            _mutation_params = {'prob':0.2}
+            _mutation_params = {}
 
         if elite_selection_params:
             _elite_selection_params = elite_selection_params
         else:
-            _elite_selection_params = {'n':5, 'desc':True}
+            _elite_selection_params = {}
 
         if parent_selection_params:
             _parent_selection_params = parent_selection_params
@@ -722,20 +728,19 @@ class Island:
 
         self.mutants.append({'generation': g, 'mutants': generation_mutants})
 
-        untested_individuals = [ind for ind in generation_children if ind.fitness is None]
+        for individual in generation_children:
+            individual.evaluate(island=self, params=self.function_params)
 
-        for new_untested_individual in untested_individuals:
-            new_untested_individual.evaluate(island=self, params=self.function_params)
+        for individual in self.survivor_selection(individuals=generation_children, island=self, **survivor_selection_params):
             if self.force_genetic_diversity:
                 # If we want a diverse gene pool, this must be true
-                if not new_untested_individual.unique_genetic_code() in self.unique_genome:
-                    self.population.append(new_untested_individual)
-                    self.unique_genome.append(new_untested_individual.unique_genetic_code())
+                if not individual.unique_genetic_code() in self.unique_genome:
+                    self.population.append(individual)
+                    self.unique_genome.append(individual.unique_genetic_code())
             else:
                 # Else, add it effectively allowing "twins" to exist
-                self.population.append(new_untested_individual)
-                self.unique_genome.append(new_untested_individual.unique_genetic_code())
-
+                self.population.append(individual)
+                self.unique_genome.append(individual.unique_genetic_code())
 
         population_fitnesses = [ind.fitness for ind in self.population]
         elite_fitnesses = [ind.fitness for ind in elites]

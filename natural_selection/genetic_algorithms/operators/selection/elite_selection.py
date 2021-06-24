@@ -12,15 +12,15 @@ __status__ = "Development"
 
 from numpy import random
 
-def selection_elites_tournament(individuals : list, n : int, tournament_size : int = 5, island=None) -> list:
+def selection_elites_tournament(individuals : list, n : int = 4, tournament_size : int = 5, island=None) -> list:
     """
     Classic tournament selection. Given a number of selection rounds (`n`), select a random list of individuals of `tournament_size` and select the top individual from the random selection.
 
     Args:
         individuals (list): A list of Individuals.
-        n (int): The number of tournaments to run, effectively the number of selected individuals to return.
+        n (int): The number of tournaments to run, effectively the number of selected individuals to return (default = 4).
         tournament_size (int): The number of random individuals to select during each tournament (default = 5).
-        island (Island): The Island calling the method (optional, default = None).
+        island (Island): The Island calling the method (default = None).
 
     Returns:
         list: Top n Individuals from tournaments.
@@ -31,29 +31,29 @@ def selection_elites_tournament(individuals : list, n : int, tournament_size : i
         elites.extend(selection_elites_top_n(selection, 1))
     return elites
 
-def selection_elites_random(individuals : list, n : int, island=None) -> list:
+def selection_elites_random(individuals : list, n : int = 4, island=None) -> list:
     """
     Completely random selection.
 
     Args:
         individuals (list): A list of Individuals.
-        n (int): Number to select.
-        island (Island): The Island calling the method (optional, default = None).
+        n (int): Number to select (default = 4).
+        island (Island): The Island calling the method (default = None).
 
     Returns:
         list: Random n Individuals.
     """
     return random.choice(individuals, size=n).tolist()
 
-def selection_elites_top_n(individuals : list, n : int, desc : bool = True, island=None) -> list:
+def selection_elites_top_n(individuals : list, n : int = 4, desc : bool = True, island=None) -> list:
     """
     A Classic top N selection function, sorted on fitness.
 
     Args:
         individuals (list): A list of Individuals.
-        n (int): Number to select.
+        n (int): Number to select (default = 4).
         desc (bool): In descending order (default = True).
-        island (Island): The Island calling the method (optional, default = None).
+        island (Island): The Island calling the method (default = None).
 
     Returns:
         list: Top n Individuals.

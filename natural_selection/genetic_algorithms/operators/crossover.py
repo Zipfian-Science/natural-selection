@@ -20,7 +20,7 @@ def crossover_two_uniform(individuals : list, prob : float = 0.5, island=None) -
     Args:
         individuals (list): A list (length of 2) of Individuals to perform crossover.
         prob (float): The probability of swapping genes.
-        island (Island): The Island calling the method (optional, default = None).
+        island (Island): The Island calling the method (default = None).
 
     Returns:
         list: Two new Individuals.
@@ -41,8 +41,8 @@ def crossover_two_n_point(individuals : list, n_points : int = 1, island=None) -
 
     Args:
         individuals (list): A list (length of 2) of Individuals to perform crossover.
-        prob (float): The probability of swapping genes.
-        island (Island): The Island calling the method (optional, default = None).
+        n_points (int): The amount of random points to split at (default = 1).
+        island (Island): The Island calling the method (default = None).
 
     Returns:
         list: Two new Individuals.

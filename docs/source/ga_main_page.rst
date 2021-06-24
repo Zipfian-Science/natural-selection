@@ -5,8 +5,11 @@
 
 Genetic Algorithms
 **************************
+
+Some text
+
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
    :caption: Contents:
 
    ga
@@ -19,7 +22,7 @@ Genetic Algorithms
    ga_random_functions
    ga_helper_functions
 
-Introduction
+Example experiment
 ========================
 
-Some text
+A simple example of setting up a GA experiment.
