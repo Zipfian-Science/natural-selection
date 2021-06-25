@@ -13,8 +13,12 @@ __status__ = "Development"
 import random
 import uuid
 from typing import Callable, Any, Iterable
+import warnings as w
+import pickle
+import logging
+from datetime import datetime
 
-
+from natural_selection import get_random_string
 from natural_selection.genetic_algorithms.operators.initialisation import initialise_population_random
 from natural_selection.genetic_algorithms.operators.selection import selection_elites_top_n, selection_parents_two, selection_survivors_all
 from natural_selection.genetic_algorithms.operators.crossover import crossover_two_uniform
@@ -53,6 +57,8 @@ class Gene:
                  step_upper_bound: Any = 1.0,
                  choices : Iterable  = None,
                  gene_properties : dict = None):
+        if '<lambda>' in repr(randomise_function):
+            w.warn("WARNING: 'randomise_function' lambda can not be pickled using standard libraries.")
         self.name = name
         self.value = value
         self.gene_max = gene_max
@@ -106,11 +112,11 @@ class Gene:
     def __repr__(self):
         start_str = f'Gene({self.name}:{self.value}:{self.gene_max}:{self.gene_min}:{self.mu}:{self.sig}:{self.step_lower_bound}:{self.step_upper_bound}'
         if self.choices:
-            for c in self.choices:
-                start_str = f'{start_str}:{str(c)}'
-        start_str = f'{start_str}:{str(self.randomise_function)}'
-        start_str = f'{start_str}:{str(self.__gene_properties)})'
-        return  start_str
+            start_str = f"{start_str}:[{':'.join(self.choices)}]"
+        start_str = f'{start_str}:{self.randomise_function.__name__}'
+        if self.__gene_properties:
+            start_str = f'{start_str}:{str(self.__gene_properties)}'
+        return  f'{start_str})'
 
 
 class Chromosome:
@@ -125,29 +131,15 @@ class Chromosome:
         gene_verify_func (Callable): A function to verify gene compatibility `func(gene,loc,chromosome)` (default = None).
     """
 
-    def __default_gene_verify_func(self, gene, loc, chromosome):
-        """
-        Needed to make objects pickle-able.
-        Args:
-            gene (Gene): Gene being inserted.
-            loc (int): Index of gene.
-            chromosome (Chromosome): The given "self".
-
-        Returns:
-            bool: Whether gene insertion is allowed or not.
-        """
-        return True
-
     def __init__(self, genes: list = None, gene_verify_func : Callable = None):
         if genes:
             self.genes = genes
         else:
             self.genes = list()
 
-        if gene_verify_func:
-            self.gene_verify_func = gene_verify_func
-        else:
-            self.gene_verify_func = self.__default_gene_verify_func
+        if gene_verify_func and '<lambda>' in repr(gene_verify_func):
+            w.warn("WARNING: 'gene_verify_func' lambda can not be pickled using standard libraries.")
+        self.gene_verify_func = gene_verify_func
 
     def append(self, gene: Gene):
         """
@@ -157,7 +149,7 @@ class Chromosome:
             gene (Gene): Gene
         """
         assert isinstance(gene, Gene), 'Must be Gene type!'
-        if not self.gene_verify_func(gene=gene,loc=-1,chromosome=self):
+        if self.gene_verify_func and not self.gene_verify_func(gene=gene,loc=-1,chromosome=self):
             raise GeneticAlgorithmError(message="Added gene did not pass compatibility tests!")
         self.genes.append(gene)
 
@@ -168,7 +160,7 @@ class Chromosome:
             assert isinstance(gene, Gene), 'Must be Gene type!'
             assert index < len(self.genes), 'Index Out of bounds!'
 
-        if not self.gene_verify_func(gene=gene, loc=index, chromosome=self):
+        if self.gene_verify_func and not self.gene_verify_func(gene=gene, loc=index, chromosome=self):
             raise GeneticAlgorithmError("Index set gene did not pass compatibility tests!")
         self.genes[index] = gene
 
@@ -210,7 +202,7 @@ class Individual:
     A class that encapsulates a single individual, with genetic code and a fitness evaluation function.
 
     Args:
-        fitness_function (Callable): Function with ``func(Chromosome, island, **params)`` signature.
+        fitness_function (Callable): Function with ``func(Chromosome, island, **params)`` signature (default = None).
         name (str): Name for keeping track of lineage (default = None).
         chromosome (Chromosome): A Chromosome object, initialised (default = None).
         species_type (str) : A unique string to identify the species type, for preventing cross polluting (default = None).
@@ -223,7 +215,12 @@ class Individual:
         parents (list): List of strings of parent names.
     """
 
-    def __init__(self, fitness_function : Callable, name : str = None, chromosome: Chromosome = None, species_type : str = None):
+    def __init__(self, fitness_function : Callable = None,
+                 name : str = None,
+                 chromosome: Chromosome = None,
+                 species_type : str = None):
+        if fitness_function and '<lambda>' in repr(fitness_function):
+            w.warn("WARNING: 'fitness_function' lambda can not be pickled using standard libraries.")
         if name is None:
             self.name = str(uuid.uuid4())
         else:
@@ -241,7 +238,7 @@ class Individual:
         if species_type:
             self.species_type = species_type
         else:
-            self.species_type = "DEFAULT_SPECIES"
+            self.species_type = "def"
 
     def register_parent_names(self, parents : list, reset_parent_name_list : bool = True):
         """
@@ -334,6 +331,15 @@ class Individual:
             self.genetic_code = repr(self.chromosome)
         return self.genetic_code
 
+    def save_individual(self, filepath : str):
+        with open(filepath, "wb") as f:
+            pickle.dump(self.__dict__, f)
+
+    def load_individual(self, filepath : str):
+        with open(filepath, "rb") as f:
+            self.__dict__.update(pickle.load(f))
+
+
     def __str__(self) -> str:
         return f'Individual({self.name}:{self.fitness})'
 
@@ -399,7 +405,7 @@ class Island:
     default to the classic functions.
 
     Args:
-        function_params (dict): The parameters for the fitness function.
+        function_params (dict): The parameters for the fitness function (default = None).
         elite_selection (Callable): Function for selecting individuals for crossover and mutation (default = None).
         initialisation_function (Callable): A function for randomly creating new individuals from the given adam.
         parent_selection (Callable): Function for selecting parents for crossover (default = None).
@@ -409,9 +415,11 @@ class Island:
         mutation_prob_function (Callable): Random probability function for mutation (default = None).
         clone_function (Callable): Function for cloning (default = None).
         survivor_selection_function (Callable): Function for selecting survivors (default = None).
-        random_seed (int): Random seed for random and Numpy generators, set to None for no seed (default = 42).
+        random_seed (int): Random seed for random and Numpy generators, set to None for no seed (default = None).
+        name (str): General name for island, useful when working with multiple islands (default = None).
         verbose (bool): Print all information (default = None).
         logging_function (Callable): Function for custom message logging, such as server logging (default = None).
+        filepath (str): If a filepath is specified, the pickled island is loaded from it (default = None).
         force_genetic_diversity (bool): Only add new offspring to the population if they have a unique chromosome (default = True).
 
     Attributes:
@@ -424,7 +432,7 @@ class Island:
         generation_count (int): The current generation number.
     """
 
-    def __init__(self, function_params : dict,
+    def __init__(self, function_params : dict = None,
                  initialisation_function: Callable = initialise_population_random,
                  elite_selection : Callable = selection_elites_top_n,
                  parent_selection : Callable = selection_parents_two,
@@ -434,34 +442,64 @@ class Island:
                  mutation_prob_function : Callable = mutation_prob_function_classic,
                  survivor_selection_function: Callable = selection_survivors_all,
                  clone_function : Callable = clone_classic,
-                 random_seed: int = 42,
+                 random_seed: int = None,
+                 name : str = None,
                  verbose : bool = True,
                  logging_function : Callable = None,
+                 filepath : str = None,
                  force_genetic_diversity : bool = True):
-        self.function_params = function_params
+
+        if filepath:
+            self.load_island(filepath)
+            return
+        self.verbose = verbose
+        self.logging_function = logging_function
+        if name is None:
+            self.name = get_random_string(include_numeric=True)
+        if verbose:
+            logging.basicConfig(level=logging.INFO,
+                                format='%(asctime)s %(island)-8s %(message)s',
+                                filename=datetime.utcnow().strftime('%Y-%m-%d-ga-output.log'),
+                                datefmt='%H:%M:%S')
+
+        self._verbose_logging(f"island: create")
+        if function_params:
+            self._verbose_logging(f"island: param {function_params}")
+            self.function_params = function_params
+        else:
+            self.function_params = dict()
         self.unique_genome = list()
         self.generation_info = list()
         self.population = list()
 
         self._initialise = initialisation_function
+        self._verbose_logging(f"island: initialisation_function {initialisation_function.__name__}")
         self.elite_selection = elite_selection
+        self._verbose_logging(f"island: elite_selection {elite_selection.__name__}")
         self.parent_selection = parent_selection
+        self._verbose_logging(f"island: parent_selection {parent_selection.__name__}")
         self.crossover = crossover_function
+        self._verbose_logging(f"island: crossover_function {crossover_function.__name__}")
         self.mutation = mutation_function
+        self._verbose_logging(f"island: mutation_function {mutation_function.__name__}")
         self.crossover_prob = crossover_prob_function
+        self._verbose_logging(f"island: crossover_prob_function {crossover_prob_function.__name__}")
         self.mutation_prob = mutation_prob_function
+        self._verbose_logging(f"island: mutation_prob_function {mutation_prob_function.__name__}")
         self.clone = clone_function
+        self._verbose_logging(f"island: clone_function {clone_function.__name__}")
         self.survivor_selection = survivor_selection_function
+        self._verbose_logging(f"island: survivor_selection_function {survivor_selection_function.__name__}")
 
-        self.logging_function = logging_function
         self.force_genetic_diversity = force_genetic_diversity
+        self._verbose_logging(f"island: force_genetic_diversity {force_genetic_diversity}")
 
-        self.verbose = verbose
         self.random_seed = random_seed
+        self._verbose_logging(f"island: random_seed {random_seed}")
         self.elites = list()
         self.mutants = list()
         self.children = list()
-        self.species_type = "DEFAULT_SPECIES"
+        self.species_type = "def"
         self.generation_count = 0
 
         # Set python random seed, as well as Numpy seed.
@@ -469,6 +507,37 @@ class Island:
             random.seed(random_seed)
             from numpy.random import seed as np_seed
             np_seed(random_seed)
+
+
+        if '<lambda>' in repr(initialisation_function):
+            w.warn("WARNING: 'initialisation_function' lambda can not be pickled using standard libraries.")
+
+        if '<lambda>' in repr(elite_selection):
+            w.warn("WARNING: 'elite_selection' lambda can not be pickled using standard libraries.")
+
+        if '<lambda>' in repr(parent_selection):
+            w.warn("WARNING: 'parent_selection' lambda can not be pickled using standard libraries.")
+
+        if '<lambda>' in repr(crossover_function):
+            w.warn("WARNING: 'crossover_function' lambda can not be pickled using standard libraries.")
+
+        if '<lambda>' in repr(mutation_function):
+            w.warn("WARNING: 'mutation_function' lambda can not be pickled using standard libraries.")
+
+        if '<lambda>' in repr(crossover_prob_function):
+            w.warn("WARNING: 'crossover_prob_function' lambda can not be pickled using standard libraries.")
+
+        if '<lambda>' in repr(mutation_prob_function):
+            w.warn("WARNING: 'mutation_prob_function' lambda can not be pickled using standard libraries.")
+
+        if '<lambda>' in repr(clone_function):
+            w.warn("WARNING: 'clone_function' lambda can not be pickled using standard libraries.")
+
+        if '<lambda>' in repr(survivor_selection_function):
+            w.warn("WARNING: 'survivor_selection_function' lambda can not be pickled using standard libraries.")
+
+        if logging_function and '<lambda>' in repr(logging_function):
+            w.warn("WARNING: 'logging_function' lambda can not be pickled using standard libraries.")
 
     def create_gene(self,
                  name : str,
@@ -544,6 +613,7 @@ class Island:
                ):
         """
         Starts the population by taking an initial individual as template and creating new ones from it.
+        Island ``species_type`` is set to adam's species type.
 
         Args:
             adam (Individual): Individual to clone from.
@@ -558,10 +628,13 @@ class Island:
         else:
             _initialisation_params = {}
 
+        self._verbose_logging(f"init: pop_size {population_size}")
+        self._verbose_logging(f"init: adam {repr(adam)}")
         self.population = self._initialise(adam=adam, n=population_size, island=self, **_initialisation_params)
 
         if evaluate_population:
             for popitem in self.population:
+                self._verbose_logging(f"init: eval {repr(popitem)}")
                 popitem.evaluate(self.function_params, island=self)
                 self.unique_genome.append(popitem.unique_genetic_code())
 
@@ -580,18 +653,23 @@ class Island:
             force_genetic_diversity (bool): Only add migrants to the population if they have a unique chromosome (default = True).
         """
         for i in migrants:
+            self._verbose_logging(f"migration: customs {repr(i)}")
             if species_check:
                 if i.species_type != self.species_type:
                     continue
             if force_genetic_diversity:
                 if not i.unique_genetic_code() in self.unique_genome:
                     if i.fitness is None or reset_fitness:
+                        self._verbose_logging(f"migration: eval {repr(i)}")
                         i.evaluate(self.function_params, island=self)
+                    self._verbose_logging(f"migration: add {repr(i)}")
                     self.population.append(i)
                     self.unique_genome.append(i.unique_genetic_code())
             else:
                 if i.fitness is None or reset_fitness:
+                    self._verbose_logging(f"migration: eval {repr(i)}")
                     i.evaluate(self.function_params)
+                self._verbose_logging(f"migration: add {repr(i)}")
                 self.population.append(i)
                 self.unique_genome.append(i.unique_genetic_code())
 
@@ -660,8 +738,9 @@ class Island:
             criterion_params = {}
 
         g = starting_generation
+        self._verbose_logging(f"evolve: start_generation {g}")
         while g_func(island=self, **criterion_params):
-            self._verbose_logging('Generation {} started'.format(g))
+            self._verbose_logging(f"evolve: generation_number {g}")
 
             self.__evolutionary_engine(g=g,
                                        elite_selection_params=_elite_selection_params,
@@ -675,9 +754,20 @@ class Island:
 
         best_ind = selection_elites_top_n(island=self, individuals=self.population, n=1)[0]
 
-        self._verbose_logging("Best individual is {0}, {1}".format(best_ind.name, best_ind.fitness))
+        self._verbose_logging(f"evolve: end")
+        self._verbose_logging(f"evolve: best {repr(best_ind)}")
 
         return best_ind
+
+    def save_island(self, filepath : str):
+        with open(filepath, "wb") as f:
+            pickle.dump(self.__dict__, f)
+        self._verbose_logging(f"save: file {filepath}")
+
+    def load_island(self, filepath : str):
+        with open(filepath, "rb") as f:
+            self.__dict__.update(pickle.load(f))
+        self._verbose_logging(f"load: file {filepath}")
 
     def __evolutionary_engine(self,
                               g,
@@ -692,19 +782,23 @@ class Island:
         elites = self.elite_selection(island=self,
                                       individuals=self.clone(individuals=self.population, island=self),
                                       **elite_selection_params)
+        self._verbose_logging(f"select: elites_count {len(elites)}")
 
         self.elites.append({'generation' : g, 'elites' : elites})
 
         # Children are strictly copies or new objects seeing as the have a lineage and parents
         generation_children = list()
         for parents in self.parent_selection(individuals=elites, island=self, **parent_selection_params):
+            self._verbose_logging(f"select: parent_count {len(parents)}")
             if self.crossover_prob(crossover_probability=crossover_probability, island=self):
-
-                self._verbose_logging('Crossover: {0}'.format([str(p) for p in parents]))
+                self._verbose_logging(f"cross: parents {[repr(p) for p in parents]}")
 
                 children = self.crossover(island=self,
                                           individuals=self.clone(individuals=parents, island=self),
                                           **crossover_params)
+
+                self._verbose_logging(f"cross: offspring_count {len(children)}")
+                self._verbose_logging(f"cross: offspring {[repr(p) for p in children]}")
 
                 for child in children:
                     child.reset_name()
@@ -720,25 +814,29 @@ class Island:
         generation_mutants = list()
         for mutant in generation_children:
             if self.mutation_prob(mutation_probability=mutation_probability, island=self):
+                self._verbose_logging(f"mutate: offspring {repr(mutant)}")
+
                 mutated = self.mutation(island=self, individual=mutant, **mutation_params)
 
-                self._verbose_logging('Mutating: {}'.format(mutant.name))
                 mutated.reset_fitness()
                 generation_mutants.append(mutated)
 
         self.mutants.append({'generation': g, 'mutants': generation_mutants})
 
         for individual in generation_children:
+            self._verbose_logging(f"evolve: eval {repr(individual)}")
             individual.evaluate(island=self, params=self.function_params)
 
         for individual in self.survivor_selection(individuals=generation_children, island=self, **survivor_selection_params):
             if self.force_genetic_diversity:
                 # If we want a diverse gene pool, this must be true
                 if not individual.unique_genetic_code() in self.unique_genome:
+                    self._verbose_logging(f"evolve: add {repr(individual)}")
                     self.population.append(individual)
                     self.unique_genome.append(individual.unique_genetic_code())
             else:
                 # Else, add it effectively allowing "twins" to exist
+                self._verbose_logging(f"evolve: add {repr(individual)}")
                 self.population.append(individual)
                 self.unique_genome.append(individual.unique_genetic_code())
 
@@ -762,7 +860,7 @@ class Island:
             }
         )
 
-        self._verbose_logging(self.generation_info[-1])
+        self._verbose_logging(f"evolve: stats {self.generation_info[-1]}")
 
         elite_length = len(elites)
         elite_mean = sum(elite_fitnesses) / elite_length
@@ -781,15 +879,15 @@ class Island:
             }
         )
 
-        self._verbose_logging(self.generation_info[-1])
+        self._verbose_logging(f"evolve: stats {self.generation_info[-1]}")
 
         for i in self.population:
             i.birthday()
 
         self.generation_count = g
 
-    def _verbose_logging(self, message):
+    def _verbose_logging(self, event_message):
         if self.verbose:
-            print(message)
+            logging.info(event_message, extra={'island' : self.name})
         if self.logging_function:
-            self.logging_function(message)
+            self.logging_function(event_message=event_message, island=self)
