@@ -17,6 +17,7 @@ import warnings as w
 import pickle
 import logging
 from datetime import datetime
+import os
 
 from natural_selection import get_random_string
 from natural_selection.genetic_algorithms.operators.initialisation import initialise_population_random
@@ -112,7 +113,7 @@ class Gene:
     def __repr__(self):
         start_str = f'Gene({self.name}:{self.value}:{self.gene_max}:{self.gene_min}:{self.mu}:{self.sig}:{self.step_lower_bound}:{self.step_upper_bound}'
         if self.choices:
-            start_str = f"{start_str}:[{':'.join(self.choices)}]"
+            start_str = f"{start_str}:[{repr(self.choices)}]"
         start_str = f'{start_str}:{self.randomise_function.__name__}'
         if self.__gene_properties:
             start_str = f'{start_str}:{str(self.__gene_properties)}'
@@ -305,7 +306,11 @@ class Individual:
         Returns:
             numeric: Fitness value.
         """
-        self.fitness = self.fitness_function(chromosome=self.chromosome, island=island, **params)
+        try:
+            self.fitness = self.fitness_function(chromosome=self.chromosome, island=island, **params)
+        except Exception as exc:
+            island._verbose_logging(f"ERROR: {self.name} - {repr(self.chromosome)} - {repr(exc)}")
+            raise GeneticAlgorithmError(message=f'Could not evaluate individual "{self.name}" due to {repr(exc)}')
 
         stamp = { "name": self.name,
                   "age": self.age,
@@ -420,6 +425,7 @@ class Island:
         verbose (bool): Print all information (default = None).
         logging_function (Callable): Function for custom message logging, such as server logging (default = None).
         filepath (str): If a filepath is specified, the pickled island is loaded from it (default = None).
+        save_checkpoint_level (int): Level of checkpoint saving 0 = none, 1 = per generation, 2 = per evaluation (default = 0).
         force_genetic_diversity (bool): Only add new offspring to the population if they have a unique chromosome (default = True).
 
     Attributes:
@@ -430,6 +436,7 @@ class Island:
         mutants (list): All mutants created during the run.
         children (list): All children created during the run.
         generation_count (int): The current generation number.
+        checkpoints_dir (str): Directory name of where all checkpoints are saved.
     """
 
     def __init__(self, function_params : dict = None,
@@ -447,6 +454,7 @@ class Island:
                  verbose : bool = True,
                  logging_function : Callable = None,
                  filepath : str = None,
+                 save_checkpoint_level : int = 0,
                  force_genetic_diversity : bool = True):
 
         if filepath:
@@ -501,6 +509,9 @@ class Island:
         self.children = list()
         self.species_type = "def"
         self.generation_count = 0
+        self.save_checkpoint_level = save_checkpoint_level
+        self.checkpoints_dir = f'_ga_checkpoints'
+        self._verbose_logging(f"island: save_checkpoint_level {save_checkpoint_level}")
 
         # Set python random seed, as well as Numpy seed.
         if random_seed:
@@ -632,11 +643,17 @@ class Island:
         self._verbose_logging(f"init: adam {repr(adam)}")
         self.population = self._initialise(adam=adam, n=population_size, island=self, **_initialisation_params)
 
+        if self.save_checkpoint_level == 2:
+            self._save_checkpoint(event='init_pre')
+
         if evaluate_population:
             for popitem in self.population:
                 self._verbose_logging(f"init: eval {repr(popitem)}")
                 popitem.evaluate(self.function_params, island=self)
                 self.unique_genome.append(popitem.unique_genetic_code())
+        if self.save_checkpoint_level == 2:
+            self._save_checkpoint(event='init_post')
+        self._verbose_logging("init: complete")
 
     def import_migrants(self, migrants : list,
                         reset_fitness : bool = False,
@@ -672,6 +689,7 @@ class Island:
                 self._verbose_logging(f"migration: add {repr(i)}")
                 self.population.append(i)
                 self.unique_genome.append(i.unique_genetic_code())
+        self._verbose_logging("migration: imported")
 
 
     def evolve(self, starting_generation : int = 0,
@@ -779,6 +797,9 @@ class Island:
                               crossover_params,
                               mutation_params):
 
+        if self.save_checkpoint_level == 1:
+            self._save_checkpoint(event=f'evolve_pre_{g}')
+
         elites = self.elite_selection(island=self,
                                       individuals=self.clone(individuals=self.population, island=self),
                                       **elite_selection_params)
@@ -823,9 +844,13 @@ class Island:
 
         self.mutants.append({'generation': g, 'mutants': generation_mutants})
 
+        if self.save_checkpoint_level == 2:
+            self._save_checkpoint(event=f'evolve_pre_eval_{g}')
         for individual in generation_children:
             self._verbose_logging(f"evolve: eval {repr(individual)}")
             individual.evaluate(island=self, params=self.function_params)
+        if self.save_checkpoint_level == 2:
+            self._save_checkpoint(event=f'evolve_post_eval_{g}')
 
         for individual in self.survivor_selection(individuals=generation_children, island=self, **survivor_selection_params):
             if self.force_genetic_diversity:
@@ -886,8 +911,20 @@ class Island:
 
         self.generation_count = g
 
+        if self.save_checkpoint_level == 1:
+            self._save_checkpoint(event=f'evolve_post_{g}')
+
     def _verbose_logging(self, event_message):
         if self.verbose:
             logging.info(event_message, extra={'island' : self.name})
         if self.logging_function:
             self.logging_function(event_message=event_message, island=self)
+
+    def _save_checkpoint(self, event):
+        if not os.path.isdir(self.checkpoints_dir):
+            os.mkdir(self.checkpoints_dir)
+        if not os.path.isdir(f'{self.checkpoints_dir}/{self.name}'):
+            os.mkdir(f'{self.checkpoints_dir}/{self.name}')
+        fp = f'{self.checkpoints_dir}/{self.name}/{datetime.utcnow().strftime("%H-%M-%S")}_{event}_checkpoint.pkl'
+        self._verbose_logging(f'checkpoint: file {fp}')
+        self.save_island(fp)

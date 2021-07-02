@@ -111,6 +111,9 @@ class TestOtherIsland(unittest.TestCase):
 def fitness(chromosome, island, x, y):
     return (chromosome[0].value * x) + (chromosome[1].value * y)
 
+def fitness_raise_error(chromosome, island, x, y):
+    return 1 / 0
+
 class TestSaveLoad(unittest.TestCase):
 
     def test_save_load(self):
@@ -144,5 +147,34 @@ class TestSaveLoad(unittest.TestCase):
         new_life.evolve(starting_generation=new_life.generation_count)
 
         self.assertEqual(new_life.generation_count, life.generation_count*2)
-
         os.remove(fp)
+
+
+class TestException(unittest.TestCase):
+
+    def test_raise_exception(self):
+        g_1 = Gene(name="first", value=1, gene_max=25, gene_min=1, randomise_function=random_int)
+        g_2 = Gene(name="second", value=1, gene_max=100, gene_min=1, randomise_function=random_int)
+        gen = Chromosome([g_1, g_2])
+        ind = Individual(fitness_raise_error, name="Adam", chromosome=gen)
+
+        life = Island({'x': 0.6, 'y': 0.2}, crossover_function=crossover_two_n_point, verbose=True)
+
+        try:
+            life.initialise(ind, population_size=5)
+        except:
+            self.assertTrue(True)
+
+class TestCheckpoints(unittest.TestCase):
+
+    def test_save_load(self):
+        g_1 = Gene(name="first", value=1, gene_max=25, gene_min=1, randomise_function=random_int)
+        g_2 = Gene(name="second", value=1, gene_max=100, gene_min=1, randomise_function=random_int)
+        gen = Chromosome([g_1, g_2])
+        ind = Individual(fitness, name="Adam", chromosome=gen)
+
+        life = Island({'x': 0.6, 'y': 0.2}, save_checkpoint_level=2)
+
+        life.initialise(ind, population_size=5)
+
+        life.evolve()
