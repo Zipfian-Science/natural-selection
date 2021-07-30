@@ -78,6 +78,15 @@ Then simply create a GA experiment:
    for gene in genes:
      print(gene.name, gene.value)
 
+Changes and history
+---------------------
+
+See :ref:`changelog-page` for version history.
+
+Latest version:
+
+* documentation
+
 Indices and tables
 ==================
 

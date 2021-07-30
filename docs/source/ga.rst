@@ -3,6 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+.. _ga-page:
+
 Core GA classes
 **************************
 .. contents:: Table of Contents
@@ -23,7 +25,7 @@ Genes encapsulate at core the key-value of a problem being optimised. They conta
 and facilitate randomisation. Genes can further be initialised with custom ``gene_properties`` used by custom ``randomise_function``.
 
 Under ``natural_selection.genetic_algorithms.utils.random_functions`` a few useful gene randomisation functions can be found for easy use.
-See :ref:`Gene Random functions` for more.
+See :ref:`ga-random-functions-page` for more.
 
 .. code-block:: python
 
@@ -37,7 +39,7 @@ See :ref:`Gene Random functions` for more.
 Custom random functions
 ------------------------
 
-See :ref:`Gene Random functions` for standard random functions.
+See :ref:`ga-random-functions-page` for standard random functions.
 To implement custom random functions, the following signature is required:
 
 .. code-block:: python
@@ -108,7 +110,7 @@ Custom gene verification functions can be added to preform logical checks when c
    chromosome = Chromosome(genes=[g_1], gene_verify_func=verify_gene_type)
 
 The signature takes the current inserted gene, the index of insertion, and the chromosome instance as input.
-If ``False`` is returned, the process raises a :ref:`General GA Error Class` exception.
+If ``False`` is returned, the process raises a :ref:`general-ga-error-class` exception.
 
 Chromosome class
 ------------------------
@@ -232,7 +234,7 @@ There are generally three different selection operations that GA employ:
 Islands are initialised by default with classic selection function, but other functions can be used, in addition to
 writing custom selection functions.
 
-By default the ``selection_elites_top_n`` function is used in islands. This can be swapped out for other :ref:`Elites selection`
+By default the ``selection_elites_top_n`` function is used in islands. This can be swapped out for other :ref:`elites-selection`
 functions:
 
 .. code-block:: python
@@ -253,7 +255,7 @@ To specify the selection function parameters, a dictionary of values can be pass
 
    isolated_island.evolve(elite_selection_params=esp)
 
-To read up about different elite selection functions and their parameters, see :ref:`Elites selection`.
+To read up about different elite selection functions and their parameters, see :ref:`elites-selection`.
 
 Island class
 ------------------------

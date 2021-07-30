@@ -3,6 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+.. _ga-selection-page:
+
 Selection
 **************************
 .. contents:: Table of Contents
@@ -43,7 +45,7 @@ Survivor selection is similar to elite selection.
    def selection_survivors_random(individuals : list, n : int = 4, island=None) -> list:
       return random.choice(individuals, size=n).tolist()
 
-.. _Elites selection:
+.. _elites-selection:
 
 Elites selection
 =====================

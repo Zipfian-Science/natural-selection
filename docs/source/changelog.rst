@@ -3,22 +3,15 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-.. _gp-main-page:
+.. _changelog-page:
 
-Genetic Programs
+Changelog
 **************************
 
-Some text.
+History
+==========================
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+Version XXX
+--------------------------
 
-   gp
-   gp_helper_functions
-   gp_initialisation
-
-Example experiment
-========================
-
-Some text
+* documentation

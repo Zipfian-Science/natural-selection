@@ -3,6 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+.. _ga-initialisation-page:
+
 Initialisation
 **************************
 .. contents:: Table of Contents
@@ -18,6 +20,7 @@ To define a custom init function, the following params are required:
 - `island`
 
 Example:
+
 .. code-block:: python
 
    def initialise_population_random(adam, n : int = 10, island=None):
@@ -31,8 +34,6 @@ Example:
       population.append(adam)
 
       return population
-
-
 
 Initialisation
 =====================
