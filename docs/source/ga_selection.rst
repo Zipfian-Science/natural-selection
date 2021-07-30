@@ -3,6 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+.. _ga-selection-page:
+
 Selection
 **************************
 .. contents:: Table of Contents
@@ -43,26 +45,45 @@ Survivor selection is similar to elite selection.
    def selection_survivors_random(individuals : list, n : int = 4, island=None) -> list:
       return random.choice(individuals, size=n).tolist()
 
-.. _Elites selection:
+.. _elites-selection:
 
 Elites selection
 =====================
+
+Tournament selection
+---------------------
 .. autofunction:: natural_selection.genetic_algorithms.operators.selection.selection_elites_tournament
 
+Random selection
+---------------------
 .. autofunction:: natural_selection.genetic_algorithms.operators.selection.selection_elites_random
 
+Top N selection
+---------------------
 .. autofunction:: natural_selection.genetic_algorithms.operators.selection.selection_elites_top_n
 
 Parent selection
 =====================
+
+Two parents
+---------------------
 .. autofunction:: natural_selection.genetic_algorithms.operators.selection.selection_parents_two
 
+Two parents shuffled
+---------------------
 .. autofunction:: natural_selection.genetic_algorithms.operators.selection.selection_parents_two_shuffled
 
+N-gram parents
+---------------------
 .. autofunction:: natural_selection.genetic_algorithms.operators.selection.selection_parents_n_gram
 
 Survivor selection
 =====================
+
+All (default)
+---------------------
 .. autofunction:: natural_selection.genetic_algorithms.operators.selection.selection_survivors_all
 
+Random survivors
+---------------------
 .. autofunction:: natural_selection.genetic_algorithms.operators.selection.selection_survivors_random
