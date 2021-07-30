@@ -3,6 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+.. _ga-crossover-page:
+
 Crossover operations
 **************************
 .. contents:: Table of Contents
@@ -47,6 +49,11 @@ Note the following in the above example:
 
 Crossover operators
 =====================
+
+Uniform Random
+---------------------
 .. autofunction:: natural_selection.genetic_algorithms.operators.crossover.crossover_two_uniform
 
+Random Point
+---------------------
 .. autofunction:: natural_selection.genetic_algorithms.operators.crossover.crossover_two_n_point

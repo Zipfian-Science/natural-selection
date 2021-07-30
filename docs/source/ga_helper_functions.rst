@@ -3,6 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+.. _ga-helper-functions-page:
+
 Helper functions
 **************************
 .. contents:: Table of Contents
@@ -13,7 +15,7 @@ Cloning functions
 =====================
 .. autofunction:: natural_selection.genetic_algorithms.utils.clone_classic
 
-.. _General GA Error Class:
+.. _general-ga-error-class:
 
 General GA Error Class
 ========================

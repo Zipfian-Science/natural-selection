@@ -9,6 +9,8 @@ deploy/
 deploy/*
 docs/build
 docs/build/*
+_ga_checkpoints
+_ga_checkpoints/**
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

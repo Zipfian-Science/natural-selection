@@ -3,13 +3,15 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+.. _gp-helper-functions-page:
+
 Helper functions
 **************************
 .. contents:: Table of Contents
 
 Simple helper functions and classes, amongst which cloning operations.
 
-.. _General GP Error Class:
+.. _general-gp-error-class:
 
 General GP Error Class
 ========================
