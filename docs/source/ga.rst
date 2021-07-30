@@ -22,6 +22,9 @@ of genes, along with the genome. These are built for direct encoding approaches.
 Genes encapsulate at core the key-value of a problem being optimised. They contain further attributes to set constraints
 and facilitate randomisation. Genes can further be initialised with custom ``gene_properties`` used by custom ``randomise_function``.
 
+Under ``natural_selection.genetic_algorithms.utils.random_functions`` a few useful gene randomisation functions can be found for easy use.
+See :ref:`Gene Random functions` for more.
+
 .. code-block:: python
 
    from natural_selection.genetic_algorithms import Gene

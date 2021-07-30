@@ -47,6 +47,11 @@ Note the following in the above example:
 
 Crossover operators
 =====================
+
+Uniform Random
+---------------------
 .. autofunction:: natural_selection.genetic_algorithms.operators.crossover.crossover_two_uniform
 
+Random Point
+---------------------
 .. autofunction:: natural_selection.genetic_algorithms.operators.crossover.crossover_two_n_point

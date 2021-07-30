@@ -47,22 +47,41 @@ Survivor selection is similar to elite selection.
 
 Elites selection
 =====================
+
+Tournament selection
+---------------------
 .. autofunction:: natural_selection.genetic_algorithms.operators.selection.selection_elites_tournament
 
+Random selection
+---------------------
 .. autofunction:: natural_selection.genetic_algorithms.operators.selection.selection_elites_random
 
+Top N selection
+---------------------
 .. autofunction:: natural_selection.genetic_algorithms.operators.selection.selection_elites_top_n
 
 Parent selection
 =====================
+
+Two parents
+---------------------
 .. autofunction:: natural_selection.genetic_algorithms.operators.selection.selection_parents_two
 
+Two parents shuffled
+---------------------
 .. autofunction:: natural_selection.genetic_algorithms.operators.selection.selection_parents_two_shuffled
 
+N-gram parents
+---------------------
 .. autofunction:: natural_selection.genetic_algorithms.operators.selection.selection_parents_n_gram
 
 Survivor selection
 =====================
+
+All (default)
+---------------------
 .. autofunction:: natural_selection.genetic_algorithms.operators.selection.selection_survivors_all
 
+Random survivors
+---------------------
 .. autofunction:: natural_selection.genetic_algorithms.operators.selection.selection_survivors_random

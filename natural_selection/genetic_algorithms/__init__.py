@@ -424,7 +424,7 @@ class Island:
         name (str): General name for island, useful when working with multiple islands (default = None).
         verbose (bool): Print all information (default = None).
         logging_function (Callable): Function for custom message logging, such as server logging (default = None).
-        filepath (str): If a filepath is specified, the pickled island is loaded from it (default = None).
+        filepath (str): If a filepath is specified, the pickled island is loaded from it, skipping the rest of initialisation (default = None).
         save_checkpoint_level (int): Level of checkpoint saving 0 = none, 1 = per generation, 2 = per evaluation (default = 0).
         force_genetic_diversity (bool): Only add new offspring to the population if they have a unique chromosome (default = True).
 
@@ -778,11 +778,23 @@ class Island:
         return best_ind
 
     def save_island(self, filepath : str):
+        """
+        Dumps a pickled self to the given file path.
+
+        Args:
+            filepath (str): File path to pickled island.
+        """
         with open(filepath, "wb") as f:
             pickle.dump(self.__dict__, f)
         self._verbose_logging(f"save: file {filepath}")
 
     def load_island(self, filepath : str):
+        """
+        Loads a pickled self from the given file path.
+
+        Args:
+            filepath (str): File path to pickled island.
+        """
         with open(filepath, "rb") as f:
             self.__dict__.update(pickle.load(f))
         self._verbose_logging(f"load: file {filepath}")
