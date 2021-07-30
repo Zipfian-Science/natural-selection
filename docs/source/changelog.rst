@@ -11,7 +11,7 @@ Changelog
 History
 ==========================
 
-Version XXX
+Version 0.2.5
 --------------------------
 
 * documentation
