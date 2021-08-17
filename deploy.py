@@ -127,7 +127,8 @@ def main(args):
     if args.pipreq:
         lock_and_gen_pipreq()
 
-    build_wheel()
+    if args.build:
+        build_wheel()
 
     if args.deploy:
         upload_to_pypi(args.remotename)
@@ -167,11 +168,18 @@ if __name__ == "__main__":
         """,
     )
     parser.add_argument(
+        "--build",
+        "-b",
+        help="Build wheel",
+        action="store_true",
+        default=False
+    )
+    parser.add_argument(
         "--remove",
         "-r",
         help="Removes build artifacts",
         action="store_true",
-        default=False
+        default=True
     )
     parser.add_argument(
         "--unit",
