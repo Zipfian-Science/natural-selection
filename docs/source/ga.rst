@@ -140,7 +140,7 @@ a fitness value and a evaluation (fitness) function.
    chromosome = Chromosome([g_1, g_2])
 
    # Next, create an individual to carry these genes and evaluate them
-   fitness_function = lambda island, gen, x, y: gen[0].value * x + y
+   fitness_function = lambda island, individual, x, y: individual.chromosome[0].value * x + individual.chromosome[0].value * y
    adam = Individual(fitness_function=fitness_function, name="Adam", chromosome=chromosome)
 
 The fitness function
@@ -154,18 +154,20 @@ Fitness functions are defined by you and they need to have the following signatu
 
 .. code-block:: python
 
-   def my_fitness_function(chromosome, island, ...):
+   def my_fitness_function(individual, island, ...):
       # function logic
+      # all attributes of the individual can be accessed here
       return fitness
 
-Both ``chromosome`` and ``island`` are required function parameters.
+Both ``individual`` and ``island`` are required function parameters.
 The function parameters are defined in the signature:
 
 .. code-block:: python
 
-   def my_fitness_function(chromosome, island, x, c, d):
+   def my_fitness_function(individual, island, x, c, d):
       # some random example of a fitness function
-      fitness = (x * chromosome[0].value) * (c * chromosome[1].value) + (d * chromosome[2].value)
+      print(individual.name, individual.fitness)
+      fitness = (x * individual.chromosome[0].value) * (c * individual.chromosome[1].value) + (d * individual.chromosome[2].value)
       return fitness
 
 Individual class
@@ -197,7 +199,7 @@ selection, crossover, and mutation operators, giving the experimenter more flexi
    chromosome = Chromosome([g_1, g_2])
 
    # Next, create an individual to carry these genes and evaluate them
-   fitness_function = lambda island, gen, x, y: gen[0].value * x + y
+   fitness_function = lambda island, individual, x, y: individual.chromosome[0].value * x + individual.chromosome[1].value * y
    adam = Individual(fitness_function=fitness_function, name="Adam", chromosome=chromosome)
 
    # Now we can create an island for running the evolutionary process

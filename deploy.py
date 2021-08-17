@@ -5,6 +5,9 @@ import run_tests as tests
 import sys
 from twine.commands import upload
 import json
+import ftplib
+import glob
+from pathlib import Path
 
 class bcolors:
     HEADER = '\033[95m'
@@ -57,6 +60,22 @@ def lock_and_gen_pipreq():
     print(f'{bcolors.UNDERLINE}{bcolors.BOLD}{bcolors.HEADER}-- Locking Pipfile.lock and generating requirements.txt{bcolors.ENDC}')
     os.system("pipenv lock -r > requirements.txt")
 
+def upload_docs_via_ftp():
+    print(f'{bcolors.UNDERLINE}{bcolors.BOLD}{bcolors.HEADER}-- Upload documentation to FTP server! {bcolors.ENDC}')
+    with ftplib.FTP(os.getenv('FTP_HOST'), os.getenv('FTP_USERNAME'), os.getenv('FTP_PASSWORD')) as ftp:
+        ftp.cwd(os.getenv('FTP_DIRECTORY'))
+
+        for f in glob.glob('./docs/build/html/*'):
+            if os.path.isfile(f):
+                with open(f, 'rb') as _f:
+                    file_path = Path(f)
+                    try:
+                        ftp.storlines(f'STOR {file_path.name}', _f)
+                        print(f"{bcolors.OKBLUE}Uploaded: {file_path.name}{bcolors.ENDC}")
+                    except Exception as exc:
+                        print(f"{bcolors.FAIL}{bcolors.BOLD}-- ERROR: {f} {str(exc)}!{bcolors.ENDC}")
+
+    print(f'{bcolors.UNDERLINE}-- Docs uploaded! {bcolors.ENDC}')
 
 def build_wheel():
     print(f'{bcolors.UNDERLINE}{bcolors.BOLD}{bcolors.HEADER}-- Deleting artefacts and building wheel{bcolors.ENDC}')
@@ -108,13 +127,17 @@ def main(args):
     if args.pipreq:
         lock_and_gen_pipreq()
 
-    build_wheel()
+    if args.build:
+        build_wheel()
 
     if args.deploy:
         upload_to_pypi(args.remotename)
 
     if args.sphinx:
         build_documentation()
+
+    if args.ftp:
+        upload_docs_via_ftp()
 
     if args.remove:
         delete_build()
@@ -145,11 +168,18 @@ if __name__ == "__main__":
         """,
     )
     parser.add_argument(
+        "--build",
+        "-b",
+        help="Build wheel",
+        action="store_true",
+        default=False
+    )
+    parser.add_argument(
         "--remove",
         "-r",
         help="Removes build artifacts",
         action="store_true",
-        default=False
+        default=True
     )
     parser.add_argument(
         "--unit",
@@ -192,4 +222,11 @@ if __name__ == "__main__":
         help="Builds the sphinx documentation",
         action="store_true",
     )
+    parser.add_argument(
+        "--ftp",
+        "-f",
+        help="Uploads the generated documentation via FTP",
+        action="store_true",
+    )
+
     main(parser.parse_args())

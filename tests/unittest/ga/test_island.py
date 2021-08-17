@@ -7,7 +7,7 @@ from natural_selection.genetic_algorithms.operators.crossover import crossover_t
 class TestSimpleIsland(unittest.TestCase):
 
     def setUp(self) -> None:
-        self.fitness = lambda chromosome, island, x, y: (chromosome[0].value * x) + (chromosome[1].value *y)
+        self.fitness = lambda individual, island, x, y: (individual.chromosome[0].value * x) + (individual.chromosome[1].value *y)
         g_1 = Gene(name="first", value=1, gene_max=25, gene_min=1, randomise_function=random_int)
         g_2 = Gene(name="second", value=1, gene_max=100, gene_min=1, randomise_function=random_int)
         g_3 = Gene(name="third", value=1, gene_max=100, gene_min=1, randomise_function=random_int)
@@ -26,7 +26,7 @@ class TestSimpleIsland(unittest.TestCase):
     def test_import_migrants(self):
         self.life.initialise(self.ind, population_size=5)
 
-        fitness = lambda chromosome, island, x, y: (chromosome[0].value * x) + (chromosome[1].value * y)
+        fitness = lambda individual, island, x, y: (individual.chromosome[0].value * x) + (individual.chromosome[1].value *y)
         g_1 = Gene(name="first", value=1, gene_max=25, gene_min=1, randomise_function=random_int)
         g_2 = Gene(name="second", value=1, gene_max=100, gene_min=1, randomise_function=random_int)
         g_3 = Gene(name="third", value=1, gene_max=100, gene_min=1, randomise_function=random_int)
@@ -41,7 +41,7 @@ class TestSimpleIsland(unittest.TestCase):
 
         self.assertEquals(len(self.life.population), 5)
 
-        fitness = lambda chromosome, island, x, y: (chromosome[0].value * x) + (chromosome[1].value * y)
+        fitness = lambda individual, island, x, y: (individual.chromosome[0].value * x) + (individual.chromosome[1].value *y)
         g_1 = Gene(name="first", value=5, gene_max=10, gene_min=1, randomise_function=random_int)
         g_2 = Gene(name="second", value=99, gene_max=100, gene_min=1, randomise_function=random_int)
         gen = Chromosome([g_1, g_2])
@@ -59,7 +59,7 @@ class TestSimpleIsland(unittest.TestCase):
 class TestOtherIsland(unittest.TestCase):
 
     def setUp(self) -> None:
-        self.fitness = lambda chromosome, island, x, y: (chromosome[0].value * x) + (chromosome[1].value *y)
+        self.fitness = lambda individual, island, x, y: (individual.chromosome[0].value * x) + (individual.chromosome[1].value *y)
         g_1 = Gene(name="first", value=1, gene_max=25, gene_min=1, randomise_function=random_int)
         g_2 = Gene(name="second", value=1, gene_max=100, gene_min=1, randomise_function=random_int)
         g_3 = Gene(name="third", value=1, gene_max=100, gene_min=1, randomise_function=random_int)
@@ -78,7 +78,7 @@ class TestOtherIsland(unittest.TestCase):
     def test_import_migrants(self):
         self.life.initialise(self.ind, population_size=5)
 
-        fitness = lambda chromosome, island, x, y: (chromosome[0].value * x) + (chromosome[1].value * y)
+        fitness = lambda individual, island, x, y: (individual.chromosome[0].value * x) + (individual.chromosome[1].value *y)
         g_1 = Gene(name="first", value=1, gene_max=25, gene_min=1, randomise_function=random_int)
         g_2 = Gene(name="second", value=1, gene_max=100, gene_min=1, randomise_function=random_int)
         g_3 = Gene(name="third", value=1, gene_max=100, gene_min=1, randomise_function=random_int)
@@ -93,7 +93,7 @@ class TestOtherIsland(unittest.TestCase):
 
         self.assertEquals(len(self.life.population), 5)
 
-        fitness = lambda chromosome, island, x, y: (chromosome[0].value * x) + (chromosome[1].value * y)
+        fitness = lambda individual, island, x, y: (individual.chromosome[0].value * x) + (individual.chromosome[1].value *y)
         g_1 = Gene(name="first", value=5, gene_max=10, gene_min=1, randomise_function=random_int)
         g_2 = Gene(name="second", value=99, gene_max=100, gene_min=1, randomise_function=random_int)
         gen = Chromosome([g_1, g_2])
@@ -108,10 +108,10 @@ class TestOtherIsland(unittest.TestCase):
         self.life.initialise(self.ind, population_size=5)
         self.life.evolve()
 
-def fitness(chromosome, island, x, y):
-    return (chromosome[0].value * x) + (chromosome[1].value * y)
+def fitness(individual, island, x, y):
+    return (individual.chromosome[0].value * x) + (individual.chromosome[1].value * y)
 
-def fitness_raise_error(chromosome, island, x, y):
+def fitness_raise_error(individual, island, x, y):
     return 1 / 0
 
 class TestSaveLoad(unittest.TestCase):

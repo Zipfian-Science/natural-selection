@@ -27,6 +27,8 @@ from natural_selection.genetic_algorithms.operators.mutation import mutation_ran
 from natural_selection.genetic_algorithms.utils.probability_functions import crossover_prob_function_classic, mutation_prob_function_classic
 from natural_selection.genetic_algorithms.utils import clone_classic, GeneticAlgorithmError
 
+from natural_selection import  __version__ as package_version
+
 class Gene:
     """
     A simple class to encapsulate a simple gene.
@@ -307,7 +309,7 @@ class Individual:
             numeric: Fitness value.
         """
         try:
-            self.fitness = self.fitness_function(chromosome=self.chromosome, island=island, **params)
+            self.fitness = self.fitness_function(individual=self, island=island, **params)
         except Exception as exc:
             island._verbose_logging(f"ERROR: {self.name} - {repr(self.chromosome)} - {repr(exc)}")
             raise GeneticAlgorithmError(message=f'Could not evaluate individual "{self.name}" due to {repr(exc)}')
@@ -470,7 +472,7 @@ class Island:
                                 filename=datetime.utcnow().strftime('%Y-%m-%d-ga-output.log'),
                                 datefmt='%H:%M:%S')
 
-        self._verbose_logging(f"island: create")
+        self._verbose_logging(f"island: create v{package_version}")
         if function_params:
             self._verbose_logging(f"island: param {function_params}")
             self.function_params = function_params
@@ -837,7 +839,7 @@ class Island:
                     child.reset_name()
                     child.register_parent_names(parents)
                     child.age = 0
-                    child.reset_fitness()
+                    # child.reset_fitness()
 
                 generation_children.extend(children)
 
@@ -851,7 +853,7 @@ class Island:
 
                 mutated = self.mutation(island=self, individual=mutant, **mutation_params)
 
-                mutated.reset_fitness()
+                # mutated.reset_fitness()
                 generation_mutants.append(mutated)
 
         self.mutants.append({'generation': g, 'mutants': generation_mutants})
