@@ -11,7 +11,9 @@ Changelog
 History
 ==========================
 
-Version 0.2.5
+Version 0.2.5 (2021-08-18)
 --------------------------
 
-* documentation
+* Fitness function now takes the individual instead of chromosome
+* Fitness not reset for offspring
+* Documentation extended
