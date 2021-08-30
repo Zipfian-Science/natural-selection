@@ -31,6 +31,35 @@ def selection_elites_tournament(individuals : list, n : int = 4, tournament_size
         elites.extend(selection_elites_top_n(selection, 1))
     return elites
 
+def selection_elites_tournament_unique(individuals : list, n : int = 4, tournament_size : int = 5, max_step : int = 100, island=None) -> list:
+    """
+    Classic tournament selection but ensures a unique list of selected individuals. Given a number of selection rounds (`n`), select a random list of individuals of `tournament_size` and select the top individual from the random selection.
+
+    Args:
+        individuals (list): A list of Individuals.
+        n (int): The number of tournaments to run, effectively the number of selected individuals to return (default = 4).
+        tournament_size (int): The number of random individuals to select during each tournament (default = 5).
+        max_step (int): In the unlikely event that a unique list of size `n` can not be achieved, break out of the loop after this amount of steps (default = 100).
+        island (Island): The Island calling the method (default = None).
+
+    Returns:
+        list: Top n Individuals from tournaments.
+    """
+    elites = []
+    i = 0
+    steps = 0
+    while i < n:
+        selection = selection_elites_random(individuals, tournament_size)
+        fittest = selection_elites_top_n(selection, 1)[0]
+        steps += 1
+        if not fittest in elites:
+            elites.append(fittest)
+            i += 1
+            continue
+        if steps >= max_step:
+            break
+    return elites
+
 def selection_elites_random(individuals : list, n : int = 4, island=None) -> list:
     """
     Completely random selection.
