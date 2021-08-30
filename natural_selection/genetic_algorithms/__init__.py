@@ -20,6 +20,8 @@ from datetime import datetime
 import os
 from collections import OrderedDict
 
+import numpy as np
+
 from natural_selection import get_random_string
 from natural_selection.genetic_algorithms.operators.initialisation import initialise_population_random
 from natural_selection.genetic_algorithms.operators.selection import selection_elites_top_n, selection_parents_two, selection_survivors_all
@@ -504,7 +506,7 @@ class Island:
         logging_function (Callable): Function for custom message logging, such as server logging (default = None).
         filepath (str): If a filepath is specified, the pickled island is loaded from it, skipping the rest of initialisation (default = None).
         save_checkpoint_level (int): Level of checkpoint saving 0 = none, 1 = per generation, 2 = per evaluation (default = 0).
-        force_genetic_diversity (bool): Only add new offspring to the population if they have a unique chromosome (default = True).
+        allow_twins (bool): Only add new offspring to the population if they have a unique chromosome (default = False).
 
     Attributes:
         unique_genome (list): List of unique chromosomes.
@@ -533,7 +535,7 @@ class Island:
                  logging_function : Callable = None,
                  filepath : str = None,
                  save_checkpoint_level : int = 0,
-                 force_genetic_diversity : bool = True):
+                 allow_twins : bool = False):
 
         if filepath:
             self.load_island(filepath)
@@ -577,8 +579,8 @@ class Island:
         self.survivor_selection = survivor_selection_function
         self._verbose_logging(f"island: survivor_selection_function {survivor_selection_function.__name__}")
 
-        self.force_genetic_diversity = force_genetic_diversity
-        self._verbose_logging(f"island: force_genetic_diversity {force_genetic_diversity}")
+        self.allow_twins = allow_twins
+        self._verbose_logging(f"island: allow_twins {allow_twins}")
 
         self.random_seed = random_seed
         self._verbose_logging(f"island: random_seed {random_seed}")
@@ -934,63 +936,71 @@ class Island:
 
         self.mutants.append({'generation': g, 'mutants': generation_mutants})
 
+        offspring_fitnesses = list()
+
         if self.save_checkpoint_level == 2:
             self._save_checkpoint(event=f'evolve_pre_eval_{g}')
         for individual in generation_children:
             self._verbose_logging(f"evolve: eval {repr(individual)}")
             individual.evaluate(island=self, params=self.function_params)
+            offspring_fitnesses.append(individual.fitness)
         if self.save_checkpoint_level == 2:
             self._save_checkpoint(event=f'evolve_post_eval_{g}')
 
+
         for individual in self.survivor_selection(individuals=generation_children, island=self, **survivor_selection_params):
-            if self.force_genetic_diversity:
-                # If we want a diverse gene pool, this must be true
-                if not individual.unique_genetic_code() in self.unique_genome:
-                    self._verbose_logging(f"evolve: add {repr(individual)}")
-                    self.population.append(individual)
-                    self.unique_genome.append(individual.unique_genetic_code())
-            else:
+            if self.allow_twins:
                 # Else, add it effectively allowing "twins" to exist
                 self._verbose_logging(f"evolve: add {repr(individual)}")
                 self.population.append(individual)
                 self.unique_genome.append(individual.unique_genetic_code())
+            elif not individual.unique_genetic_code() in self.unique_genome:
+                # If we want a diverse gene pool, this must be true
+                self._verbose_logging(f"evolve: add {repr(individual)}")
+                self.population.append(individual)
+                self.unique_genome.append(individual.unique_genetic_code())
+
 
         population_fitnesses = [ind.fitness for ind in self.population]
         elite_fitnesses = [ind.fitness for ind in elites]
 
-        population_length = len(self.population)
-        population_mean = sum(population_fitnesses) / population_length
-        population_sum2 = sum(x * x for x in population_fitnesses)
-        population_std = abs(population_sum2 / population_length - population_mean ** 2) ** 0.5
-
         self.generation_info.append(
             {
-                'stat': 'population',
+                'stat': 'offspring',
                 'generation': g,
-                'pop_len': population_length,
-                'fitness_mean': population_mean,
-                'fitness_std': population_std,
-                'fitness_min': min(population_fitnesses),
-                'fitness_max': max(population_fitnesses),
+                'pop_len': len(offspring_fitnesses),
+                'fitness_mean': np.mean(offspring_fitnesses),
+                'fitness_std': np.std(offspring_fitnesses),
+                'fitness_min': min(offspring_fitnesses),
+                'fitness_max': max(offspring_fitnesses),
             }
         )
 
         self._verbose_logging(f"evolve: stats {self.generation_info[-1]}")
 
-        elite_length = len(elites)
-        elite_mean = sum(elite_fitnesses) / elite_length
-        elite_sum2 = sum(x * x for x in elite_fitnesses)
-        elite_std = abs(elite_sum2 / elite_length - elite_mean ** 2) ** 0.5
-
         self.generation_info.append(
             {
                 'stat': 'elites',
                 'generation': g,
-                'pop_len': elite_length,
-                'fitness_mean': elite_mean,
-                'fitness_std': elite_std,
+                'pop_len': len(elite_fitnesses),
+                'fitness_mean': np.mean(elite_fitnesses),
+                'fitness_std': np.std(elite_fitnesses),
                 'fitness_min': min(elite_fitnesses),
                 'fitness_max': max(elite_fitnesses),
+            }
+        )
+
+        self._verbose_logging(f"evolve: stats {self.generation_info[-1]}")
+
+        self.generation_info.append(
+            {
+                'stat': 'population',
+                'generation': g,
+                'pop_len': len(population_fitnesses),
+                'fitness_mean': np.mean(population_fitnesses),
+                'fitness_std': np.std(population_fitnesses),
+                'fitness_min': min(population_fitnesses),
+                'fitness_max': max(population_fitnesses),
             }
         )
 
