@@ -11,6 +11,11 @@ Changelog
 History
 ==========================
 
+Version 0.2.7 (2021-08-31)
+--------------------------
+
+* Fixed major bug in not adding new offspring due to genetic code not being reset
+
 Version 0.2.6 (2021-08-31)
 --------------------------
 

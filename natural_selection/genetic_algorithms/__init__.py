@@ -917,7 +917,6 @@ class Island:
                     child.reset_name()
                     child.register_parent_names(parents)
                     child.age = 0
-                    # child.reset_fitness()
 
                 generation_children.extend(children)
 
@@ -931,7 +930,6 @@ class Island:
 
                 mutated = self.mutation(island=self, individual=mutant, **mutation_params)
 
-                # mutated.reset_fitness()
                 generation_mutants.append(mutated)
 
         self.mutants.append({'generation': g, 'mutants': generation_mutants})
@@ -941,6 +939,7 @@ class Island:
         if self.save_checkpoint_level == 2:
             self._save_checkpoint(event=f'evolve_pre_eval_{g}')
         for individual in generation_children:
+            individual.reset_fitness()
             self._verbose_logging(f"evolve: eval {repr(individual)}")
             individual.evaluate(island=self, params=self.function_params)
             offspring_fitnesses.append(individual.fitness)
