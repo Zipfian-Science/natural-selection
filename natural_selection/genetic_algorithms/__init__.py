@@ -964,19 +964,19 @@ class Island:
         population_fitnesses = [ind.fitness for ind in self.population]
         elite_fitnesses = [ind.fitness for ind in elites]
 
-        self.generation_info.append(
-            {
-                'stat': 'offspring',
-                'generation': g,
-                'pop_len': len(offspring_fitnesses),
-                'fitness_mean': np.mean(offspring_fitnesses),
-                'fitness_std': np.std(offspring_fitnesses),
-                'fitness_min': min(offspring_fitnesses),
-                'fitness_max': max(offspring_fitnesses),
-            }
-        )
-
-        self._verbose_logging(f"evolve: stats {self.generation_info[-1]}")
+        if len(offspring_fitnesses) > 0:
+            self.generation_info.append(
+                {
+                    'stat': 'offspring',
+                    'generation': g,
+                    'pop_len': len(offspring_fitnesses),
+                    'fitness_mean': np.mean(offspring_fitnesses),
+                    'fitness_std': np.std(offspring_fitnesses),
+                    'fitness_min': min(offspring_fitnesses),
+                    'fitness_max': max(offspring_fitnesses),
+                }
+            )
+            self._verbose_logging(f"evolve: stats {self.generation_info[-1]}")
 
         self.generation_info.append(
             {
