@@ -11,6 +11,15 @@ Changelog
 History
 ==========================
 
+Version 0.2.6 (2021-08-31)
+--------------------------
+
+* Renamed ``force_genetic_diversity`` to ``allow_twins``
+* Added new tournament selection function of unique only selection, see ``selection_elites_tournament_unique``
+* Fixed bug in ``crossover_two_n_point`` where crossover was just swapping genes, and effectively not creating true offspring
+* Logging offspring stats too
+* Now individuals and chromosomes can have custom properties easily added
+
 Version 0.2.5 (2021-08-18)
 --------------------------
 

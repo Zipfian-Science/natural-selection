@@ -127,7 +127,7 @@ def main(args):
     if args.pipreq:
         lock_and_gen_pipreq()
 
-    if args.build:
+    if args.build or args.deploy:
         build_wheel()
 
     if args.deploy:
@@ -159,6 +159,8 @@ def main(args):
             with open("natural_selection/__init__.py", "w") as f:
                 f.writelines(lines)
 
+        print(f"{bcolors.OKGREEN}{bcolors.BOLD}-- Version number bumped to {version}!{bcolors.ENDC}")
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -170,7 +172,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--build",
         "-b",
-        help="Build wheel",
+        help="Build wheel, not required if -d is used",
         action="store_true",
         default=False
     )
