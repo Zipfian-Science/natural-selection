@@ -85,6 +85,7 @@ See :ref:`changelog-page` for version history.
 
 Latest version:
 
+* Fixed major bug in not adding new offspring due to genetic code not being reset
 * Renamed ``force_genetic_diversity`` to ``allow_twins``
 * Added new tournament selection function of unique only selection, see ``selection_elites_tournament_unique``
 * Fixed bug in ``crossover_two_n_point`` where crossover was just swapping genes, and effectively not creating true offspring
