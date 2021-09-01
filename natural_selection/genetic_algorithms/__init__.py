@@ -544,6 +544,8 @@ class Island:
         self.logging_function = logging_function
         if name is None:
             self.name = get_random_string(include_numeric=True)
+        else:
+            self.name = name
         if verbose:
             logging.basicConfig(level=logging.INFO,
                                 format='%(asctime)s %(island)-8s %(message)s',
