@@ -34,6 +34,8 @@ def initialise_population_mutation_function(adam, n : int = 10, mutation_params 
     Returns:
         list: Population members.
     """
+    import copy
+
     population = list()
 
     if mutation_params:
@@ -42,9 +44,9 @@ def initialise_population_mutation_function(adam, n : int = 10, mutation_params 
         _mutation_params = {}
 
     for i in range(n - 1):
-        eve = island.create_individual(adam.fitness_function, chromosome=adam.chromosome)
-        mutated = island.mutation(island=island, individual=eve, **_mutation_params)
-        population.append(mutated)
+        eve = island.create_individual(adam.fitness_function, chromosome=copy.deepcopy(adam.chromosome))
+        eve = island.mutation(island=island, individual=eve, **_mutation_params)
+        population.append(eve)
 
     population.append(adam)
 
