@@ -11,7 +11,7 @@ Changelog
 History
 ==========================
 
-Version 0.2.8 (2021-)
+Version 0.2.8 (2021-09-01)
 --------------------------
 
 * Added new randomise function: ``mutation_randomize_n_point``
