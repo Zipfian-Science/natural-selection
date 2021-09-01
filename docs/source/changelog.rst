@@ -11,6 +11,11 @@ Changelog
 History
 ==========================
 
+Version 0.2.9 (2021-09-01)
+--------------------------
+
+* Fixed major bug in ``initialise_population_mutation_function``, due to chromosomes not being copied
+
 Version 0.2.8 (2021-09-01)
 --------------------------
 
