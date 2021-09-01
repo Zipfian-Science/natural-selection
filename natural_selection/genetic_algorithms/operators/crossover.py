@@ -62,6 +62,5 @@ def crossover_two_n_point(individuals : list, n_points : int = 1, prob : float =
             b = point_cut_list[i]
             e = point_cut_list[i+1]
             mother.chromosome[b:e], father.chromosome[b:e] = father.chromosome[b:e], mother.chromosome[b:e]
-        print('')
 
     return [mother, father]

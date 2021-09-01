@@ -34,3 +34,7 @@ Mutation operators
 Uniform Random
 ---------------------
 .. autofunction:: natural_selection.genetic_algorithms.operators.mutation.mutation_randomize
+
+Random Point
+---------------------
+.. autofunction:: natural_selection.genetic_algorithms.operators.mutation.mutation_randomize_n_point
