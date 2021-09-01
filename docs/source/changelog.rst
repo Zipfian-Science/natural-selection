@@ -11,6 +11,12 @@ Changelog
 History
 ==========================
 
+Version 0.2.8 (2021-)
+--------------------------
+
+* Added new randomise function: ``mutation_randomize_n_point``
+* Added new initialisation function ``initialise_population_mutation_function`` to use the defined mutation function
+
 Version 0.2.7 (2021-08-31)
 --------------------------
 

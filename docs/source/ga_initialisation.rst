@@ -41,3 +41,7 @@ Initialisation
 Random Initialisation
 ---------------------
 .. autofunction:: natural_selection.genetic_algorithms.operators.initialisation.initialise_population_random
+
+Initialisation with mutation function
+-------------------------------------
+.. autofunction:: natural_selection.genetic_algorithms.operators.initialise_population_mutation_function
