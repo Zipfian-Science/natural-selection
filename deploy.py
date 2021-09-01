@@ -62,18 +62,22 @@ def lock_and_gen_pipreq():
 
 def upload_docs_via_ftp():
     print(f'{bcolors.UNDERLINE}{bcolors.BOLD}{bcolors.HEADER}-- Upload documentation to FTP server! {bcolors.ENDC}')
-    with ftplib.FTP(os.getenv('FTP_HOST'), os.getenv('FTP_USERNAME'), os.getenv('FTP_PASSWORD')) as ftp:
-        ftp.cwd(os.getenv('FTP_DIRECTORY'))
+    try:
+        with ftplib.FTP(os.getenv('FTP_HOST'), os.getenv('FTP_USERNAME'), os.getenv('FTP_PASSWORD')) as ftp:
+            ftp.cwd(os.getenv('FTP_DIRECTORY'))
 
-        for f in glob.glob('./docs/build/html/*'):
-            if os.path.isfile(f):
-                with open(f, 'rb') as _f:
-                    file_path = Path(f)
-                    try:
-                        ftp.storlines(f'STOR {file_path.name}', _f)
-                        print(f"{bcolors.OKBLUE}Uploaded: {file_path.name}{bcolors.ENDC}")
-                    except Exception as exc:
-                        print(f"{bcolors.FAIL}{bcolors.BOLD}-- ERROR: {f} {str(exc)}!{bcolors.ENDC}")
+            for f in glob.glob('./docs/build/html/*'):
+                if os.path.isfile(f):
+                    with open(f, 'rb') as _f:
+                        file_path = Path(f)
+                        try:
+                            ftp.storlines(f'STOR {file_path.name}', _f)
+                            print(f"{bcolors.OKBLUE}Uploaded: {file_path.name}{bcolors.ENDC}")
+                        except Exception as exc:
+                            print(f"{bcolors.FAIL}{bcolors.BOLD}-- ERROR: {f} {str(exc)}!{bcolors.ENDC}")
+    except Exception as exc:
+        print(f"{bcolors.FAIL}{bcolors.BOLD}-- ERROR: {f} {str(exc)}!{bcolors.ENDC}")
+        return
 
     print(f'{bcolors.UNDERLINE}-- Docs uploaded! {bcolors.ENDC}')
 

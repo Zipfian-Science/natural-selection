@@ -83,10 +83,9 @@ Changes and history
 
 See :ref:`changelog-page` for version history.
 
-Latest version 0.2.8 (2021-09-01):
+Latest version 0.2.9 (2021-09-01):
 
-* Added new randomise function: ``mutation_randomize_n_point``
-* Added new initialisation function ``initialise_population_mutation_function`` to use the defined mutation function
+* Fixed major bug in ``initialise_population_mutation_function``, due to chromosomes not being copied
 
 
 Indices and tables
