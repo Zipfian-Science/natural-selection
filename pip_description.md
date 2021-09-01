@@ -30,9 +30,9 @@ by Zipfian Science
 ```
 Python tools for creating and running Evolutionary Algorithm (EA) experiments by [Zipfian Science](https://zipfian.science/).
 
-For documentation, see [docs](http://docs.zipfian.science/natural-selection/index.html).
-
-Source on [GitHub](https://github.com/Zipfian-Science/natural-selection).
+* For documentation, see [docs](http://docs.zipfian.science/natural-selection/index.html).
+* Source on [GitHub](https://github.com/Zipfian-Science/natural-selection).
+* For history, see [changelog](http://docs.zipfian.science/natural-selection/changelog.html#changelog-page)
 ## Install
 
 ```shell script
@@ -53,7 +53,7 @@ g_2 = Gene(name="test_real", value=0.5, gene_max=1.0, gene_min=0.1, randomise_fu
 gen = Chromosome([g_1, g_2])
 
 # Next, create an individual to carry these genes and evaluate them
-fitness_function = lambda gen, x, y: gen[0].value * x + y
+fitness_function = lambda island, individual, x, y: individual.chromosome[0].value * x + individual.chromosome[0].value * y
 adam = Individual(fitness_function, name="Adam", chromosome=gen)
 
 # Now we can create an island for running the evolutionary process

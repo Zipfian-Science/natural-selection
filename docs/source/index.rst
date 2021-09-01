@@ -55,7 +55,7 @@ Then simply create a GA experiment:
    gen = Chromosome([g_1, g_2])
 
    # Next, create an individual to carry these genes and evaluate them
-   fitness_function = lambda island, gen, x, y: gen[0].value * x + y
+   fitness_function = lambda island, individual, x, y: individual.chromosome[0].value * x + individual.chromosome[0].value * y
    adam = Individual(fitness_function, name="Adam", chromosome=gen)
 
    # Now we can create an island for running the evolutionary process
@@ -83,9 +83,10 @@ Changes and history
 
 See :ref:`changelog-page` for version history.
 
-Latest version:
+Latest version 0.2.9 (2021-09-01):
 
-* documentation
+* Fixed major bug in ``initialise_population_mutation_function``, due to chromosomes not being copied
+
 
 Indices and tables
 ==================

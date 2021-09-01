@@ -35,13 +35,14 @@ def crossover_two_uniform(individuals : list, prob : float = 0.5, island=None) -
 
     return [mother, father]
 
-def crossover_two_n_point(individuals : list, n_points : int = 1, island=None) -> list:
+def crossover_two_n_point(individuals : list, n_points : int = 1, prob : float = 0.5, island=None) -> list:
     """
     Classic crossover method to randomly select N points for crossover.
 
     Args:
         individuals (list): A list (length of 2) of Individuals to perform crossover.
         n_points (int): The amount of random points to split at (default = 1).
+        prob (float): The probability of swapping genes.
         island (Island): The Island calling the method (default = None).
 
     Returns:
@@ -57,8 +58,9 @@ def crossover_two_n_point(individuals : list, n_points : int = 1, island=None) -
     point_cut_list.insert(0,0)
     point_cut_list.append(size)
     for i in range(len(point_cut_list)-1):
-        b = point_cut_list[i]
-        e = point_cut_list[i+1]
-        mother.chromosome[b:e], father.chromosome[b:e] = father.chromosome[b:e], mother.chromosome[b:e]
+        if random.random() < prob:
+            b = point_cut_list[i]
+            e = point_cut_list[i+1]
+            mother.chromosome[b:e], father.chromosome[b:e] = father.chromosome[b:e], mother.chromosome[b:e]
 
     return [mother, father]

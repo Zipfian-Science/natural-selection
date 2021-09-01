@@ -54,6 +54,8 @@ Tournament selection
 ---------------------
 .. autofunction:: natural_selection.genetic_algorithms.operators.selection.selection_elites_tournament
 
+.. autofunction:: natural_selection.genetic_algorithms.operators.selection.selection_elites_tournament_unique
+
 Random selection
 ---------------------
 .. autofunction:: natural_selection.genetic_algorithms.operators.selection.selection_elites_random

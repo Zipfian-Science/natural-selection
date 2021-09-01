@@ -18,6 +18,9 @@ import pickle
 import logging
 from datetime import datetime
 import os
+from collections import OrderedDict
+
+import numpy as np
 
 from natural_selection import get_random_string
 from natural_selection.genetic_algorithms.operators.initialisation import initialise_population_random
@@ -26,6 +29,8 @@ from natural_selection.genetic_algorithms.operators.crossover import crossover_t
 from natural_selection.genetic_algorithms.operators.mutation import mutation_randomize
 from natural_selection.genetic_algorithms.utils.probability_functions import crossover_prob_function_classic, mutation_prob_function_classic
 from natural_selection.genetic_algorithms.utils import clone_classic, GeneticAlgorithmError
+
+from natural_selection import  __version__ as package_version
 
 class Gene:
     """
@@ -101,6 +106,13 @@ class Gene:
         )
 
     def add_new_property(self, key : str, value : Any):
+        """
+        Method to add new properties (attributes).
+
+        Args:
+            key (str): Name of property.
+            value (Any): Anything.
+        """
         if self.__gene_properties:
             self.__gene_properties.update({key: value})
         else:
@@ -130,9 +142,12 @@ class Chromosome:
     Args:
         genes (list): list of initialised Gene objects.
         gene_verify_func (Callable): A function to verify gene compatibility `func(gene,loc,chromosome)` (default = None).
+        chromosome_properties (dict): For custom functions, extra params may be given (default = None).
     """
 
-    def __init__(self, genes: list = None, gene_verify_func : Callable = None):
+    def __init__(self, genes: list = None,
+                 gene_verify_func : Callable = None,
+                 chromosome_properties : dict = None):
         if genes:
             self.genes = genes
         else:
@@ -141,6 +156,10 @@ class Chromosome:
         if gene_verify_func and '<lambda>' in repr(gene_verify_func):
             w.warn("WARNING: 'gene_verify_func' lambda can not be pickled using standard libraries.")
         self.gene_verify_func = gene_verify_func
+        self.__chromosome_properties = chromosome_properties
+        if chromosome_properties:
+            for k, v in chromosome_properties.items():
+                self.__dict__.update({k: v})
 
     def append(self, gene: Gene):
         """
@@ -154,6 +173,37 @@ class Chromosome:
             raise GeneticAlgorithmError(message="Added gene did not pass compatibility tests!")
         self.genes.append(gene)
 
+    def add_new_property(self, key : str, value : Any):
+        """
+        Method to add new properties (attributes).
+
+        Args:
+            key (str): Name of property.
+            value (Any): Anything.
+        """
+        if self.__chromosome_properties:
+            self.__chromosome_properties.update({key: value})
+        else:
+            self.__chromosome_properties = {key: value}
+        self.__dict__.update({key: value})
+
+    def randomise_gene(self, index : int):
+        """
+        Randomise a gene at index.
+
+        Args:
+            index (int): Index of gene.
+        """
+        assert index < len(self.genes), 'Index Out of bounds!'
+        self.genes[index].randomise()
+
+    def randomise_all_genes(self):
+        """
+        Randomises all genes in chromosome.
+        """
+        for gene in self.genes:
+            gene.randomise()
+
     def __setitem__(self, index, gene):
         if isinstance(index, slice):
             assert index.start < len(self.genes), 'Index Out of bounds!'
@@ -164,6 +214,16 @@ class Chromosome:
         if self.gene_verify_func and not self.gene_verify_func(gene=gene, loc=index, chromosome=self):
             raise GeneticAlgorithmError("Index set gene did not pass compatibility tests!")
         self.genes[index] = gene
+
+    def to_dict(self) -> OrderedDict:
+        """
+        Helper function to convert chromosome into a key-value Python dictionary, assuming genes have unique names!
+
+        Returns:
+            OrderedDict: Ordered dictionary of genes.
+        """
+        return OrderedDict({gene.name : gene.value for gene in self.genes})
+
 
     def __getitem__(self, index) -> Gene:
         if isinstance(index, slice):
@@ -207,6 +267,7 @@ class Individual:
         name (str): Name for keeping track of lineage (default = None).
         chromosome (Chromosome): A Chromosome object, initialised (default = None).
         species_type (str) : A unique string to identify the species type, for preventing cross polluting (default = None).
+        individual_properties (dict): For fitness functions, extra params may be given (default = None).
 
     Attributes:
         fitness (Numeric): The fitness score after evaluation.
@@ -219,7 +280,8 @@ class Individual:
     def __init__(self, fitness_function : Callable = None,
                  name : str = None,
                  chromosome: Chromosome = None,
-                 species_type : str = None):
+                 species_type : str = None,
+                 individual_properties : dict = None):
         if fitness_function and '<lambda>' in repr(fitness_function):
             w.warn("WARNING: 'fitness_function' lambda can not be pickled using standard libraries.")
         if name is None:
@@ -240,6 +302,11 @@ class Individual:
             self.species_type = species_type
         else:
             self.species_type = "def"
+
+        self.__individual_properties = individual_properties
+        if individual_properties:
+            for k, v in individual_properties.items():
+                self.__dict__.update({k: v})
 
     def register_parent_names(self, parents : list, reset_parent_name_list : bool = True):
         """
@@ -307,7 +374,7 @@ class Individual:
             numeric: Fitness value.
         """
         try:
-            self.fitness = self.fitness_function(chromosome=self.chromosome, island=island, **params)
+            self.fitness = self.fitness_function(individual=self, island=island, **params)
         except Exception as exc:
             island._verbose_logging(f"ERROR: {self.name} - {repr(self.chromosome)} - {repr(exc)}")
             raise GeneticAlgorithmError(message=f'Could not evaluate individual "{self.name}" due to {repr(exc)}')
@@ -344,6 +411,19 @@ class Individual:
         with open(filepath, "rb") as f:
             self.__dict__.update(pickle.load(f))
 
+    def add_new_property(self, key : str, value : Any):
+        """
+        Method to add new properties (attributes).
+
+        Args:
+            key (str): Name of property.
+            value (Any): Anything.
+        """
+        if self.__individual_properties:
+            self.__individual_properties.update({key: value})
+        else:
+            self.__individual_properties = {key: value}
+        self.__dict__.update({key: value})
 
     def __str__(self) -> str:
         return f'Individual({self.name}:{self.fitness})'
@@ -426,7 +506,7 @@ class Island:
         logging_function (Callable): Function for custom message logging, such as server logging (default = None).
         filepath (str): If a filepath is specified, the pickled island is loaded from it, skipping the rest of initialisation (default = None).
         save_checkpoint_level (int): Level of checkpoint saving 0 = none, 1 = per generation, 2 = per evaluation (default = 0).
-        force_genetic_diversity (bool): Only add new offspring to the population if they have a unique chromosome (default = True).
+        allow_twins (bool): Only add new offspring to the population if they have a unique chromosome (default = False).
 
     Attributes:
         unique_genome (list): List of unique chromosomes.
@@ -455,7 +535,7 @@ class Island:
                  logging_function : Callable = None,
                  filepath : str = None,
                  save_checkpoint_level : int = 0,
-                 force_genetic_diversity : bool = True):
+                 allow_twins : bool = False):
 
         if filepath:
             self.load_island(filepath)
@@ -470,7 +550,7 @@ class Island:
                                 filename=datetime.utcnow().strftime('%Y-%m-%d-ga-output.log'),
                                 datefmt='%H:%M:%S')
 
-        self._verbose_logging(f"island: create")
+        self._verbose_logging(f"island: create v{package_version}")
         if function_params:
             self._verbose_logging(f"island: param {function_params}")
             self.function_params = function_params
@@ -499,8 +579,8 @@ class Island:
         self.survivor_selection = survivor_selection_function
         self._verbose_logging(f"island: survivor_selection_function {survivor_selection_function.__name__}")
 
-        self.force_genetic_diversity = force_genetic_diversity
-        self._verbose_logging(f"island: force_genetic_diversity {force_genetic_diversity}")
+        self.allow_twins = allow_twins
+        self._verbose_logging(f"island: allow_twins {allow_twins}")
 
         self.random_seed = random_seed
         self._verbose_logging(f"island: random_seed {random_seed}")
@@ -837,7 +917,6 @@ class Island:
                     child.reset_name()
                     child.register_parent_names(parents)
                     child.age = 0
-                    child.reset_fitness()
 
                 generation_children.extend(children)
 
@@ -851,68 +930,76 @@ class Island:
 
                 mutated = self.mutation(island=self, individual=mutant, **mutation_params)
 
-                mutated.reset_fitness()
                 generation_mutants.append(mutated)
 
         self.mutants.append({'generation': g, 'mutants': generation_mutants})
 
+        offspring_fitnesses = list()
+
         if self.save_checkpoint_level == 2:
             self._save_checkpoint(event=f'evolve_pre_eval_{g}')
         for individual in generation_children:
+            individual.reset_fitness()
             self._verbose_logging(f"evolve: eval {repr(individual)}")
             individual.evaluate(island=self, params=self.function_params)
+            offspring_fitnesses.append(individual.fitness)
         if self.save_checkpoint_level == 2:
             self._save_checkpoint(event=f'evolve_post_eval_{g}')
 
+
         for individual in self.survivor_selection(individuals=generation_children, island=self, **survivor_selection_params):
-            if self.force_genetic_diversity:
-                # If we want a diverse gene pool, this must be true
-                if not individual.unique_genetic_code() in self.unique_genome:
-                    self._verbose_logging(f"evolve: add {repr(individual)}")
-                    self.population.append(individual)
-                    self.unique_genome.append(individual.unique_genetic_code())
-            else:
+            if self.allow_twins:
                 # Else, add it effectively allowing "twins" to exist
                 self._verbose_logging(f"evolve: add {repr(individual)}")
                 self.population.append(individual)
                 self.unique_genome.append(individual.unique_genetic_code())
+            elif not individual.unique_genetic_code() in self.unique_genome:
+                # If we want a diverse gene pool, this must be true
+                self._verbose_logging(f"evolve: add {repr(individual)}")
+                self.population.append(individual)
+                self.unique_genome.append(individual.unique_genetic_code())
+
 
         population_fitnesses = [ind.fitness for ind in self.population]
         elite_fitnesses = [ind.fitness for ind in elites]
 
-        population_length = len(self.population)
-        population_mean = sum(population_fitnesses) / population_length
-        population_sum2 = sum(x * x for x in population_fitnesses)
-        population_std = abs(population_sum2 / population_length - population_mean ** 2) ** 0.5
-
-        self.generation_info.append(
-            {
-                'stat': 'population',
-                'generation': g,
-                'pop_len': population_length,
-                'fitness_mean': population_mean,
-                'fitness_std': population_std,
-                'fitness_min': min(population_fitnesses),
-                'fitness_max': max(population_fitnesses),
-            }
-        )
-
-        self._verbose_logging(f"evolve: stats {self.generation_info[-1]}")
-
-        elite_length = len(elites)
-        elite_mean = sum(elite_fitnesses) / elite_length
-        elite_sum2 = sum(x * x for x in elite_fitnesses)
-        elite_std = abs(elite_sum2 / elite_length - elite_mean ** 2) ** 0.5
+        if len(offspring_fitnesses) > 0:
+            self.generation_info.append(
+                {
+                    'stat': 'offspring',
+                    'generation': g,
+                    'pop_len': len(offspring_fitnesses),
+                    'fitness_mean': np.mean(offspring_fitnesses),
+                    'fitness_std': np.std(offspring_fitnesses),
+                    'fitness_min': min(offspring_fitnesses),
+                    'fitness_max': max(offspring_fitnesses),
+                }
+            )
+            self._verbose_logging(f"evolve: stats {self.generation_info[-1]}")
 
         self.generation_info.append(
             {
                 'stat': 'elites',
                 'generation': g,
-                'pop_len': elite_length,
-                'fitness_mean': elite_mean,
-                'fitness_std': elite_std,
+                'pop_len': len(elite_fitnesses),
+                'fitness_mean': np.mean(elite_fitnesses),
+                'fitness_std': np.std(elite_fitnesses),
                 'fitness_min': min(elite_fitnesses),
                 'fitness_max': max(elite_fitnesses),
+            }
+        )
+
+        self._verbose_logging(f"evolve: stats {self.generation_info[-1]}")
+
+        self.generation_info.append(
+            {
+                'stat': 'population',
+                'generation': g,
+                'pop_len': len(population_fitnesses),
+                'fitness_mean': np.mean(population_fitnesses),
+                'fitness_std': np.std(population_fitnesses),
+                'fitness_min': min(population_fitnesses),
+                'fitness_max': max(population_fitnesses),
             }
         )
 

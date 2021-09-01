@@ -5,7 +5,7 @@ from natural_selection.genetic_algorithms.utils.random_functions import random_i
 class TestIndividual(unittest.TestCase):
 
     def setUp(self) -> None:
-        self.fitness = lambda chromosome, island, x, y: chromosome[0].value * x + y
+        self.fitness = lambda individual, island, x, y: individual.chromosome[0].value * x + individual.chromosome[0].value * y
         g_1 = Gene(name="test", value=3, gene_max=10, gene_min=1, randomise_function=random_int)
         g_2 = Gene(name="test_other", value=4, gene_max=10, gene_min=1, randomise_function=random_int)
         gen = Chromosome([g_1, g_2])
@@ -37,7 +37,7 @@ class TestIndividual(unittest.TestCase):
 
     def test_evaluate(self):
         f = self.ind.evaluate({'x' : 2, 'y' : 5})
-        self.assertEquals(f, 11)
+        self.assertEquals(f, 21)
         self.assertNotEquals(f, 10)
 
     def test_unique_genetic_code(self):
