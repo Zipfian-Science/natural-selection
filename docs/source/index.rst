@@ -83,14 +83,11 @@ Changes and history
 
 See :ref:`changelog-page` for version history.
 
-Latest version:
+Latest version 0.2.8 (2021-09-01):
 
-* Fixed major bug in not adding new offspring due to genetic code not being reset
-* Renamed ``force_genetic_diversity`` to ``allow_twins``
-* Added new tournament selection function of unique only selection, see ``selection_elites_tournament_unique``
-* Fixed bug in ``crossover_two_n_point`` where crossover was just swapping genes, and effectively not creating true offspring
-* Logging offspring stats too
-* Now individuals and chromosomes can have custom properties easily added
+* Added new randomise function: ``mutation_randomize_n_point``
+* Added new initialisation function ``initialise_population_mutation_function`` to use the defined mutation function
+
 
 Indices and tables
 ==================
