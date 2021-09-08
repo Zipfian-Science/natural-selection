@@ -11,6 +11,12 @@ Changelog
 History
 ==========================
 
+Version 0.2.10 (2021-09-08)
+--------------------------
+
+* Fixed bug in ``name`` param of Island.
+* Removed the need to pass a dict of params to ``evaluate`` function of individuals
+
 Version 0.2.9 (2021-09-01)
 --------------------------
 
