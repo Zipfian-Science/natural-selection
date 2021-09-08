@@ -83,9 +83,10 @@ Changes and history
 
 See :ref:`changelog-page` for version history.
 
-Latest version 0.2.9 (2021-09-01):
+Version 0.2.10 (2021-09-08):
 
-* Fixed major bug in ``initialise_population_mutation_function``, due to chromosomes not being copied
+* Fixed bug in ``name`` param of Island.
+* Removed the need to pass a dict of params to ``evaluate`` function of individuals
 
 
 Indices and tables
