@@ -362,21 +362,26 @@ class Individual:
         """
         self.chromosome.append(gene)
 
-    def evaluate(self, params : dict, island=None) -> Any:
+    def evaluate(self, params : dict = None, island=None) -> Any:
         """
         Run the fitness function with the given params.
 
         Args:
-            params (dict): Named dict of eval params.
-            island (Island): Pass the Island for advanced fitness functions based on Island properties and populations.
+            params (dict): Named dict of eval params (default = None).
+            island (Island): Pass the Island for advanced fitness functions based on Island properties and populations (default = None).
 
         Returns:
             numeric: Fitness value.
         """
+        if not params is None:
+            _params = params
+        else:
+            _params = {}
         try:
-            self.fitness = self.fitness_function(individual=self, island=island, **params)
+            self.fitness = self.fitness_function(individual=self, island=island, **_params)
         except Exception as exc:
-            island._verbose_logging(f"ERROR: {self.name} - {repr(self.chromosome)} - {repr(exc)}")
+            if island:
+                island._verbose_logging(f"ERROR: {self.name} - {repr(self.chromosome)} - {repr(exc)}")
             raise GeneticAlgorithmError(message=f'Could not evaluate individual "{self.name}" due to {repr(exc)}')
 
         stamp = { "name": self.name,
