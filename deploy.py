@@ -9,6 +9,8 @@ import ftplib
 import glob
 from pathlib import Path
 
+_project_name = 'natural_selection'
+
 class bcolors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -34,8 +36,8 @@ def upload_to_pypi(release_name):
         release_name = version_name
 
     release_name = release_name.replace("-", "_")
-    local_file = f"dist/natural_selection-{version_name}.tar.gz"
-    remote_file = f"natural_selection-{release_name}.tar.gz"
+    local_file = f"dist/{_project_name}-{version_name}.tar.gz"
+    remote_file = f"{_project_name}-{release_name}.tar.gz"
 
     os.mkdir('deploy')
     shutil.copy(local_file, f"deploy/{remote_file}")
@@ -90,11 +92,11 @@ def build_wheel():
 def delete_build():
     if sys.platform == "win32":
         os.system("RMDIR build /s /q")
-        os.system("RMDIR natural_selection.egg-info /s /q")
+        os.system(f"RMDIR {_project_name}.egg-info /s /q")
 
     else:
         os.system("rm -rf build")
-        os.system("rm -rf natural_selection.egg-info" )
+        os.system(f"rm -rf {_project_name}.egg-info" )
 
 
 def delete_dist():
@@ -156,11 +158,11 @@ def main(args):
         with open("version.json", "w") as f:
             json.dump(version, f)
 
-        with open("natural_selection/__init__.py", "r") as f:
+        with open(f"{_project_name}/__init__.py", "r") as f:
             lines = f.readlines()
             lines[0] = "__version__ = '{major}.{minor}.{patch}'\n".format(**version)
         if lines:
-            with open("natural_selection/__init__.py", "w") as f:
+            with open(f"{_project_name}/__init__.py", "w") as f:
                 f.writelines(lines)
 
         print(f"{bcolors.OKGREEN}{bcolors.BOLD}-- Version number bumped to {version}!{bcolors.ENDC}")
@@ -169,8 +171,8 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        description="""
-        Builds Natural Selection libs package, runs tests, builds docs, and deploys to PyPi.
+        description=f"""
+        Builds {_project_name} libs package, runs tests, builds docs, and deploys to PyPi.
         """,
     )
     parser.add_argument(
