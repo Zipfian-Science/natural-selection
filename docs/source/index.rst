@@ -83,10 +83,10 @@ Changes and history
 
 See :ref:`changelog-page` for version history.
 
-Version 0.2.10 (2021-09-08):
+Version 0.2.11 (2021-09-24)
 
-* Fixed bug in ``name`` param of Island.
-* Removed the need to pass a dict of params to ``evaluate`` function of individuals
+* Fixed flaw where chromosome and individual properties aren't being copied with initialisation.
+* Renamed ``_verbose_logging`` to ``verbose_logging`` to publicly expose.
 
 
 Indices and tables
