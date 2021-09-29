@@ -19,6 +19,7 @@ import logging
 from datetime import datetime
 import os
 from collections import OrderedDict
+import copy
 
 import numpy as np
 
@@ -94,15 +95,15 @@ class Gene:
             Gene: Newly created gene.
         """
         return Gene(
-            name=self.name,
+            name=copy.copy(self.name),
             value=self.randomise_function(gene=self),
             randomise_function=self.randomise_function,
-            gene_max=self.gene_max,
-            gene_min=self.gene_min,
-            mu=self.mu,
-            sig=self.sig,
-            choices=self.choices,
-            gene_properties=self.__gene_properties
+            gene_max=copy.copy(self.gene_max),
+            gene_min=copy.copy(self.gene_min),
+            mu=copy.copy(self.mu),
+            sig=copy.copy(self.sig),
+            choices=copy.deepcopy(self.choices),
+            gene_properties=copy.deepcopy(self.__gene_properties)
         )
 
     def add_new_property(self, key : str, value : Any):
@@ -188,6 +189,12 @@ class Chromosome:
         self.__dict__.update({key: value})
 
     def get_properties(self):
+        """
+        Gets a dict of the custom properties that were added at initialisation or the `add_new_property` method.
+
+        Returns:
+            dict: All custom properties.
+        """
         return self.__chromosome_properties
 
     def randomise_gene(self, index : int):
@@ -434,6 +441,12 @@ class Individual:
         self.__dict__.update({key: value})
 
     def get_properties(self) -> dict:
+        """
+        Gets a dict of the custom properties that were added at initialisation or the `add_new_property` method.
+
+        Returns:
+            dict: All custom properties.
+        """
         return self.__individual_properties
 
     def __str__(self) -> str:

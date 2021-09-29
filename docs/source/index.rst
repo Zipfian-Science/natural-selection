@@ -83,10 +83,9 @@ Changes and history
 
 See :ref:`changelog-page` for version history.
 
-Version 0.2.11 (2021-09-24)
+Version 0.2.12 (2021-09-29)
 
-* Fixed flaw where chromosome and individual properties aren't being copied with initialisation.
-* Renamed ``_verbose_logging`` to ``verbose_logging`` to publicly expose.
+* Added deep copying on randomly creating new gene (to avoid referencing)
 
 
 Indices and tables

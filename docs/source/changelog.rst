@@ -11,6 +11,11 @@ Changelog
 History
 ==========================
 
+Version 0.2.12 (2021-09-29)
+---------------------------
+
+* Added deep copying on randomly creating new gene (to avoid referencing)
+
 Version 0.2.11 (2021-09-24)
 ---------------------------
 
