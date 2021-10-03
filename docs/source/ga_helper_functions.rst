@@ -15,6 +15,14 @@ Cloning functions
 =====================
 .. autofunction:: natural_selection.genetic_algorithms.utils.clone_classic
 
+Island checkpoint functions
+===========================
+.. autofunction:: natural_selection.genetic_algorithms.utils.default_save_checkpoint_function
+
+Pre/post evolution functions
+============================
+.. autofunction:: natural_selection.genetic_algorithms.utils.post_evolution_function_save_all
+
 .. _general-ga-error-class:
 
 General GA Error Class

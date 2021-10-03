@@ -17,7 +17,6 @@ import warnings as w
 import pickle
 import logging
 from datetime import datetime
-import os
 from collections import OrderedDict
 import copy
 
@@ -29,7 +28,7 @@ from natural_selection.genetic_algorithms.operators.selection import selection_e
 from natural_selection.genetic_algorithms.operators.crossover import crossover_two_uniform
 from natural_selection.genetic_algorithms.operators.mutation import mutation_randomize
 from natural_selection.genetic_algorithms.utils.probability_functions import crossover_prob_function_classic, mutation_prob_function_classic
-from natural_selection.genetic_algorithms.utils import clone_classic, GeneticAlgorithmError
+from natural_selection.genetic_algorithms.utils import clone_classic, default_save_checkpoint_function, GeneticAlgorithmError
 
 from natural_selection import  __version__ as package_version
 
@@ -277,6 +276,7 @@ class Individual:
         name (str): Name for keeping track of lineage (default = None).
         chromosome (Chromosome): A Chromosome object, initialised (default = None).
         species_type (str) : A unique string to identify the species type, for preventing cross polluting (default = None).
+        filepath (str): Skip init and load from a pickled file.
         individual_properties (dict): For fitness functions, extra params may be given (default = None).
 
     Attributes:
@@ -291,7 +291,11 @@ class Individual:
                  name : str = None,
                  chromosome: Chromosome = None,
                  species_type : str = None,
+                 filepath : str = None,
                  individual_properties : dict = None):
+        if not filepath is None:
+            self.load_individual(filepath=filepath)
+            return
         if fitness_function and '<lambda>' in repr(fitness_function):
             w.warn("WARNING: 'fitness_function' lambda can not be pickled using standard libraries.")
         if name is None:
@@ -419,10 +423,22 @@ class Individual:
         return self.genetic_code
 
     def save_individual(self, filepath : str):
+        """
+        Save an individual to a pickle file.
+
+        Args:
+            filepath (str): File path to write to.
+        """
         with open(filepath, "wb") as f:
             pickle.dump(self.__dict__, f)
 
     def load_individual(self, filepath : str):
+        """
+        Load an individual from a pickle file.
+
+        Args:
+            filepath (str): File path to load from.
+        """
         with open(filepath, "rb") as f:
             self.__dict__.update(pickle.load(f))
 
@@ -528,6 +544,7 @@ class Island:
         name (str): General name for island, useful when working with multiple islands (default = None).
         verbose (bool): Print all information (default = None).
         logging_function (Callable): Function for custom message logging, such as server logging (default = None).
+        save_checkpoint_function (Callable): Function for custom checkpoint saving (default = None).
         filepath (str): If a filepath is specified, the pickled island is loaded from it, skipping the rest of initialisation (default = None).
         save_checkpoint_level (int): Level of checkpoint saving 0 = none, 1 = per generation, 2 = per evaluation (default = 0).
         allow_twins (bool): Only add new offspring to the population if they have a unique chromosome (default = False).
@@ -557,6 +574,7 @@ class Island:
                  name : str = None,
                  verbose : bool = True,
                  logging_function : Callable = None,
+                 save_checkpoint_function: Callable = default_save_checkpoint_function,
                  filepath : str = None,
                  save_checkpoint_level : int = 0,
                  allow_twins : bool = False):
@@ -604,6 +622,9 @@ class Island:
         self.verbose_logging(f"island: clone_function {clone_function.__name__}")
         self.survivor_selection = survivor_selection_function
         self.verbose_logging(f"island: survivor_selection_function {survivor_selection_function.__name__}")
+
+        self.save_checkpoint = save_checkpoint_function
+        self.verbose_logging(f"island: save_checkpoint_function {save_checkpoint_function.__name__}")
 
         self.allow_twins = allow_twins
         self.verbose_logging(f"island: allow_twins {allow_twins}")
@@ -656,6 +677,9 @@ class Island:
         if logging_function and '<lambda>' in repr(logging_function):
             w.warn("WARNING: 'logging_function' lambda can not be pickled using standard libraries.")
 
+        if save_checkpoint_function and '<lambda>' in repr(save_checkpoint_function):
+            w.warn("WARNING: 'save_checkpoint_function' lambda can not be pickled using standard libraries.")
+
     def create_gene(self,
                  name : str,
                  value : Any,
@@ -682,7 +706,8 @@ class Island:
         Returns:
             gene: A new Gene object.
         """
-        return Gene(name, value, randomise_function, gene_max, gene_min, mu, sig, choices, gene_properties)
+        return Gene(name=name, value=value, randomise_function=randomise_function, gene_max=gene_max, gene_min=gene_min,
+                    mu=mu, sig=sig, choices=choices, gene_properties=gene_properties)
 
     def create_chromosome(self,
                           genes: list = None,
@@ -699,7 +724,7 @@ class Island:
         Returns:
             chromosome: A new Chromosome.
         """
-        return Chromosome(genes, gene_verify_func, chromosome_properties)
+        return Chromosome(genes=genes, gene_verify_func=gene_verify_func, chromosome_properties=chromosome_properties)
 
     def create_individual(self,
                           fitness_function : Callable,
@@ -722,7 +747,8 @@ class Island:
         Returns:
             individual: A new Individual.
         """
-        ind = Individual(fitness_function, name, chromosome, species_type, individual_properties)
+        ind = Individual(fitness_function=fitness_function, name=name, chromosome=chromosome, species_type=species_type,
+                         individual_properties=individual_properties)
         if add_to_population:
             self.population.append(ind)
         return ind
@@ -754,7 +780,7 @@ class Island:
         self.population = self._initialise(adam=adam, n=population_size, island=self, **_initialisation_params)
 
         if self.save_checkpoint_level == 2:
-            self._save_checkpoint(event='init_pre')
+            self.save_checkpoint(event='init_pre', island=self)
 
         if evaluate_population:
             for popitem in self.population:
@@ -762,7 +788,7 @@ class Island:
                 popitem.evaluate(self.function_params, island=self)
                 self.unique_genome.append(popitem.unique_genetic_code())
         if self.save_checkpoint_level == 2:
-            self._save_checkpoint(event='init_post')
+            self.save_checkpoint(event='init_post', island=self)
         self.verbose_logging("init: complete")
 
     def import_migrants(self, migrants : list,
@@ -812,7 +838,11 @@ class Island:
                             parent_selection_params: dict = None,
                             survivor_selection_params: dict = None,
                             criterion_function : Callable = None,
-                            criterion_params : dict = None) -> Individual:
+                            criterion_params : dict = None,
+                            pre_generation_check_function : Callable = None,
+                            post_generation_check_function: Callable = None,
+                            post_evolution_function: Callable = None,
+               ) -> Individual:
         """
         Starts the evolutionary run.
 
@@ -826,6 +856,9 @@ class Island:
             selection_params (dict): Dict of params for custom selection function (default = None).
             criterion_function (Callable): A function to evaluate if the desired criterion has been met (default = None).
             criterion_params (dict): Function parameters for criterion (default = None).
+            pre_generation_check_function (Callable): A function to perform some custom pre-action at the start of every generation, with signature ``func(generation, island)`` (default = None).
+            post_generation_check_function (Callable): A function to perform some custom post-action at the end of every generation, with signature ``func(generation, island)``  (default = None).
+            post_evolution_function (Callable): A function to perform some custom post-action after full evolution cycle, with signature ``func(island)`` (default = None).
 
         Returns:
             Individual: The fittest Individual found.
@@ -870,6 +903,9 @@ class Island:
         while g_func(island=self, **criterion_params):
             self.verbose_logging(f"evolve: generation_number {g}")
 
+            if pre_generation_check_function:
+                pre_generation_check_function(generation=g, island=self)
+
             self.__evolutionary_engine(g=g,
                                        elite_selection_params=_elite_selection_params,
                                        parent_selection_params=_parent_selection_params,
@@ -878,12 +914,18 @@ class Island:
                                        mutation_probability=mutation_probability,
                                        crossover_params=_crossover_params,
                                        mutation_params=_mutation_params)
+            if post_generation_check_function:
+                post_generation_check_function(generation=g, island=self)
             g += 1
+
 
         best_ind = selection_elites_top_n(island=self, individuals=self.population, n=1)[0]
 
         self.verbose_logging(f"evolve: end")
         self.verbose_logging(f"evolve: best {repr(best_ind)}")
+
+        if post_evolution_function:
+            post_evolution_function(island=self)
 
         return best_ind
 
@@ -920,7 +962,7 @@ class Island:
                               mutation_params):
 
         if self.save_checkpoint_level == 1:
-            self._save_checkpoint(event=f'evolve_pre_{g}')
+            self.save_checkpoint(event=f'evolve_pre_{g}', island=self)
 
         elites = self.elite_selection(island=self,
                                       individuals=self.clone(individuals=self.population, island=self),
@@ -967,14 +1009,14 @@ class Island:
         offspring_fitnesses = list()
 
         if self.save_checkpoint_level == 2:
-            self._save_checkpoint(event=f'evolve_pre_eval_{g}')
+            self.save_checkpoint(event=f'evolve_pre_eval_{g}', island=self)
         for individual in generation_children:
             individual.reset_fitness()
             self.verbose_logging(f"evolve: eval {repr(individual)}")
             individual.evaluate(island=self, params=self.function_params)
             offspring_fitnesses.append(individual.fitness)
         if self.save_checkpoint_level == 2:
-            self._save_checkpoint(event=f'evolve_post_eval_{g}')
+            self.save_checkpoint(event=f'evolve_post_eval_{g}', island=self)
 
 
         for individual in self.survivor_selection(individuals=generation_children, island=self, **survivor_selection_params):
@@ -1041,19 +1083,10 @@ class Island:
         self.generation_count = g
 
         if self.save_checkpoint_level == 1:
-            self._save_checkpoint(event=f'evolve_post_{g}')
+            self.save_checkpoint(event=f'evolve_post_{g}', island=self)
 
     def verbose_logging(self, event_message):
         if self.verbose:
             logging.info(event_message, extra={'island' : self.name})
         if self.logging_function:
             self.logging_function(event_message=event_message, island=self)
-
-    def _save_checkpoint(self, event):
-        if not os.path.isdir(self.checkpoints_dir):
-            os.mkdir(self.checkpoints_dir)
-        if not os.path.isdir(f'{self.checkpoints_dir}/{self.name}'):
-            os.mkdir(f'{self.checkpoints_dir}/{self.name}')
-        fp = f'{self.checkpoints_dir}/{self.name}/{datetime.utcnow().strftime("%H-%M-%S")}_{event}_checkpoint.pkl'
-        self.verbose_logging(f'checkpoint: file {fp}')
-        self.save_island(fp)

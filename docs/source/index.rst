@@ -83,9 +83,9 @@ Changes and history
 
 See :ref:`changelog-page` for version history.
 
-Version 0.2.12 (2021-09-29)
+Version 0.2.14 (2021-10-02):
 
-* Added deep copying on randomly creating new gene (to avoid referencing)
+* Bug fix in ``create_individual`` of island after adding new init params to Individual class.
 
 
 Indices and tables

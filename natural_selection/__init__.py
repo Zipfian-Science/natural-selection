@@ -1,4 +1,4 @@
-__version__ = '0.2.13'
+__version__ = '0.2.15'
 
 def get_random_string(length : int = 8, include_numeric=False) -> str:
     """
