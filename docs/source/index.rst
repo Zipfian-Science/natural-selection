@@ -83,9 +83,9 @@ Changes and history
 
 See :ref:`changelog-page` for version history.
 
-Version 0.2.14 (2021-10-02):
+Version 0.2.15 (2021-10-08):
 
-* Bug fix in ``create_individual`` of island after adding new init params to Individual class.
+* Added ability to give the chromosome creation function through to initialisation ``chromosome_create_func``, overcoming deep copy issues.
 
 
 Indices and tables

@@ -11,6 +11,11 @@ Changelog
 History
 ==========================
 
+Version 0.2.15 (2021-10-08)
+---------------------------
+
+* Added ability to give the chromosome creation function through to initialisation ``chromosome_create_func``, overcoming deep copy issues.
+
 Version 0.2.14 (2021-10-02)
 ---------------------------
 
