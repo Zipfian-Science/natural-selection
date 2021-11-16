@@ -11,6 +11,12 @@ Changelog
 History
 ==========================
 
+Version 0.2.16 (2021-11-16)
+---------------------------
+
+* Added ``write_report`` to Island, for printing generational history to file.
+* Logging now writes individuals as strings, not the full representation, thus logs are less cluttered.
+
 Version 0.2.15 (2021-10-08)
 ---------------------------
 
