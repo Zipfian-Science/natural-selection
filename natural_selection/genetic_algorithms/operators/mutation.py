@@ -58,6 +58,8 @@ def mutation_randomize_n_point(individual, n_points : int = 1, prob : float = 0.
             b = point_cut_list[i]
             e = point_cut_list[i+1]
             for g_id in range(b,e):
+                island.verbose_logging(f"mutate: gene_before {repr(individual.chromosome[i])}")
                 individual.chromosome[g_id].randomise()
+                island.verbose_logging(f"mutate: gene_after {repr(individual.chromosome[i])}")
 
     return individual
