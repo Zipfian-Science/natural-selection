@@ -787,7 +787,7 @@ class Island:
             _initialisation_params = {}
 
         self.verbose_logging(f"init: pop_size {population_size}")
-        self.verbose_logging(f"init: adam {repr(adam)}")
+        self.verbose_logging(f"init: adam {str(adam)}")
         self.population = self._initialise(adam=adam, n=population_size, island=self, **_initialisation_params)
 
         if self.save_checkpoint_level == 2:
@@ -795,7 +795,7 @@ class Island:
 
         if evaluate_population:
             for popitem in self.population:
-                self.verbose_logging(f"init: eval {repr(popitem)}")
+                self.verbose_logging(f"init: eval {str(popitem)}")
                 popitem.evaluate(self.function_params, island=self)
                 self.unique_genome.append(popitem.unique_genetic_code())
         if self.save_checkpoint_level == 2:
@@ -817,23 +817,23 @@ class Island:
             force_genetic_diversity (bool): Only add migrants to the population if they have a unique chromosome (default = True).
         """
         for i in migrants:
-            self.verbose_logging(f"migration: customs {repr(i)}")
+            self.verbose_logging(f"migration: customs {str(i)}")
             if species_check:
                 if i.species_type != self.species_type:
                     continue
             if force_genetic_diversity:
                 if not i.unique_genetic_code() in self.unique_genome:
                     if i.fitness is None or reset_fitness:
-                        self.verbose_logging(f"migration: eval {repr(i)}")
+                        self.verbose_logging(f"migration: eval {str(i)}")
                         i.evaluate(self.function_params, island=self)
-                    self.verbose_logging(f"migration: add {repr(i)}")
+                    self.verbose_logging(f"migration: add {str(i)}")
                     self.population.append(i)
                     self.unique_genome.append(i.unique_genetic_code())
             else:
                 if i.fitness is None or reset_fitness:
-                    self.verbose_logging(f"migration: eval {repr(i)}")
+                    self.verbose_logging(f"migration: eval {str(i)}")
                     i.evaluate(self.function_params)
-                self.verbose_logging(f"migration: add {repr(i)}")
+                self.verbose_logging(f"migration: add {str(i)}")
                 self.population.append(i)
                 self.unique_genome.append(i.unique_genetic_code())
         self.verbose_logging("migration: imported")
@@ -933,7 +933,7 @@ class Island:
         best_ind = selection_elites_top_n(island=self, individuals=self.population, n=1)[0]
 
         self.verbose_logging(f"evolve: end")
-        self.verbose_logging(f"evolve: best {repr(best_ind)}")
+        self.verbose_logging(f"evolve: best {str(best_ind)}")
 
         if post_evolution_function:
             post_evolution_function(island=self)
@@ -987,14 +987,14 @@ class Island:
         for parents in self.parent_selection(individuals=elites, island=self, **parent_selection_params):
             self.verbose_logging(f"select: parent_count {len(parents)}")
             if self.crossover_prob(crossover_probability=crossover_probability, island=self):
-                self.verbose_logging(f"cross: parents {[repr(p) for p in parents]}")
+                self.verbose_logging(f"cross: parents {[str(p) for p in parents]}")
 
                 children = self.crossover(island=self,
                                           individuals=self.clone(individuals=parents, island=self),
                                           **crossover_params)
 
                 self.verbose_logging(f"cross: offspring_count {len(children)}")
-                self.verbose_logging(f"cross: offspring {[repr(p) for p in children]}")
+                self.verbose_logging(f"cross: offspring {[str(p) for p in children]}")
 
                 for child in children:
                     child.reset_name()
@@ -1009,7 +1009,7 @@ class Island:
         generation_mutants = list()
         for mutant in generation_children:
             if self.mutation_prob(mutation_probability=mutation_probability, island=self):
-                self.verbose_logging(f"mutate: offspring {repr(mutant)}")
+                self.verbose_logging(f"mutate: offspring {str(mutant)}")
 
                 mutated = self.mutation(island=self, individual=mutant, **mutation_params)
 
@@ -1023,7 +1023,7 @@ class Island:
             self.save_checkpoint(event=f'evolve_pre_eval_{g}', island=self)
         for individual in generation_children:
             individual.reset_fitness()
-            self.verbose_logging(f"evolve: eval {repr(individual)}")
+            self.verbose_logging(f"evolve: eval {str(individual)}")
             individual.evaluate(island=self, params=self.function_params)
             offspring_fitnesses.append(individual.fitness)
         if self.save_checkpoint_level == 2:
@@ -1033,12 +1033,12 @@ class Island:
         for individual in self.survivor_selection(individuals=generation_children, island=self, **survivor_selection_params):
             if self.allow_twins:
                 # Else, add it effectively allowing "twins" to exist
-                self.verbose_logging(f"evolve: add {repr(individual)}")
+                self.verbose_logging(f"evolve: add {str(individual)}")
                 self.population.append(individual)
                 self.unique_genome.append(individual.unique_genetic_code())
             elif not individual.unique_genetic_code() in self.unique_genome:
                 # If we want a diverse gene pool, this must be true
-                self.verbose_logging(f"evolve: add {repr(individual)}")
+                self.verbose_logging(f"evolve: add {str(individual)}")
                 self.population.append(individual)
                 self.unique_genome.append(individual.unique_genetic_code())
 
