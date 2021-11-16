@@ -332,7 +332,7 @@ class Individual:
         if reset_parent_name_list:
             self.parents = list()
         for parent in parents:
-            self.parents.append(parent.name)
+            self.parents.append(parent)
 
     def reset_name(self, name : str = None):
         """
@@ -558,6 +558,7 @@ class Island:
         children (list): All children created during the run.
         generation_count (int): The current generation number.
         checkpoints_dir (str): Directory name of where all checkpoints are saved.
+        lineage (dict): A graph of lineage for the whole population.
     """
 
     __stat_key = 'stat'
@@ -613,6 +614,10 @@ class Island:
             self.function_params = dict()
         self.unique_genome = list()
         self.generation_info = list()
+        self.lineage = {
+            'nodes' : [],
+            'edges' : []
+        }
         self.population = list()
 
         self._initialise = initialisation_function
@@ -802,6 +807,18 @@ class Island:
             self.save_checkpoint(event='init_post', island=self)
         self.verbose_logging("init: complete")
 
+        for p in self.population:
+            self.__add_to_lineage(p)
+
+    def __add_to_lineage(self, individual : Individual):
+        self.lineage['nodes'].append({
+            'name': individual.name,
+            'age': individual.age,
+            'fitness': individual.fitness,
+            'chromosome': str(individual.chromosome),
+            '_individual' : individual
+        })
+
     def import_migrants(self, migrants : list,
                         reset_fitness : bool = False,
                         species_check : bool = True,
@@ -829,6 +846,7 @@ class Island:
                     self.verbose_logging(f"migration: add {str(i)}")
                     self.population.append(i)
                     self.unique_genome.append(i.unique_genetic_code())
+                    self.__add_to_lineage(i)
             else:
                 if i.fitness is None or reset_fitness:
                     self.verbose_logging(f"migration: eval {str(i)}")
@@ -836,6 +854,8 @@ class Island:
                 self.verbose_logging(f"migration: add {str(i)}")
                 self.population.append(i)
                 self.unique_genome.append(i.unique_genetic_code())
+                self.__add_to_lineage(i)
+
         self.verbose_logging("migration: imported")
 
 
@@ -1029,6 +1049,14 @@ class Island:
         if self.save_checkpoint_level == 2:
             self.save_checkpoint(event=f'evolve_post_eval_{g}', island=self)
 
+        for child in generation_children:
+            self.__add_to_lineage(child)
+            for p in child.parents:
+                self.lineage['edges'].append({
+                    'from': p.name,
+                    'to': child.name,
+                    'generation' : g
+                })
 
         for individual in self.survivor_selection(individuals=generation_children, island=self, **survivor_selection_params):
             if self.allow_twins:
@@ -1049,8 +1077,8 @@ class Island:
         if len(offspring_fitnesses) > 0:
             self.generation_info.append(
                 {
-                    self.__stat_key: 'offspring',
                     self.__generation_key: g,
+                    self.__stat_key: 'offspring',
                     self.__pop_len_key: len(offspring_fitnesses),
                     self.__fitness_mean_key: np.mean(offspring_fitnesses),
                     self.__fitness_std_key: np.std(offspring_fitnesses),
@@ -1064,8 +1092,8 @@ class Island:
 
         self.generation_info.append(
             {
-                self.__stat_key: 'elites',
                 self.__generation_key: g,
+                self.__stat_key: 'elites',
                 self.__pop_len_key: len(elite_fitnesses),
                 self.__fitness_mean_key: np.mean(elite_fitnesses),
                 self.__fitness_std_key: np.std(elite_fitnesses),
@@ -1080,8 +1108,8 @@ class Island:
 
         self.generation_info.append(
             {
-                self.__stat_key: 'population',
                 self.__generation_key: g,
+                self.__stat_key: 'population',
                 self.__pop_len_key: len(population_fitnesses),
                 self.__fitness_mean_key: np.mean(population_fitnesses),
                 self.__fitness_std_key: np.std(population_fitnesses),
@@ -1117,8 +1145,8 @@ class Island:
         else:
             import csv
             keys = [
-                self.__stat_key,
                 self.__generation_key,
+                self.__stat_key,
                 self.__pop_len_key,
                 self.__fitness_mean_key,
                 self.__fitness_std_key,
