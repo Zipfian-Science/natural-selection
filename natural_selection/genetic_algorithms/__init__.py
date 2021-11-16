@@ -560,6 +560,17 @@ class Island:
         checkpoints_dir (str): Directory name of where all checkpoints are saved.
     """
 
+    __stat_key = 'stat'
+    __generation_key = 'generation'
+    __pop_len_key = 'pop_len'
+    __fitness_mean_key = 'fitness_mean'
+    __fitness_std_key = 'fitness_std'
+    __fitness_min_key = 'fitness_min'
+    __fitness_max_key = 'fitness_max'
+    __most_fit_key = 'most_fit'
+    __least_fit_key = 'least_fit'
+
+
     def __init__(self, function_params : dict = None,
                  initialisation_function: Callable = initialise_population_random,
                  elite_selection : Callable = selection_elites_top_n,
@@ -1038,26 +1049,30 @@ class Island:
         if len(offspring_fitnesses) > 0:
             self.generation_info.append(
                 {
-                    'stat': 'offspring',
-                    'generation': g,
-                    'pop_len': len(offspring_fitnesses),
-                    'fitness_mean': np.mean(offspring_fitnesses),
-                    'fitness_std': np.std(offspring_fitnesses),
-                    'fitness_min': min(offspring_fitnesses),
-                    'fitness_max': max(offspring_fitnesses),
+                    self.__stat_key: 'offspring',
+                    self.__generation_key: g,
+                    self.__pop_len_key: len(offspring_fitnesses),
+                    self.__fitness_mean_key: np.mean(offspring_fitnesses),
+                    self.__fitness_std_key: np.std(offspring_fitnesses),
+                    self.__fitness_min_key: min(offspring_fitnesses),
+                    self.__fitness_max_key: max(offspring_fitnesses),
+                    self.__most_fit_key: selection_elites_top_n(island=self, individuals=generation_children, n=1)[0].name,
+                    self.__least_fit_key : selection_elites_top_n(island=self, individuals=generation_children, n=1)[-1].name
                 }
             )
             self.verbose_logging(f"evolve: stats {self.generation_info[-1]}")
 
         self.generation_info.append(
             {
-                'stat': 'elites',
-                'generation': g,
-                'pop_len': len(elite_fitnesses),
-                'fitness_mean': np.mean(elite_fitnesses),
-                'fitness_std': np.std(elite_fitnesses),
-                'fitness_min': min(elite_fitnesses),
-                'fitness_max': max(elite_fitnesses),
+                self.__stat_key: 'elites',
+                self.__generation_key: g,
+                self.__pop_len_key: len(elite_fitnesses),
+                self.__fitness_mean_key: np.mean(elite_fitnesses),
+                self.__fitness_std_key: np.std(elite_fitnesses),
+                self.__fitness_min_key: min(elite_fitnesses),
+                self.__fitness_max_key: max(elite_fitnesses),
+                self.__most_fit_key: selection_elites_top_n(island=self, individuals=elites, n=1)[0].name,
+                self.__least_fit_key : selection_elites_top_n(island=self, individuals=elites, n=1)[-1].name
             }
         )
 
@@ -1065,13 +1080,15 @@ class Island:
 
         self.generation_info.append(
             {
-                'stat': 'population',
-                'generation': g,
-                'pop_len': len(population_fitnesses),
-                'fitness_mean': np.mean(population_fitnesses),
-                'fitness_std': np.std(population_fitnesses),
-                'fitness_min': min(population_fitnesses),
-                'fitness_max': max(population_fitnesses),
+                self.__stat_key: 'population',
+                self.__generation_key: g,
+                self.__pop_len_key: len(population_fitnesses),
+                self.__fitness_mean_key: np.mean(population_fitnesses),
+                self.__fitness_std_key: np.std(population_fitnesses),
+                self.__fitness_min_key: min(population_fitnesses),
+                self.__fitness_max_key: max(population_fitnesses),
+                self.__most_fit_key: selection_elites_top_n(island=self, individuals=self.population, n=1)[0].name,
+                self.__least_fit_key: selection_elites_top_n(island=self, individuals=self.population, n=1)[-1].name
             }
         )
 
@@ -1084,6 +1101,31 @@ class Island:
 
         if self.save_checkpoint_level == 1:
             self.save_checkpoint(event=f'evolve_post_{g}', island=self)
+
+    def write_report(self, filename : str, output_json : bool = False):
+        if output_json:
+            import json
+            with open(filename, 'w', newline='', encoding='utf8') as output_file:
+                json.dump(self.generation_info, output_file)
+        else:
+            import csv
+            keys = [
+                self.__stat_key,
+                self.__generation_key,
+                self.__pop_len_key,
+                self.__fitness_mean_key,
+                self.__fitness_std_key,
+                self.__fitness_min_key,
+                self.__fitness_max_key,
+                self.__most_fit_key,
+                self.__least_fit_key
+            ]
+            with open(filename, 'w', newline='', encoding='utf8') as output_file:
+                dict_writer = csv.DictWriter(output_file, keys)
+                dict_writer.writeheader()
+                dict_writer.writerows(self.generation_info)
+
+
 
     def verbose_logging(self, event_message):
         if self.verbose:
