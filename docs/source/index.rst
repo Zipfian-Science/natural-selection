@@ -83,10 +83,11 @@ Changes and history
 
 See :ref:`changelog-page` for version history.
 
-Version 0.2.11 (2021-09-24)
+Version 0.2.16 (2021-11-16):
 
-* Fixed flaw where chromosome and individual properties aren't being copied with initialisation.
-* Renamed ``_verbose_logging`` to ``verbose_logging`` to publicly expose.
+* Added ``lineage`` to Island, to easily track the lineage of parents/offsrping. This is especially handy for enforcing genetic diversity.
+* Added ``write_report`` to Island, for printing generational history to file.
+* Logging now writes individuals as strings, not the full representation, thus logs are less cluttered.
 
 
 Indices and tables

@@ -1,4 +1,6 @@
 import copy
+import os
+from datetime import datetime
 
 def clone_classic(individuals : list, island=None):
     """
@@ -12,6 +14,33 @@ def clone_classic(individuals : list, island=None):
         list: Carbon copy of population.
     """
     return copy.deepcopy(individuals)
+
+def default_save_checkpoint_function(event, island):
+    """
+    Default checkpoint saving function. Used to save the Island periodically after certain events.
+
+    Args:
+        event (str): The evolutionary event (crossover, eval etc).
+        island (Island): The island to save.
+
+    """
+    if not os.path.isdir(island.checkpoints_dir):
+        os.mkdir(island.checkpoints_dir)
+    if not os.path.isdir(f'{island.checkpoints_dir}/{island.name}'):
+        os.mkdir(f'{island.checkpoints_dir}/{island.name}')
+    fp = f'{island.checkpoints_dir}/{island.name}/{datetime.utcnow().strftime("%H-%M-%S")}_{event}_checkpoint.pkl'
+    island.verbose_logging(f'checkpoint: file {fp}')
+    island.save_island(fp)
+
+def post_evolution_function_save_all(island):
+    """
+    Simple function to save (pickle) every population member after completing evolution.
+
+    Args:
+        island (Island): Island to get ``population`` from.
+    """
+    for p in island.population:
+        p.save_individual(filepath=f'individual_{p.name}.pkl')
 
 class GeneticAlgorithmError(Exception):
     """

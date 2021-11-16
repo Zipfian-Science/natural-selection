@@ -19,6 +19,26 @@ class TestSimpleIsland(unittest.TestCase):
 
         self.life = Island({'x': 0.6, 'y' : 0.2}, crossover_function=crossover_two_n_point)
 
+    def test_write_report(self):
+        self.life.initialise(self.ind, population_size=5)
+        self.life.evolve(crossover_params={'n_points': 2})
+
+        self.life.write_report('test.csv')
+        self.life.write_report('test.json', output_json=True)
+
+        self.assertTrue(os.path.isfile('test.csv'))
+        self.assertTrue(os.path.isfile('test.json'))
+
+        os.remove('test.csv')
+        os.remove('test.json')
+
+    def test_lineage(self):
+        self.life.initialise(self.ind, population_size=5)
+        self.life.evolve(crossover_params={'n_points': 2}, n_generations=10, crossover_probability=0.6)
+
+        self.assertTrue(len(self.life.lineage['edges']) > 1)
+
+
     def test_create(self):
         self.life.initialise(self.ind, population_size=5)
         self.assertEquals(len(self.life.population), 5)
