@@ -83,11 +83,9 @@ Changes and history
 
 See :ref:`changelog-page` for version history.
 
-Version 0.2.16 (2021-11-16):
+Version 0.2.17 (2021-11-16):
 
-* Added ``lineage`` to Island, to easily track the lineage of parents/offsrping. This is especially handy for enforcing genetic diversity.
-* Added ``write_report`` to Island, for printing generational history to file.
-* Logging now writes individuals as strings, not the full representation, thus logs are less cluttered.
+* Added ``write_lineage_json`` to Island to easily dump lineage graph to JSON file.
 
 
 Indices and tables

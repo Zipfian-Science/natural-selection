@@ -1130,6 +1130,26 @@ class Island:
         if self.save_checkpoint_level == 1:
             self.save_checkpoint(event=f'evolve_post_{g}', island=self)
 
+    def write_lineage_json(self, filename : str):
+        """
+        Dumps the lineage safely to JSON file.
+
+        Args:
+            filename (str): Output file.
+        """
+        nodes = list()
+        for n in self.lineage['nodes']:
+            nodes.append({
+                'name': n['name'],
+                'age': n['age'],
+                'fitness': n['fitness'],
+                'chromosome': n['chromosome'],
+            })
+        import json
+        with open(filename, 'w', newline='', encoding='utf8') as output_file:
+            json.dump({'nodes' : nodes, 'edges' : self.lineage['edges']}, output_file)
+
+
     def write_report(self, filename : str, output_json : bool = False):
         """
         Write the generational history to CSV (or JSON) file.

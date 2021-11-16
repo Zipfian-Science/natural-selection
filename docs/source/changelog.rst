@@ -11,6 +11,11 @@ Changelog
 History
 ==========================
 
+Version 0.2.17 (2021-11-16)
+---------------------------
+
+* Added ``write_lineage_json`` to Island to easily dump lineage graph to JSON file.
+
 Version 0.2.16 (2021-11-16)
 ---------------------------
 

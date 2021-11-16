@@ -38,6 +38,11 @@ class TestSimpleIsland(unittest.TestCase):
 
         self.assertTrue(len(self.life.lineage['edges']) > 1)
 
+        self.life.write_lineage_json('test.json')
+
+        self.assertTrue(os.path.isfile('test.json'))
+
+        os.remove('test.json')
 
     def test_create(self):
         self.life.initialise(self.ind, population_size=5)
