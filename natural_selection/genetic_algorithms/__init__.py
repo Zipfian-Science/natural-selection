@@ -1103,6 +1103,13 @@ class Island:
             self.save_checkpoint(event=f'evolve_post_{g}', island=self)
 
     def write_report(self, filename : str, output_json : bool = False):
+        """
+        Write the generational history to CSV (or JSON) file.
+
+        Args:
+            filename (str): Output file.
+            output_json (bool): Write as JSON instead of CSV (default = False).
+        """
         if output_json:
             import json
             with open(filename, 'w', newline='', encoding='utf8') as output_file:
