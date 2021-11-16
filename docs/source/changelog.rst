@@ -11,6 +11,35 @@ Changelog
 History
 ==========================
 
+Version 0.2.16 (2021-11-16)
+---------------------------
+
+* Added ``write_report`` to Island, for printing generational history to file.
+* Logging now writes individuals as strings, not the full representation, thus logs are less cluttered.
+
+Version 0.2.15 (2021-10-08)
+---------------------------
+
+* Added ability to give the chromosome creation function through to initialisation ``chromosome_create_func``, overcoming deep copy issues.
+
+Version 0.2.14 (2021-10-02)
+---------------------------
+
+* Bug fix in ``create_individual`` of island after adding new init params to Individual class.
+
+Version 0.2.13 (2021-10-02)
+---------------------------
+
+* Moved the save checkpoint function from the Island class into utils as ``save_checkpoint_function``.
+* Added ``pre_generation_check_function`` to Island ``evolve`` for performing custom pre generation actions.
+* Added ``post_generation_check_function`` to Island ``evolve`` for performing custom post generation actions.
+* Added ``post_evolution_function`` to Island ``evolve`` for performing custom post evolution actions.
+
+Version 0.2.12 (2021-09-29)
+---------------------------
+
+* Added deep copying on randomly creating new gene (to avoid referencing).
+
 Version 0.2.11 (2021-09-24)
 ---------------------------
 

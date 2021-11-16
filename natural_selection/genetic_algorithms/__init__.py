@@ -17,8 +17,8 @@ import warnings as w
 import pickle
 import logging
 from datetime import datetime
-import os
 from collections import OrderedDict
+import copy
 
 import numpy as np
 
@@ -28,7 +28,7 @@ from natural_selection.genetic_algorithms.operators.selection import selection_e
 from natural_selection.genetic_algorithms.operators.crossover import crossover_two_uniform
 from natural_selection.genetic_algorithms.operators.mutation import mutation_randomize
 from natural_selection.genetic_algorithms.utils.probability_functions import crossover_prob_function_classic, mutation_prob_function_classic
-from natural_selection.genetic_algorithms.utils import clone_classic, GeneticAlgorithmError
+from natural_selection.genetic_algorithms.utils import clone_classic, default_save_checkpoint_function, GeneticAlgorithmError
 
 from natural_selection import  __version__ as package_version
 
@@ -94,15 +94,15 @@ class Gene:
             Gene: Newly created gene.
         """
         return Gene(
-            name=self.name,
+            name=copy.copy(self.name),
             value=self.randomise_function(gene=self),
             randomise_function=self.randomise_function,
-            gene_max=self.gene_max,
-            gene_min=self.gene_min,
-            mu=self.mu,
-            sig=self.sig,
-            choices=self.choices,
-            gene_properties=self.__gene_properties
+            gene_max=copy.copy(self.gene_max),
+            gene_min=copy.copy(self.gene_min),
+            mu=copy.copy(self.mu),
+            sig=copy.copy(self.sig),
+            choices=copy.deepcopy(self.choices),
+            gene_properties=copy.deepcopy(self.__gene_properties)
         )
 
     def add_new_property(self, key : str, value : Any):
@@ -188,6 +188,12 @@ class Chromosome:
         self.__dict__.update({key: value})
 
     def get_properties(self):
+        """
+        Gets a dict of the custom properties that were added at initialisation or the `add_new_property` method.
+
+        Returns:
+            dict: All custom properties.
+        """
         return self.__chromosome_properties
 
     def randomise_gene(self, index : int):
@@ -270,6 +276,7 @@ class Individual:
         name (str): Name for keeping track of lineage (default = None).
         chromosome (Chromosome): A Chromosome object, initialised (default = None).
         species_type (str) : A unique string to identify the species type, for preventing cross polluting (default = None).
+        filepath (str): Skip init and load from a pickled file.
         individual_properties (dict): For fitness functions, extra params may be given (default = None).
 
     Attributes:
@@ -284,7 +291,11 @@ class Individual:
                  name : str = None,
                  chromosome: Chromosome = None,
                  species_type : str = None,
+                 filepath : str = None,
                  individual_properties : dict = None):
+        if not filepath is None:
+            self.load_individual(filepath=filepath)
+            return
         if fitness_function and '<lambda>' in repr(fitness_function):
             w.warn("WARNING: 'fitness_function' lambda can not be pickled using standard libraries.")
         if name is None:
@@ -412,10 +423,22 @@ class Individual:
         return self.genetic_code
 
     def save_individual(self, filepath : str):
+        """
+        Save an individual to a pickle file.
+
+        Args:
+            filepath (str): File path to write to.
+        """
         with open(filepath, "wb") as f:
             pickle.dump(self.__dict__, f)
 
     def load_individual(self, filepath : str):
+        """
+        Load an individual from a pickle file.
+
+        Args:
+            filepath (str): File path to load from.
+        """
         with open(filepath, "rb") as f:
             self.__dict__.update(pickle.load(f))
 
@@ -434,6 +457,12 @@ class Individual:
         self.__dict__.update({key: value})
 
     def get_properties(self) -> dict:
+        """
+        Gets a dict of the custom properties that were added at initialisation or the `add_new_property` method.
+
+        Returns:
+            dict: All custom properties.
+        """
         return self.__individual_properties
 
     def __str__(self) -> str:
@@ -515,6 +544,7 @@ class Island:
         name (str): General name for island, useful when working with multiple islands (default = None).
         verbose (bool): Print all information (default = None).
         logging_function (Callable): Function for custom message logging, such as server logging (default = None).
+        save_checkpoint_function (Callable): Function for custom checkpoint saving (default = None).
         filepath (str): If a filepath is specified, the pickled island is loaded from it, skipping the rest of initialisation (default = None).
         save_checkpoint_level (int): Level of checkpoint saving 0 = none, 1 = per generation, 2 = per evaluation (default = 0).
         allow_twins (bool): Only add new offspring to the population if they have a unique chromosome (default = False).
@@ -530,6 +560,17 @@ class Island:
         checkpoints_dir (str): Directory name of where all checkpoints are saved.
     """
 
+    __stat_key = 'stat'
+    __generation_key = 'generation'
+    __pop_len_key = 'pop_len'
+    __fitness_mean_key = 'fitness_mean'
+    __fitness_std_key = 'fitness_std'
+    __fitness_min_key = 'fitness_min'
+    __fitness_max_key = 'fitness_max'
+    __most_fit_key = 'most_fit'
+    __least_fit_key = 'least_fit'
+
+
     def __init__(self, function_params : dict = None,
                  initialisation_function: Callable = initialise_population_random,
                  elite_selection : Callable = selection_elites_top_n,
@@ -544,6 +585,7 @@ class Island:
                  name : str = None,
                  verbose : bool = True,
                  logging_function : Callable = None,
+                 save_checkpoint_function: Callable = default_save_checkpoint_function,
                  filepath : str = None,
                  save_checkpoint_level : int = 0,
                  allow_twins : bool = False):
@@ -591,6 +633,9 @@ class Island:
         self.verbose_logging(f"island: clone_function {clone_function.__name__}")
         self.survivor_selection = survivor_selection_function
         self.verbose_logging(f"island: survivor_selection_function {survivor_selection_function.__name__}")
+
+        self.save_checkpoint = save_checkpoint_function
+        self.verbose_logging(f"island: save_checkpoint_function {save_checkpoint_function.__name__}")
 
         self.allow_twins = allow_twins
         self.verbose_logging(f"island: allow_twins {allow_twins}")
@@ -643,6 +688,9 @@ class Island:
         if logging_function and '<lambda>' in repr(logging_function):
             w.warn("WARNING: 'logging_function' lambda can not be pickled using standard libraries.")
 
+        if save_checkpoint_function and '<lambda>' in repr(save_checkpoint_function):
+            w.warn("WARNING: 'save_checkpoint_function' lambda can not be pickled using standard libraries.")
+
     def create_gene(self,
                  name : str,
                  value : Any,
@@ -669,7 +717,8 @@ class Island:
         Returns:
             gene: A new Gene object.
         """
-        return Gene(name, value, randomise_function, gene_max, gene_min, mu, sig, choices, gene_properties)
+        return Gene(name=name, value=value, randomise_function=randomise_function, gene_max=gene_max, gene_min=gene_min,
+                    mu=mu, sig=sig, choices=choices, gene_properties=gene_properties)
 
     def create_chromosome(self,
                           genes: list = None,
@@ -686,7 +735,7 @@ class Island:
         Returns:
             chromosome: A new Chromosome.
         """
-        return Chromosome(genes, gene_verify_func, chromosome_properties)
+        return Chromosome(genes=genes, gene_verify_func=gene_verify_func, chromosome_properties=chromosome_properties)
 
     def create_individual(self,
                           fitness_function : Callable,
@@ -709,7 +758,8 @@ class Island:
         Returns:
             individual: A new Individual.
         """
-        ind = Individual(fitness_function, name, chromosome, species_type, individual_properties)
+        ind = Individual(fitness_function=fitness_function, name=name, chromosome=chromosome, species_type=species_type,
+                         individual_properties=individual_properties)
         if add_to_population:
             self.population.append(ind)
         return ind
@@ -737,19 +787,19 @@ class Island:
             _initialisation_params = {}
 
         self.verbose_logging(f"init: pop_size {population_size}")
-        self.verbose_logging(f"init: adam {repr(adam)}")
+        self.verbose_logging(f"init: adam {str(adam)}")
         self.population = self._initialise(adam=adam, n=population_size, island=self, **_initialisation_params)
 
         if self.save_checkpoint_level == 2:
-            self._save_checkpoint(event='init_pre')
+            self.save_checkpoint(event='init_pre', island=self)
 
         if evaluate_population:
             for popitem in self.population:
-                self.verbose_logging(f"init: eval {repr(popitem)}")
+                self.verbose_logging(f"init: eval {str(popitem)}")
                 popitem.evaluate(self.function_params, island=self)
                 self.unique_genome.append(popitem.unique_genetic_code())
         if self.save_checkpoint_level == 2:
-            self._save_checkpoint(event='init_post')
+            self.save_checkpoint(event='init_post', island=self)
         self.verbose_logging("init: complete")
 
     def import_migrants(self, migrants : list,
@@ -767,23 +817,23 @@ class Island:
             force_genetic_diversity (bool): Only add migrants to the population if they have a unique chromosome (default = True).
         """
         for i in migrants:
-            self.verbose_logging(f"migration: customs {repr(i)}")
+            self.verbose_logging(f"migration: customs {str(i)}")
             if species_check:
                 if i.species_type != self.species_type:
                     continue
             if force_genetic_diversity:
                 if not i.unique_genetic_code() in self.unique_genome:
                     if i.fitness is None or reset_fitness:
-                        self.verbose_logging(f"migration: eval {repr(i)}")
+                        self.verbose_logging(f"migration: eval {str(i)}")
                         i.evaluate(self.function_params, island=self)
-                    self.verbose_logging(f"migration: add {repr(i)}")
+                    self.verbose_logging(f"migration: add {str(i)}")
                     self.population.append(i)
                     self.unique_genome.append(i.unique_genetic_code())
             else:
                 if i.fitness is None or reset_fitness:
-                    self.verbose_logging(f"migration: eval {repr(i)}")
+                    self.verbose_logging(f"migration: eval {str(i)}")
                     i.evaluate(self.function_params)
-                self.verbose_logging(f"migration: add {repr(i)}")
+                self.verbose_logging(f"migration: add {str(i)}")
                 self.population.append(i)
                 self.unique_genome.append(i.unique_genetic_code())
         self.verbose_logging("migration: imported")
@@ -799,7 +849,11 @@ class Island:
                             parent_selection_params: dict = None,
                             survivor_selection_params: dict = None,
                             criterion_function : Callable = None,
-                            criterion_params : dict = None) -> Individual:
+                            criterion_params : dict = None,
+                            pre_generation_check_function : Callable = None,
+                            post_generation_check_function: Callable = None,
+                            post_evolution_function: Callable = None,
+               ) -> Individual:
         """
         Starts the evolutionary run.
 
@@ -813,6 +867,9 @@ class Island:
             selection_params (dict): Dict of params for custom selection function (default = None).
             criterion_function (Callable): A function to evaluate if the desired criterion has been met (default = None).
             criterion_params (dict): Function parameters for criterion (default = None).
+            pre_generation_check_function (Callable): A function to perform some custom pre-action at the start of every generation, with signature ``func(generation, island)`` (default = None).
+            post_generation_check_function (Callable): A function to perform some custom post-action at the end of every generation, with signature ``func(generation, island)``  (default = None).
+            post_evolution_function (Callable): A function to perform some custom post-action after full evolution cycle, with signature ``func(island)`` (default = None).
 
         Returns:
             Individual: The fittest Individual found.
@@ -857,6 +914,9 @@ class Island:
         while g_func(island=self, **criterion_params):
             self.verbose_logging(f"evolve: generation_number {g}")
 
+            if pre_generation_check_function:
+                pre_generation_check_function(generation=g, island=self)
+
             self.__evolutionary_engine(g=g,
                                        elite_selection_params=_elite_selection_params,
                                        parent_selection_params=_parent_selection_params,
@@ -865,12 +925,18 @@ class Island:
                                        mutation_probability=mutation_probability,
                                        crossover_params=_crossover_params,
                                        mutation_params=_mutation_params)
+            if post_generation_check_function:
+                post_generation_check_function(generation=g, island=self)
             g += 1
+
 
         best_ind = selection_elites_top_n(island=self, individuals=self.population, n=1)[0]
 
         self.verbose_logging(f"evolve: end")
-        self.verbose_logging(f"evolve: best {repr(best_ind)}")
+        self.verbose_logging(f"evolve: best {str(best_ind)}")
+
+        if post_evolution_function:
+            post_evolution_function(island=self)
 
         return best_ind
 
@@ -907,7 +973,7 @@ class Island:
                               mutation_params):
 
         if self.save_checkpoint_level == 1:
-            self._save_checkpoint(event=f'evolve_pre_{g}')
+            self.save_checkpoint(event=f'evolve_pre_{g}', island=self)
 
         elites = self.elite_selection(island=self,
                                       individuals=self.clone(individuals=self.population, island=self),
@@ -921,14 +987,14 @@ class Island:
         for parents in self.parent_selection(individuals=elites, island=self, **parent_selection_params):
             self.verbose_logging(f"select: parent_count {len(parents)}")
             if self.crossover_prob(crossover_probability=crossover_probability, island=self):
-                self.verbose_logging(f"cross: parents {[repr(p) for p in parents]}")
+                self.verbose_logging(f"cross: parents {[str(p) for p in parents]}")
 
                 children = self.crossover(island=self,
                                           individuals=self.clone(individuals=parents, island=self),
                                           **crossover_params)
 
                 self.verbose_logging(f"cross: offspring_count {len(children)}")
-                self.verbose_logging(f"cross: offspring {[repr(p) for p in children]}")
+                self.verbose_logging(f"cross: offspring {[str(p) for p in children]}")
 
                 for child in children:
                     child.reset_name()
@@ -943,7 +1009,7 @@ class Island:
         generation_mutants = list()
         for mutant in generation_children:
             if self.mutation_prob(mutation_probability=mutation_probability, island=self):
-                self.verbose_logging(f"mutate: offspring {repr(mutant)}")
+                self.verbose_logging(f"mutate: offspring {str(mutant)}")
 
                 mutated = self.mutation(island=self, individual=mutant, **mutation_params)
 
@@ -954,25 +1020,25 @@ class Island:
         offspring_fitnesses = list()
 
         if self.save_checkpoint_level == 2:
-            self._save_checkpoint(event=f'evolve_pre_eval_{g}')
+            self.save_checkpoint(event=f'evolve_pre_eval_{g}', island=self)
         for individual in generation_children:
             individual.reset_fitness()
-            self.verbose_logging(f"evolve: eval {repr(individual)}")
+            self.verbose_logging(f"evolve: eval {str(individual)}")
             individual.evaluate(island=self, params=self.function_params)
             offspring_fitnesses.append(individual.fitness)
         if self.save_checkpoint_level == 2:
-            self._save_checkpoint(event=f'evolve_post_eval_{g}')
+            self.save_checkpoint(event=f'evolve_post_eval_{g}', island=self)
 
 
         for individual in self.survivor_selection(individuals=generation_children, island=self, **survivor_selection_params):
             if self.allow_twins:
                 # Else, add it effectively allowing "twins" to exist
-                self.verbose_logging(f"evolve: add {repr(individual)}")
+                self.verbose_logging(f"evolve: add {str(individual)}")
                 self.population.append(individual)
                 self.unique_genome.append(individual.unique_genetic_code())
             elif not individual.unique_genetic_code() in self.unique_genome:
                 # If we want a diverse gene pool, this must be true
-                self.verbose_logging(f"evolve: add {repr(individual)}")
+                self.verbose_logging(f"evolve: add {str(individual)}")
                 self.population.append(individual)
                 self.unique_genome.append(individual.unique_genetic_code())
 
@@ -983,26 +1049,30 @@ class Island:
         if len(offspring_fitnesses) > 0:
             self.generation_info.append(
                 {
-                    'stat': 'offspring',
-                    'generation': g,
-                    'pop_len': len(offspring_fitnesses),
-                    'fitness_mean': np.mean(offspring_fitnesses),
-                    'fitness_std': np.std(offspring_fitnesses),
-                    'fitness_min': min(offspring_fitnesses),
-                    'fitness_max': max(offspring_fitnesses),
+                    self.__stat_key: 'offspring',
+                    self.__generation_key: g,
+                    self.__pop_len_key: len(offspring_fitnesses),
+                    self.__fitness_mean_key: np.mean(offspring_fitnesses),
+                    self.__fitness_std_key: np.std(offspring_fitnesses),
+                    self.__fitness_min_key: min(offspring_fitnesses),
+                    self.__fitness_max_key: max(offspring_fitnesses),
+                    self.__most_fit_key: selection_elites_top_n(island=self, individuals=generation_children, n=1)[0].name,
+                    self.__least_fit_key : selection_elites_top_n(island=self, individuals=generation_children, n=1)[-1].name
                 }
             )
             self.verbose_logging(f"evolve: stats {self.generation_info[-1]}")
 
         self.generation_info.append(
             {
-                'stat': 'elites',
-                'generation': g,
-                'pop_len': len(elite_fitnesses),
-                'fitness_mean': np.mean(elite_fitnesses),
-                'fitness_std': np.std(elite_fitnesses),
-                'fitness_min': min(elite_fitnesses),
-                'fitness_max': max(elite_fitnesses),
+                self.__stat_key: 'elites',
+                self.__generation_key: g,
+                self.__pop_len_key: len(elite_fitnesses),
+                self.__fitness_mean_key: np.mean(elite_fitnesses),
+                self.__fitness_std_key: np.std(elite_fitnesses),
+                self.__fitness_min_key: min(elite_fitnesses),
+                self.__fitness_max_key: max(elite_fitnesses),
+                self.__most_fit_key: selection_elites_top_n(island=self, individuals=elites, n=1)[0].name,
+                self.__least_fit_key : selection_elites_top_n(island=self, individuals=elites, n=1)[-1].name
             }
         )
 
@@ -1010,13 +1080,15 @@ class Island:
 
         self.generation_info.append(
             {
-                'stat': 'population',
-                'generation': g,
-                'pop_len': len(population_fitnesses),
-                'fitness_mean': np.mean(population_fitnesses),
-                'fitness_std': np.std(population_fitnesses),
-                'fitness_min': min(population_fitnesses),
-                'fitness_max': max(population_fitnesses),
+                self.__stat_key: 'population',
+                self.__generation_key: g,
+                self.__pop_len_key: len(population_fitnesses),
+                self.__fitness_mean_key: np.mean(population_fitnesses),
+                self.__fitness_std_key: np.std(population_fitnesses),
+                self.__fitness_min_key: min(population_fitnesses),
+                self.__fitness_max_key: max(population_fitnesses),
+                self.__most_fit_key: selection_elites_top_n(island=self, individuals=self.population, n=1)[0].name,
+                self.__least_fit_key: selection_elites_top_n(island=self, individuals=self.population, n=1)[-1].name
             }
         )
 
@@ -1028,19 +1100,42 @@ class Island:
         self.generation_count = g
 
         if self.save_checkpoint_level == 1:
-            self._save_checkpoint(event=f'evolve_post_{g}')
+            self.save_checkpoint(event=f'evolve_post_{g}', island=self)
+
+    def write_report(self, filename : str, output_json : bool = False):
+        """
+        Write the generational history to CSV (or JSON) file.
+
+        Args:
+            filename (str): Output file.
+            output_json (bool): Write as JSON instead of CSV (default = False).
+        """
+        if output_json:
+            import json
+            with open(filename, 'w', newline='', encoding='utf8') as output_file:
+                json.dump(self.generation_info, output_file)
+        else:
+            import csv
+            keys = [
+                self.__stat_key,
+                self.__generation_key,
+                self.__pop_len_key,
+                self.__fitness_mean_key,
+                self.__fitness_std_key,
+                self.__fitness_min_key,
+                self.__fitness_max_key,
+                self.__most_fit_key,
+                self.__least_fit_key
+            ]
+            with open(filename, 'w', newline='', encoding='utf8') as output_file:
+                dict_writer = csv.DictWriter(output_file, keys)
+                dict_writer.writeheader()
+                dict_writer.writerows(self.generation_info)
+
+
 
     def verbose_logging(self, event_message):
         if self.verbose:
             logging.info(event_message, extra={'island' : self.name})
         if self.logging_function:
             self.logging_function(event_message=event_message, island=self)
-
-    def _save_checkpoint(self, event):
-        if not os.path.isdir(self.checkpoints_dir):
-            os.mkdir(self.checkpoints_dir)
-        if not os.path.isdir(f'{self.checkpoints_dir}/{self.name}'):
-            os.mkdir(f'{self.checkpoints_dir}/{self.name}')
-        fp = f'{self.checkpoints_dir}/{self.name}/{datetime.utcnow().strftime("%H-%M-%S")}_{event}_checkpoint.pkl'
-        self.verbose_logging(f'checkpoint: file {fp}')
-        self.save_island(fp)
