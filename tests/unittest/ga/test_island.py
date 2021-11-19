@@ -16,6 +16,7 @@ class TestSimpleIsland(unittest.TestCase):
         g_6 = Gene(name="sixth", value=1, gene_max=100, gene_min=1, randomise_function=random_int)
         gen = Chromosome([g_1, g_2, g_3, g_4, g_5, g_6])
         self.ind = Individual(self.fitness, name="Adam", chromosome=gen)
+        self.ind.add_new_property('some_property', 10)
 
         self.life = Island({'x': 0.6, 'y' : 0.2}, crossover_function=crossover_two_n_point)
 
