@@ -8,6 +8,8 @@ import json
 import ftplib
 import glob
 from pathlib import Path
+from datetime import datetime
+from natural_selection import __version__ as ver
 
 _project_name = 'natural_selection'
 _git_files_for_add = [
@@ -27,10 +29,13 @@ class bcolors:
     UNDERLINE = '\033[4m'
 
 def upload_to_pypi(release_name):
-    with open("version.json", "r") as f:
-        version = json.load(f)
+    if os.path.isfile("version.json"):
+        with open("version.json", "r") as f:
+            version = json.load(f)
 
-    version_name = '{major}.{minor}.{patch}'.format(**version)
+        version_name = '{major}.{minor}.{patch}'.format(**version)
+    else:
+        version_name = ver
 
     print(f'{bcolors.UNDERLINE}{bcolors.BOLD}{bcolors.WARNING}-- Using version {version_name}!{bcolors.ENDC}')
 
@@ -159,21 +164,27 @@ def main(args):
 
     if args.deploy:
         # All went well!
-        with open("version.json", "r") as f:
-            version = json.load(f)
+        if os.path.isfile("version.json"):
+            with open("version.json", "r") as f:
+                version = json.load(f)
 
-        version['patch'] += 1
-        with open("version.json", "w") as f:
-            json.dump(version, f)
+            version['patch'] += 1
+            with open("version.json", "w") as f:
+                json.dump(version, f)
 
         with open(f"{_project_name}/__init__.py", "r") as f:
             lines = f.readlines()
-            lines[0] = "__version__ = '{major}.{minor}.{patch}'\n".format(**version)
+            v = ver.split('.')
+            major = int(v[0])
+            minor = int(v[1])
+            patch = int(v[2]) + 1
+            lines[0] = f"__version__ = '{major}.{minor}.{patch}'\n"
+            lines[1] = f'__date__ = "{datetime.today().strftime("%Y-%m-%d")}"\n'
         if lines:
             with open(f"{_project_name}/__init__.py", "w") as f:
                 f.writelines(lines)
 
-        print(f"{bcolors.OKGREEN}{bcolors.BOLD}-- Version number bumped to {version}!{bcolors.ENDC}")
+        print(f"{bcolors.OKGREEN}{bcolors.BOLD}-- Version number bumped to {major}.{minor}.{patch}!{bcolors.ENDC}")
 
     if args.git:
         add_files_for_commit()

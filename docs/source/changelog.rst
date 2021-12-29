@@ -11,6 +11,11 @@ Changelog
 History
 ==========================
 
+Version 0.2.19 (2021-12-29)
+---------------------------
+
+* Fixed minor issue when loading an island and logging not working.
+
 Version 0.2.18 (2021-11-19)
 ---------------------------
 

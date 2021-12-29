@@ -83,12 +83,9 @@ Changes and history
 
 See :ref:`changelog-page` for version history.
 
-Version 0.2.18 (2021-11-19):
+Version 0.2.19 (2021-12-29):
 
-* Print crossover logs after resetting offspring
-* Adding all properties of individuals to lineage nodes.
-* Added ``get`` to Individuals to safely return properties.
-* Custom crossover functions can now add ``gene_inheritance`` to offspring to detail what percentages offspring inherit.
+* Fixed minor issue when loading an island and logging not working.
 
 
 Indices and tables

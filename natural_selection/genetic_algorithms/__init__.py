@@ -19,6 +19,7 @@ import logging
 from datetime import datetime
 from collections import OrderedDict
 import copy
+from time import gmtime
 
 import numpy as np
 
@@ -606,20 +607,25 @@ class Island:
                  save_checkpoint_level : int = 0,
                  allow_twins : bool = False):
 
-        if filepath:
-            self.load_island(filepath)
-            return
-        self.verbose = verbose
-        self.logging_function = logging_function
         if name is None:
             self.name = get_random_string(include_numeric=True)
         else:
             self.name = name
+
+        self.verbose = verbose
+        self.logging_function = logging_function
+
         if verbose:
             logging.basicConfig(level=logging.INFO,
                                 format='%(asctime)s %(island)-8s %(message)s',
                                 filename=datetime.utcnow().strftime('%Y-%m-%d-ga-output.log'),
                                 datefmt='%H:%M:%S')
+
+            logging.Formatter.converter = gmtime
+
+        if filepath:
+            self.load_island(filepath)
+            return
 
         self.verbose_logging(f"island: create v{package_version}")
         if function_params:
