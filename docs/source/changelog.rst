@@ -11,6 +11,24 @@ Changelog
 History
 ==========================
 
+Version 0.2.19 (2021-12-29)
+---------------------------
+
+* Fixed minor issue when loading an island and logging not working.
+
+Version 0.2.18 (2021-11-19)
+---------------------------
+
+* Print crossover logs after resetting offspring
+* Adding all properties of individuals to lineage nodes.
+* Added ``get`` to Individuals to safely return properties.
+* Custom crossover functions can now add ``gene_inheritance`` to offspring to detail what percentages offspring inherit.
+
+Version 0.2.17 (2021-11-16)
+---------------------------
+
+* Added ``write_lineage_json`` to Island to easily dump lineage graph to JSON file.
+
 Version 0.2.16 (2021-11-16)
 ---------------------------
 
