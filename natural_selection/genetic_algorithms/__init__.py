@@ -19,6 +19,7 @@ import logging
 from datetime import datetime
 from collections import OrderedDict
 import copy
+from time import gmtime
 
 import numpy as np
 
@@ -465,6 +466,21 @@ class Individual:
         """
         return self.__individual_properties
 
+    def get(self, key : str, default=None):
+        """
+        Gets the value of a property or returns default if it doesn't exist.
+
+        Args:
+            key (str): Property name.
+            default: Value to return if the property is not found (default = None).
+
+        Returns:
+            any: The property of the individual.
+        """
+        if key in self.__dict__.keys():
+            return self.__dict__[key]
+        return default
+
     def __str__(self) -> str:
         return f'Individual({self.name}:{self.fitness})'
 
@@ -591,20 +607,25 @@ class Island:
                  save_checkpoint_level : int = 0,
                  allow_twins : bool = False):
 
-        if filepath:
-            self.load_island(filepath)
-            return
-        self.verbose = verbose
-        self.logging_function = logging_function
         if name is None:
             self.name = get_random_string(include_numeric=True)
         else:
             self.name = name
+
+        self.verbose = verbose
+        self.logging_function = logging_function
+
         if verbose:
             logging.basicConfig(level=logging.INFO,
                                 format='%(asctime)s %(island)-8s %(message)s',
                                 filename=datetime.utcnow().strftime('%Y-%m-%d-ga-output.log'),
                                 datefmt='%H:%M:%S')
+
+            logging.Formatter.converter = gmtime
+
+        if filepath:
+            self.load_island(filepath)
+            return
 
         self.verbose_logging(f"island: create v{package_version}")
         if function_params:
@@ -811,13 +832,17 @@ class Island:
             self.__add_to_lineage(p)
 
     def __add_to_lineage(self, individual : Individual):
-        self.lineage['nodes'].append({
+        node = {
             'name': individual.name,
             'age': individual.age,
             'fitness': individual.fitness,
             'chromosome': str(individual.chromosome),
             '_individual' : individual
-        })
+        }
+        properties = individual.get_properties()
+        if not properties is None:
+            node.update(properties)
+        self.lineage['nodes'].append(node)
 
     def import_migrants(self, migrants : list,
                         reset_fitness : bool = False,
@@ -1013,13 +1038,14 @@ class Island:
                                           individuals=self.clone(individuals=parents, island=self),
                                           **crossover_params)
 
-                self.verbose_logging(f"cross: offspring_count {len(children)}")
-                self.verbose_logging(f"cross: offspring {[str(p) for p in children]}")
 
                 for child in children:
                     child.reset_name()
                     child.register_parent_names(parents)
                     child.age = 0
+
+                self.verbose_logging(f"cross: offspring_count {len(children)}")
+                self.verbose_logging(f"cross: offspring {[str(p) for p in children]}")
 
                 generation_children.extend(children)
 
@@ -1052,11 +1078,15 @@ class Island:
         for child in generation_children:
             self.__add_to_lineage(child)
             for p in child.parents:
-                self.lineage['edges'].append({
+                edge = {
                     'from': p.name,
                     'to': child.name,
                     'generation' : g
-                })
+                }
+                gene_inheritance = child.get('gene_inheritance')
+                if not gene_inheritance is None:
+                    edge['gene_inheritance'] = gene_inheritance[p.name]
+                self.lineage['edges'].append(edge)
 
         for individual in self.survivor_selection(individuals=generation_children, island=self, **survivor_selection_params):
             if self.allow_twins:
@@ -1129,6 +1159,21 @@ class Island:
 
         if self.save_checkpoint_level == 1:
             self.save_checkpoint(event=f'evolve_post_{g}', island=self)
+
+    def write_lineage_json(self, filename : str):
+        """
+        Dumps the lineage safely to JSON file.
+
+        Args:
+            filename (str): Output file.
+        """
+        nodes = list()
+        for n in self.lineage['nodes']:
+            nodes.append({k:v for k, v in n.items() if not k.startswith('_')})
+        import json
+        with open(filename, 'w', newline='', encoding='utf8') as output_file:
+            json.dump({'nodes' : nodes, 'edges' : self.lineage['edges']}, output_file)
+
 
     def write_report(self, filename : str, output_json : bool = False):
         """

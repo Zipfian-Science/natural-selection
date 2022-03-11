@@ -83,11 +83,9 @@ Changes and history
 
 See :ref:`changelog-page` for version history.
 
-Version 0.2.16 (2021-11-16):
+Version 0.2.19 (2021-12-29):
 
-* Added ``lineage`` to Island, to easily track the lineage of parents/offsrping. This is especially handy for enforcing genetic diversity.
-* Added ``write_report`` to Island, for printing generational history to file.
-* Logging now writes individuals as strings, not the full representation, thus logs are less cluttered.
+* Fixed minor issue when loading an island and logging not working.
 
 
 Indices and tables
