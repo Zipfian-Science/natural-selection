@@ -82,6 +82,42 @@ class TestSimpleIsland(unittest.TestCase):
         self.life.initialise(self.ind, population_size=5)
         self.life.evolve(crossover_params={'n_points' : 2})
 
+class TestSimpleIslandMinimise(unittest.TestCase):
+
+    def setUp(self) -> None:
+        self.fitness = lambda individual, island, x, y: (individual.chromosome[0].value * x) + (individual.chromosome[1].value *y)
+        g_1 = Gene(name="first", value=1, gene_max=10, gene_min=1, randomise_function=random_int)
+        g_2 = Gene(name="second", value=1, gene_max=10, gene_min=1, randomise_function=random_int)
+        gen = Chromosome([g_1, g_2])
+        self.ind = Individual(self.fitness, name="Adam", chromosome=gen)
+        self.ind.add_new_property('some_property', 10)
+
+        self.life = Island({'x': 0.6, 'y' : 0.2}, maximise_function=False)
+
+    def test_evolve_generational(self):
+        self.life.initialise(self.ind, population_size=5)
+        best = self.life.evolve()
+
+        self.assertLessEqual(best.fitness, 8)
+
+class TestSimpleIslandMaximise(unittest.TestCase):
+
+    def setUp(self) -> None:
+        self.fitness = lambda individual, island, x, y: (individual.chromosome[0].value * x) + (individual.chromosome[1].value *y)
+        g_1 = Gene(name="first", value=1, gene_max=10, gene_min=1, randomise_function=random_int)
+        g_2 = Gene(name="second", value=1, gene_max=10, gene_min=1, randomise_function=random_int)
+        gen = Chromosome([g_1, g_2])
+        self.ind = Individual(self.fitness, name="Adam", chromosome=gen)
+        self.ind.add_new_property('some_property', 10)
+
+        self.life = Island({'x': 0.6, 'y' : 0.2})
+
+    def test_evolve_generational(self):
+        self.life.initialise(self.ind, population_size=5)
+        best = self.life.evolve()
+
+        self.assertGreaterEqual(best.fitness, 0.8)
+
 class TestOtherIsland(unittest.TestCase):
 
     def setUp(self) -> None:
