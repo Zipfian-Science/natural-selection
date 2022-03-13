@@ -27,8 +27,8 @@ def selection_elites_tournament(individuals : list, n : int = 4, tournament_size
     """
     elites = []
     for i in range(n):
-        selection = selection_elites_random(individuals, tournament_size)
-        elites.extend(selection_elites_top_n(selection, 1))
+        selection = selection_elites_random(individuals, tournament_size, island=island)
+        elites.extend(selection_elites_top_n(selection, 1, island=island))
     return elites
 
 def selection_elites_tournament_unique(individuals : list, n : int = 4, tournament_size : int = 5, max_step : int = 100, island=None) -> list:
@@ -49,8 +49,8 @@ def selection_elites_tournament_unique(individuals : list, n : int = 4, tourname
     i = 0
     steps = 0
     while i < n:
-        selection = selection_elites_random(individuals, tournament_size)
-        fittest = selection_elites_top_n(selection, 1)[0]
+        selection = selection_elites_random(individuals, tournament_size, island=island)
+        fittest = selection_elites_top_n(selection, 1, island=island)[0]
         steps += 1
         if not fittest in elites:
             elites.append(fittest)
@@ -81,7 +81,7 @@ def selection_elites_top_n(individuals : list, n : int = 4, desc : bool = True, 
     Args:
         individuals (list): A list of Individuals.
         n (int): Number to select (default = 4).
-        desc (bool): In descending order (default = True).
+        desc (bool): In descending order, only used if Island is None, else `maximise_function` overrides (default = True).
         island (Island): The Island calling the method (default = None).
 
     Returns:
@@ -90,6 +90,9 @@ def selection_elites_top_n(individuals : list, n : int = 4, desc : bool = True, 
     def sortFitness(val):
         return val.fitness
 
-    individuals.sort(key=sortFitness, reverse=desc)
+    if island:
+        individuals.sort(key=sortFitness, reverse=island.maximise_function)
+    else:
+        individuals.sort(key=sortFitness, reverse=desc)
 
     return individuals[0:n]
