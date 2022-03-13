@@ -11,6 +11,11 @@ Changelog
 History
 ==========================
 
+Version 0.2.20 (2022-03-11)
+---------------------------
+
+* Added the param ``maximise_function`` to Island, to either maximise the function (default) or when set to false to minimise the function.
+
 Version 0.2.19 (2021-12-29)
 ---------------------------
 

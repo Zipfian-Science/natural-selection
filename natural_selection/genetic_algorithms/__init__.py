@@ -547,6 +547,7 @@ class Island:
 
     Args:
         function_params (dict): The parameters for the fitness function (default = None).
+        maximise_function (bool): If True, the fitness value is maximised, False will minimise the function fitness (default = True).
         elite_selection (Callable): Function for selecting individuals for crossover and mutation (default = None).
         initialisation_function (Callable): A function for randomly creating new individuals from the given adam.
         parent_selection (Callable): Function for selecting parents for crossover (default = None).
@@ -589,6 +590,7 @@ class Island:
 
 
     def __init__(self, function_params : dict = None,
+                 maximise_function : bool = True,
                  initialisation_function: Callable = initialise_population_random,
                  elite_selection : Callable = selection_elites_top_n,
                  parent_selection : Callable = selection_parents_two,
@@ -641,6 +643,8 @@ class Island:
         }
         self.population = list()
 
+        self.maximise_function = maximise_function
+        self.verbose_logging(f"island: maximise_function {maximise_function}")
         self._initialise = initialisation_function
         self.verbose_logging(f"island: initialisation_function {initialisation_function.__name__}")
         self.elite_selection = elite_selection
