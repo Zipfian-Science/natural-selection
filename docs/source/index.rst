@@ -83,9 +83,9 @@ Changes and history
 
 See :ref:`changelog-page` for version history.
 
-Version 0.2.19 (2021-12-29):
+Version 0.2.21 (2022-03-13):
 
-* Fixed minor issue when loading an island and logging not working.
+* Added the ability to add properties to islands, much like with individuals, chromosomes and genes. ``add_new_property``, ``get_properties``, and ``get``.
 
 
 Indices and tables

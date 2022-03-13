@@ -1,5 +1,5 @@
-__version__ = '0.2.21'
-__date__ = "2022-03-11"
+__version__ = '0.2.22'
+__date__ = "2022-03-13"
 
 def get_random_string(length : int = 8, include_numeric=False) -> str:
     """
