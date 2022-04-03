@@ -2,10 +2,10 @@
 """Basic classes for running Genetic Algorithms.
 """
 __author__ = "Justin Hocking"
-__copyright__ = "Copyright 2021, Zipfian Science"
+__copyright__ = "Copyright 2022, Zipfian Science"
 __credits__ = []
 __license__ = ""
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 __maintainer__ = "Justin Hocking"
 __email__ = "justin.hocking@zipfian.science"
 __status__ = "Development"
@@ -120,6 +120,30 @@ class Gene:
             self.__gene_properties = {key: value}
         self.__dict__.update({key: value})
 
+    def get_properties(self):
+        """
+        Gets a dict of the custom properties that were added at initialisation or the `add_new_property` method.
+
+        Returns:
+            dict: All custom properties.
+        """
+        return self.__gene_properties
+
+    def get(self, key: str, default=None):
+        """
+        Gets the value of a property or returns default if it doesn't exist.
+
+        Args:
+            key (str): Property name.
+            default: Value to return if the property is not found (default = None).
+
+        Returns:
+            any: The property of the individual.
+        """
+        if key in self.__dict__.keys():
+            return self.__dict__[key]
+        return default
+
     def __str__(self) -> str:
         return f'Gene({self.name}:{self.value})'
 
@@ -196,6 +220,21 @@ class Chromosome:
             dict: All custom properties.
         """
         return self.__chromosome_properties
+
+    def get(self, key : str, default=None):
+        """
+        Gets the value of a property or returns default if it doesn't exist.
+
+        Args:
+            key (str): Property name.
+            default: Value to return if the property is not found (default = None).
+
+        Returns:
+            any: The property of the individual.
+        """
+        if key in self.__dict__.keys():
+            return self.__dict__[key]
+        return default
 
     def randomise_gene(self, index : int):
         """
@@ -721,6 +760,8 @@ class Island:
         if save_checkpoint_function and '<lambda>' in repr(save_checkpoint_function):
             w.warn("WARNING: 'save_checkpoint_function' lambda can not be pickled using standard libraries.")
 
+        self.__island_properties = dict()
+
     def create_gene(self,
                  name : str,
                  value : Any,
@@ -1209,7 +1250,43 @@ class Island:
                 dict_writer.writeheader()
                 dict_writer.writerows(self.generation_info)
 
+    def add_new_property(self, key : str, value : Any):
+        """
+        Method to add new properties (attributes).
 
+        Args:
+            key (str): Name of property.
+            value (Any): Anything.
+        """
+        if self.__island_properties:
+            self.__island_properties.update({key: value})
+        else:
+            self.__island_properties = {key: value}
+        self.__dict__.update({key: value})
+
+    def get_properties(self):
+        """
+        Gets a dict of the custom properties that were added at initialisation or the `add_new_property` method.
+
+        Returns:
+            dict: All custom properties.
+        """
+        return self.__island_properties
+
+    def get(self, key: str, default=None):
+        """
+        Gets the value of a property or returns default if it doesn't exist.
+
+        Args:
+            key (str): Property name.
+            default: Value to return if the property is not found (default = None).
+
+        Returns:
+            any: The property of the individual.
+        """
+        if key in self.__dict__.keys():
+            return self.__dict__[key]
+        return default
 
     def verbose_logging(self, event_message):
         if self.verbose:
