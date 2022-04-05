@@ -45,3 +45,10 @@ Random Initialisation
 Initialisation with mutation function
 -------------------------------------
 .. autofunction:: natural_selection.genetic_algorithms.operators.initialisation.initialise_population_mutation_function
+
+Alien spawn
+=====================
+
+Default spawn
+---------------------
+.. autofunction:: natural_selection.genetic_algorithms.operators.initialisation.alien_spawn_default

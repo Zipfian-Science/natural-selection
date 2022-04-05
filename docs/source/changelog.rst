@@ -11,6 +11,12 @@ Changelog
 History
 ==========================
 
+Version 0.2.23 (2022-04-05)
+---------------------------
+
+* Added a new ability to spawn new aliens at the end of each generation.
+* Added ``alien_spawn_function`` to Island initialisation.
+
 Version 0.2.22 (2022-04-03)
 ---------------------------
 

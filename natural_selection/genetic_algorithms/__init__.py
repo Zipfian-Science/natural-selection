@@ -24,7 +24,7 @@ from time import gmtime
 import numpy as np
 
 from natural_selection import get_random_string
-from natural_selection.genetic_algorithms.operators.initialisation import initialise_population_random
+from natural_selection.genetic_algorithms.operators.initialisation import initialise_population_random, alien_spawn_default
 from natural_selection.genetic_algorithms.operators.selection import selection_elites_top_n, selection_parents_two, selection_survivors_all
 from natural_selection.genetic_algorithms.operators.crossover import crossover_two_uniform
 from natural_selection.genetic_algorithms.operators.mutation import mutation_randomize
@@ -605,6 +605,7 @@ class Island:
         mutation_prob_function (Callable): Random probability function for mutation (default = None).
         clone_function (Callable): Function for cloning (default = None).
         survivor_selection_function (Callable): Function for selecting survivors (default = None).
+        alien_spawn_function (Callable): Function for spawning new aliens during each generation (default = None).
         random_seed (int): Random seed for random and Numpy generators, set to None for no seed (default = None).
         name (str): General name for island, useful when working with multiple islands (default = None).
         verbose (bool): Print all information (default = None).
@@ -618,6 +619,7 @@ class Island:
         unique_genome (list): List of unique chromosomes.
         generation_info (list): List of dicts detailing info for every generation.
         population (list): The full population of members.
+        parents (list): All parents selected during the run.
         elites (list): All elites selected during the run.
         mutants (list): All mutants created during the run.
         children (list): All children created during the run.
@@ -647,6 +649,7 @@ class Island:
                  crossover_prob_function : Callable = crossover_prob_function_classic,
                  mutation_prob_function : Callable = mutation_prob_function_classic,
                  survivor_selection_function: Callable = selection_survivors_all,
+                 alien_spawn_function: Callable = alien_spawn_default,
                  clone_function : Callable = clone_classic,
                  random_seed: int = None,
                  name : str = None,
@@ -712,6 +715,9 @@ class Island:
         self.survivor_selection = survivor_selection_function
         self.verbose_logging(f"island: survivor_selection_function {survivor_selection_function.__name__}")
 
+        self.alien_spawn_function = alien_spawn_function
+        self.verbose_logging(f"island: survivor_selection_function {survivor_selection_function.__name__}")
+
         self.save_checkpoint = save_checkpoint_function
         self.verbose_logging(f"island: save_checkpoint_function {save_checkpoint_function.__name__}")
 
@@ -721,6 +727,7 @@ class Island:
         self.random_seed = random_seed
         self.verbose_logging(f"island: random_seed {random_seed}")
         self.elites = list()
+        self.parents = list()
         self.mutants = list()
         self.children = list()
         self.species_type = "def"
@@ -762,6 +769,9 @@ class Island:
 
         if '<lambda>' in repr(survivor_selection_function):
             w.warn("WARNING: 'survivor_selection_function' lambda can not be pickled using standard libraries.")
+
+        if '<lambda>' in repr(alien_spawn_function):
+            w.warn("WARNING: 'alien_spawn_function' lambda can not be pickled using standard libraries.")
 
         if logging_function and '<lambda>' in repr(logging_function):
             w.warn("WARNING: 'logging_function' lambda can not be pickled using standard libraries.")
@@ -951,6 +961,7 @@ class Island:
                parent_selection_params : dict = None,
                parent_combination_params: dict = None,
                survivor_selection_params: dict = None,
+               alien_spawn_params: dict = None,
                criterion_function : Callable = None,
                criterion_params : dict = None,
                pre_generation_check_function : Callable = None,
@@ -968,6 +979,7 @@ class Island:
             crossover_params (dict): Dict of params for custom crossover function (default = None).
             mutation_params (dict): Dict of params for custom mutation function (default = None).
             selection_params (dict): Dict of params for custom selection function (default = None).
+            alien_spawn_params (dict): Dict of params for alien spawn function (default = None).
             criterion_function (Callable): A function to evaluate if the desired criterion has been met (default = None).
             criterion_params (dict): Function parameters for criterion (default = None).
             pre_generation_check_function (Callable): A function to perform some custom pre-action at the start of every generation, with signature ``func(generation, island)`` (default = None).
@@ -1003,6 +1015,11 @@ class Island:
         else:
             _survivor_selection_params = {}
 
+        if alien_spawn_params:
+            _alien_spawn_params = alien_spawn_params
+        else:
+            _alien_spawn_params = {}
+
         def _default_criterion_function(island):
             return island.generation_count < starting_generation + n_generations - 1
 
@@ -1027,7 +1044,8 @@ class Island:
                                        crossover_probability=crossover_probability,
                                        mutation_probability=mutation_probability,
                                        crossover_params=_crossover_params,
-                                       mutation_params=_mutation_params)
+                                       mutation_params=_mutation_params,
+                                       alien_spawn_params=_alien_spawn_params)
             if post_generation_check_function:
                 post_generation_check_function(generation=g, island=self)
             g += 1
@@ -1073,21 +1091,22 @@ class Island:
                               crossover_probability,
                               mutation_probability,
                               crossover_params,
-                              mutation_params):
+                              mutation_params,
+                              alien_spawn_params):
 
         if self.save_checkpoint_level == 1:
             self.save_checkpoint(event=f'evolve_pre_{g}', island=self)
 
-        elites = self.parent_selection(island=self,
+        selected_parents = self.parent_selection(island=self,
                                        individuals=self.clone(individuals=self.population, island=self),
                                        **parent_selection_params)
-        self.verbose_logging(f"select: elites_count {len(elites)}")
+        self.verbose_logging(f"select: selected_parents_count {len(selected_parents)}")
 
-        self.elites.append({'generation' : g, 'elites' : elites})
+        self.parents.append({'generation' : g, 'parents' : selected_parents})
 
         # Children are strictly copies or new objects seeing as the have a lineage and parents
         generation_children = list()
-        for parents in self.parent_combination(individuals=elites, island=self, **parent_combination_params):
+        for parents in self.parent_combination(individuals=selected_parents, island=self, **parent_combination_params):
             self.verbose_logging(f"select: parent_count {len(parents)}")
             if self.crossover_prob(crossover_probability=crossover_probability, island=self):
                 self.verbose_logging(f"cross: parents {[str(p) for p in parents]}")
@@ -1160,7 +1179,7 @@ class Island:
 
 
         population_fitnesses = [ind.fitness for ind in self.population]
-        elite_fitnesses = [ind.fitness for ind in elites]
+        selected_parents_fitnesses = [ind.fitness for ind in selected_parents]
 
         if len(offspring_fitnesses) > 0:
             self.generation_info.append(
@@ -1181,16 +1200,17 @@ class Island:
         self.generation_info.append(
             {
                 self.__generation_key: g,
-                self.__stat_key: 'elites',
-                self.__pop_len_key: len(elite_fitnesses),
-                self.__fitness_mean_key: np.mean(elite_fitnesses),
-                self.__fitness_std_key: np.std(elite_fitnesses),
-                self.__fitness_min_key: min(elite_fitnesses),
-                self.__fitness_max_key: max(elite_fitnesses),
-                self.__most_fit_key: selection_elites_top_n(island=self, individuals=elites, n=1)[0].name,
-                self.__least_fit_key : selection_elites_top_n(island=self, individuals=elites, n=1)[-1].name
+                self.__stat_key: 'parents',
+                self.__pop_len_key: len(selected_parents_fitnesses),
+                self.__fitness_mean_key: np.mean(selected_parents_fitnesses),
+                self.__fitness_std_key: np.std(selected_parents_fitnesses),
+                self.__fitness_min_key: min(selected_parents_fitnesses),
+                self.__fitness_max_key: max(selected_parents_fitnesses),
+                self.__most_fit_key: selection_elites_top_n(island=self, individuals=selected_parents, n=1)[0].name,
+                self.__least_fit_key : selection_elites_top_n(island=self, individuals=selected_parents, n=1)[-1].name
             }
         )
+
 
         self.verbose_logging(f"evolve: stats {self.generation_info[-1]}")
 
@@ -1210,8 +1230,66 @@ class Island:
 
         self.verbose_logging(f"evolve: stats {self.generation_info[-1]}")
 
+        elites = selection_elites_top_n(island=self, individuals=self.population, n=4)
+        elite_fitnesses = [ind.fitness for ind in elites]
+        self.elites.append({'generation': g, 'elites': elites})
+
+        self.generation_info.append(
+            {
+                self.__generation_key: g,
+                self.__stat_key: 'elites',
+                self.__pop_len_key: len(elite_fitnesses),
+                self.__fitness_mean_key: np.mean(elite_fitnesses),
+                self.__fitness_std_key: np.std(elite_fitnesses),
+                self.__fitness_min_key: min(elite_fitnesses),
+                self.__fitness_max_key: max(elite_fitnesses),
+                self.__most_fit_key: selection_elites_top_n(island=self, individuals=elites, n=1)[0].name,
+                self.__least_fit_key: selection_elites_top_n(island=self, individuals=elites, n=1)[-1].name
+            }
+        )
+
+        self.verbose_logging(f"evolve: stats {self.generation_info[-1]}")
+
         for i in self.population:
             i.birthday()
+
+        new_aliens = self.alien_spawn_function(**alien_spawn_params ,island=self)
+
+        if len(new_aliens) > 0:
+            alien_fitnesses = list()
+            for alien in new_aliens:
+                if self.allow_twins:
+                    # Else, add it effectively allowing "twins" to exist
+                    self.verbose_logging(f"evolve: eval {str(alien)}")
+                    alien.evaluate(island=self, params=self.function_params)
+                    alien_fitnesses.append(alien.fitness)
+                    self.verbose_logging(f"evolve: add {str(alien)}")
+                    self.population.append(alien)
+                    self.unique_genome.append(alien.unique_genetic_code())
+                    self.__add_to_lineage(alien)
+                elif not alien.unique_genetic_code() in self.unique_genome:
+                    self.verbose_logging(f"evolve: eval {str(alien)}")
+                    alien.evaluate(island=self, params=self.function_params)
+                    alien_fitnesses.append(alien.fitness)
+                    # If we want a diverse gene pool, this must be true
+                    self.verbose_logging(f"evolve: add {str(alien)}")
+                    self.population.append(alien)
+                    self.unique_genome.append(alien.unique_genetic_code())
+                    self.__add_to_lineage(alien)
+
+            self.generation_info.append(
+                {
+                    self.__generation_key: g,
+                    self.__stat_key: 'aliens',
+                    self.__pop_len_key: len(alien_fitnesses),
+                    self.__fitness_mean_key: np.mean(alien_fitnesses),
+                    self.__fitness_std_key: np.std(alien_fitnesses),
+                    self.__fitness_min_key: min(alien_fitnesses),
+                    self.__fitness_max_key: max(alien_fitnesses),
+                    self.__most_fit_key: selection_elites_top_n(island=self, individuals=new_aliens, n=1)[0].name,
+                    self.__least_fit_key: selection_elites_top_n(island=self, individuals=new_aliens, n=1)[-1].name
+                }
+            )
 
         self.generation_count = g
 
