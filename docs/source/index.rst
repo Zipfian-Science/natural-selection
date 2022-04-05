@@ -83,9 +83,10 @@ Changes and history
 
 See :ref:`changelog-page` for version history.
 
-Version 0.2.21 (2022-03-13):
+Version 0.2.23 (2022-04-05):
 
-* Added the ability to add properties to islands, much like with individuals, chromosomes and genes. ``add_new_property``, ``get_properties``, and ``get``.
+* Added a new ability to spawn new aliens at the end of each generation.
+* Added ``alien_spawn_function`` to Island initialisation.
 
 
 Indices and tables
