@@ -1,6 +1,18 @@
 import copy
 from typing import Callable
 
+def alien_spawn_default(island=None):
+    """
+    Default empty list spawning.
+
+    Args:
+        island (Island): Needed to wrap to `create_chromosome` and `create_individual` methods (default = None).
+
+    Returns:
+        list: Empty
+    """
+    return []
+
 def initialise_population_random(adam, n : int = 10, chromosome_create_func : Callable = None, island=None):
     """
     Classic random initialisation function to create a pool of `n` individuals from a starting Individual `adam`.

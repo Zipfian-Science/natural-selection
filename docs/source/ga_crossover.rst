@@ -56,4 +56,12 @@ Uniform Random
 
 Random Point
 ---------------------
+.. autofunction:: natural_selection.genetic_algorithms.operators.crossover.crossover_two_one_point
+
+.. autofunction:: natural_selection.genetic_algorithms.operators.crossover.crossover_two_two_point
+
 .. autofunction:: natural_selection.genetic_algorithms.operators.crossover.crossover_two_n_point
+
+Miscellaneous
+---------------------
+.. autofunction:: natural_selection.genetic_algorithms.operators.crossover.crossover_one_binary_union
