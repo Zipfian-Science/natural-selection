@@ -134,6 +134,11 @@ def add_files_for_commit():
     for f in _git_files_for_add:
         os.system(f"git add {f}")
 
+def broadcast_update_announce():
+    from broadcast import broadcast_update_announce
+
+    broadcast_update_announce()
+
 def main(args):
     if not do_unit_tests(args):
         print(f'{bcolors.FAIL}{bcolors.BOLD}Unit testing failed, not building!{bcolors.ENDC}')
@@ -147,6 +152,13 @@ def main(args):
         lock_and_gen_pipreq()
 
     if args.build or args.deploy:
+        with open(f"{_project_name}/__init__.py", "r") as f:
+            lines = f.readlines()
+            lines[1] = f'__date__ = "{datetime.today().strftime("%Y-%m-%d")}"\n'
+        if lines:
+            with open(f"{_project_name}/__init__.py", "w") as f:
+                f.writelines(lines)
+
         build_wheel()
 
     if args.deploy:
@@ -179,7 +191,6 @@ def main(args):
             minor = int(v[1])
             patch = int(v[2]) + 1
             lines[0] = f"__version__ = '{major}.{minor}.{patch}'\n"
-            lines[1] = f'__date__ = "{datetime.today().strftime("%Y-%m-%d")}"\n'
         if lines:
             with open(f"{_project_name}/__init__.py", "w") as f:
                 f.writelines(lines)

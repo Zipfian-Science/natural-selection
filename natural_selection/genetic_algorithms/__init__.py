@@ -273,6 +273,15 @@ class Chromosome:
         """
         return OrderedDict({gene.name : gene.value for gene in self.genes})
 
+    def to_list(self) -> list:
+        """
+        Helper function to convert chromosome into a Python list of the gene values.
+
+        Returns:
+            list: Values of the genes in order, as a list.
+        """
+        return [gene.value for gene in self.genes]
+
 
     def __getitem__(self, index) -> Gene:
         if isinstance(index, slice):
@@ -587,9 +596,9 @@ class Island:
     Args:
         function_params (dict): The parameters for the fitness function (default = None).
         maximise_function (bool): If True, the fitness value is maximised, False will minimise the function fitness (default = True).
-        elite_selection (Callable): Function for selecting individuals for crossover and mutation (default = None).
+        parent_selection (Callable): Function for selecting individuals for crossover (default = None).
         initialisation_function (Callable): A function for randomly creating new individuals from the given adam.
-        parent_selection (Callable): Function for selecting parents for crossover (default = None).
+        parent_combination (Callable): Function for combining parents for crossover (default = None).
         crossover_function (Callable): Function for crossover (default = None).
         mutation_function (Callable): Function for mutation (default = None).
         crossover_prob_function (Callable): Random probability function for crossover (default = None).
@@ -631,8 +640,8 @@ class Island:
     def __init__(self, function_params : dict = None,
                  maximise_function : bool = True,
                  initialisation_function: Callable = initialise_population_random,
-                 elite_selection : Callable = selection_elites_top_n,
-                 parent_selection : Callable = selection_parents_two,
+                 parent_selection : Callable = selection_elites_top_n,
+                 parent_combination : Callable = selection_parents_two,
                  crossover_function : Callable = crossover_two_uniform,
                  mutation_function : Callable = mutation_randomize,
                  crossover_prob_function : Callable = crossover_prob_function_classic,
@@ -686,10 +695,10 @@ class Island:
         self.verbose_logging(f"island: maximise_function {maximise_function}")
         self._initialise = initialisation_function
         self.verbose_logging(f"island: initialisation_function {initialisation_function.__name__}")
-        self.elite_selection = elite_selection
-        self.verbose_logging(f"island: elite_selection {elite_selection.__name__}")
         self.parent_selection = parent_selection
         self.verbose_logging(f"island: parent_selection {parent_selection.__name__}")
+        self.parent_combination = parent_combination
+        self.verbose_logging(f"island: parent_combination {parent_combination.__name__}")
         self.crossover = crossover_function
         self.verbose_logging(f"island: crossover_function {crossover_function.__name__}")
         self.mutation = mutation_function
@@ -730,11 +739,11 @@ class Island:
         if '<lambda>' in repr(initialisation_function):
             w.warn("WARNING: 'initialisation_function' lambda can not be pickled using standard libraries.")
 
-        if '<lambda>' in repr(elite_selection):
-            w.warn("WARNING: 'elite_selection' lambda can not be pickled using standard libraries.")
-
         if '<lambda>' in repr(parent_selection):
             w.warn("WARNING: 'parent_selection' lambda can not be pickled using standard libraries.")
+
+        if '<lambda>' in repr(parent_combination):
+            w.warn("WARNING: 'parent_combination' lambda can not be pickled using standard libraries.")
 
         if '<lambda>' in repr(crossover_function):
             w.warn("WARNING: 'crossover_function' lambda can not be pickled using standard libraries.")
@@ -770,6 +779,8 @@ class Island:
                  gene_min : Any = None,
                  mu : Any = None,
                  sig: Any = None,
+                 step_lower_bound : Any = None,
+                 step_upper_bound : Any = None,
                  choices : Iterable  = None,
                  gene_properties : dict = None):
         """
@@ -783,13 +794,15 @@ class Island:
             gene_min (Any, numeric type): Min value for random number generator (default = None).
             mu (Any, numeric type): Mean value of distribution to sample from (default = None).
             sig (Any, numeric type): Std. Dev. value of distribution to sample from (default = None).
+            step_lower_bound (Any, numeric type): For uniform stepping functions, defines lower bound of range (default = None).
+            step_upper_bound (Any, numeric type): For uniform stepping functions, defines upper bound of range (default = None).
             choices (Iterable): List of choices, categorical or not, to randomly choose from (default = None).
             gene_properties (dict): For custom random functions, extra params may be given (default = None).
         Returns:
             gene: A new Gene object.
         """
         return Gene(name=name, value=value, randomise_function=randomise_function, gene_max=gene_max, gene_min=gene_min,
-                    mu=mu, sig=sig, choices=choices, gene_properties=gene_properties)
+                    mu=mu, sig=sig, step_lower_bound=step_lower_bound, step_upper_bound=step_upper_bound, choices=choices, gene_properties=gene_properties)
 
     def create_chromosome(self,
                           genes: list = None,
@@ -930,19 +943,19 @@ class Island:
 
 
     def evolve(self, starting_generation : int = 0,
-                            n_generations : int = 5,
-                            crossover_probability : float = 0.5,
-                            mutation_probability : float = 0.25,
-                            crossover_params : dict = None,
-                            mutation_params : dict = None,
-                            elite_selection_params : dict = None,
-                            parent_selection_params: dict = None,
-                            survivor_selection_params: dict = None,
-                            criterion_function : Callable = None,
-                            criterion_params : dict = None,
-                            pre_generation_check_function : Callable = None,
-                            post_generation_check_function: Callable = None,
-                            post_evolution_function: Callable = None,
+               n_generations : int = 5,
+               crossover_probability : float = 0.5,
+               mutation_probability : float = 0.25,
+               crossover_params : dict = None,
+               mutation_params : dict = None,
+               parent_selection_params : dict = None,
+               parent_combination_params: dict = None,
+               survivor_selection_params: dict = None,
+               criterion_function : Callable = None,
+               criterion_params : dict = None,
+               pre_generation_check_function : Callable = None,
+               post_generation_check_function: Callable = None,
+               post_evolution_function: Callable = None,
                ) -> Individual:
         """
         Starts the evolutionary run.
@@ -975,15 +988,15 @@ class Island:
         else:
             _mutation_params = {}
 
-        if elite_selection_params:
-            _elite_selection_params = elite_selection_params
-        else:
-            _elite_selection_params = {}
-
         if parent_selection_params:
             _parent_selection_params = parent_selection_params
         else:
             _parent_selection_params = {}
+
+        if parent_combination_params:
+            _parent_combination_params = parent_combination_params
+        else:
+            _parent_combination_params = {}
 
         if survivor_selection_params:
             _survivor_selection_params = survivor_selection_params
@@ -1008,8 +1021,8 @@ class Island:
                 pre_generation_check_function(generation=g, island=self)
 
             self.__evolutionary_engine(g=g,
-                                       elite_selection_params=_elite_selection_params,
                                        parent_selection_params=_parent_selection_params,
+                                       parent_combination_params=_parent_combination_params,
                                        survivor_selection_params=_survivor_selection_params,
                                        crossover_probability=crossover_probability,
                                        mutation_probability=mutation_probability,
@@ -1054,8 +1067,8 @@ class Island:
 
     def __evolutionary_engine(self,
                               g,
-                              elite_selection_params,
                               parent_selection_params,
+                              parent_combination_params,
                               survivor_selection_params,
                               crossover_probability,
                               mutation_probability,
@@ -1065,16 +1078,16 @@ class Island:
         if self.save_checkpoint_level == 1:
             self.save_checkpoint(event=f'evolve_pre_{g}', island=self)
 
-        elites = self.elite_selection(island=self,
-                                      individuals=self.clone(individuals=self.population, island=self),
-                                      **elite_selection_params)
+        elites = self.parent_selection(island=self,
+                                       individuals=self.clone(individuals=self.population, island=self),
+                                       **parent_selection_params)
         self.verbose_logging(f"select: elites_count {len(elites)}")
 
         self.elites.append({'generation' : g, 'elites' : elites})
 
         # Children are strictly copies or new objects seeing as the have a lineage and parents
         generation_children = list()
-        for parents in self.parent_selection(individuals=elites, island=self, **parent_selection_params):
+        for parents in self.parent_combination(individuals=elites, island=self, **parent_combination_params):
             self.verbose_logging(f"select: parent_count {len(parents)}")
             if self.crossover_prob(crossover_probability=crossover_probability, island=self):
                 self.verbose_logging(f"cross: parents {[str(p) for p in parents]}")

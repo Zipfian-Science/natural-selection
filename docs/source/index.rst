@@ -83,9 +83,13 @@ Changes and history
 
 See :ref:`changelog-page` for version history.
 
-Version 0.2.21 (2022-03-13):
+Version 0.2.22 (2022-04-03):
 
-* Added the ability to add properties to islands, much like with individuals, chromosomes and genes. ``add_new_property``, ``get_properties``, and ``get``.
+* Renamed the ``elite_selection`` to ``parent_selection`` due to misleading name.
+* Renamed the original ``parent_selection`` to ``parent_combination`` due to misleading name.
+* Removed the ``elite`` in parent selection functions.
+* Added ``selection_roulette`` to parent selection.
+* Added new ``crossover_one_binary_union`` crossover operator for binary string union.
 
 
 Indices and tables

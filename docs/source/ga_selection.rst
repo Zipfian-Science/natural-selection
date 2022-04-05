@@ -18,7 +18,7 @@ Custom selection functions can be used in islands.
 
 .. code-block:: python
 
-   def selection_elites_random(individuals : list, n : int = 4, island=None) -> list:
+   def selection_random(individuals : list, n : int = 4, island=None) -> list:
       return random.choice(individuals, size=n).tolist()
 
 Note the following in the above example:
@@ -47,24 +47,30 @@ Survivor selection is similar to elite selection.
 
 .. _elites-selection:
 
-Elites selection
+Parent selection
 =====================
 
 Tournament selection
 ---------------------
-.. autofunction:: natural_selection.genetic_algorithms.operators.selection.selection_elites_tournament
+.. autofunction:: natural_selection.genetic_algorithms.operators.selection.selection_tournament
 
-.. autofunction:: natural_selection.genetic_algorithms.operators.selection.selection_elites_tournament_unique
+.. autofunction:: natural_selection.genetic_algorithms.operators.selection.selection_tournament_unique
 
 Random selection
 ---------------------
-.. autofunction:: natural_selection.genetic_algorithms.operators.selection.selection_elites_random
+.. autofunction:: natural_selection.genetic_algorithms.operators.selection.selection_random
 
-Top N selection
----------------------
+Top N selection (elites)
+------------------------
 .. autofunction:: natural_selection.genetic_algorithms.operators.selection.selection_elites_top_n
 
-Parent selection
+Roulette selection
+---------------------
+.. autofunction:: natural_selection.genetic_algorithms.operators.selection.selection_roulette
+
+.. autofunction:: natural_selection.genetic_algorithms.operators.selection.selection_almost_roulette_minimisation
+
+Parent combination
 =====================
 
 Two parents

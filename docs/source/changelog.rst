@@ -11,6 +11,15 @@ Changelog
 History
 ==========================
 
+Version 0.2.22 (2022-04-03)
+---------------------------
+
+* Renamed the ``elite_selection`` to ``parent_selection`` due to misleading name.
+* Renamed the original ``parent_selection`` to ``parent_combination`` due to misleading name.
+* Removed the ``elite`` in parent selection functions.
+* Added ``selection_roulette`` to parent selection.
+* Added new ``crossover_one_binary_union`` crossover operator for binary string union.
+
 Version 0.2.21 (2022-03-13)
 ---------------------------
 
