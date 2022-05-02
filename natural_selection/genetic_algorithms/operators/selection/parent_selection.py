@@ -12,7 +12,7 @@ __status__ = "Development"
 
 from numpy import random
 
-def selection_roulette(individuals : list, n : int = 4, with_replacement : bool = False, island=None) -> list:
+def selection_roulette(individuals : list, n : int = 4, with_replacement : bool = True, island=None) -> list:
     """
     Classic roulette wheel selection, or also known as Fitness proportionate selection.
     This method selects individuals based on their fitness in proportion to the whole population.
@@ -23,7 +23,7 @@ def selection_roulette(individuals : list, n : int = 4, with_replacement : bool 
     Args:
         individuals (list): A list of Individuals.
         n (int): The number of selected individuals to return (default = 4).
-        with_replacement (bool) : Whether the sample is with or without replacement (default = False).
+        with_replacement (bool) : Whether the sample is with or without replacement (default = True).
         island (Island): The Island calling the method (default = None).
 
     Raises:
@@ -42,7 +42,7 @@ def selection_roulette(individuals : list, n : int = 4, with_replacement : bool 
     # Selects one chromosome based on the computed probabilities
     return random.choice(individuals, size=n, replace=with_replacement, p=probabilities).tolist()
 
-def selection_almost_roulette_minimisation(individuals : list, n : int = 4, with_replacement : bool = False, island=None) -> list:
+def selection_almost_roulette_minimisation(individuals : list, n : int = 4, with_replacement : bool = True, island=None) -> list:
     """
     Almost roulette wheel selection selection but for function minimisation.
     This method selects individuals based on their fitness in proportion to the whole population.
@@ -53,7 +53,7 @@ def selection_almost_roulette_minimisation(individuals : list, n : int = 4, with
     Args:
         individuals (list): A list of Individuals.
         n (int): The number of selected individuals to return (default = 4).
-        with_replacement (bool) : Whether the sample is with or without replacement (default = False).
+        with_replacement (bool) : Whether the sample is with or without replacement (default = True).
         island (Island): The Island calling the method (default = None).
 
     Raises:
@@ -74,7 +74,7 @@ def selection_almost_roulette_minimisation(individuals : list, n : int = 4, with
     # Selects one chromosome based on the computed probabilities
     return random.choice(individuals, size=n, replace=with_replacement, p=probabilities).tolist()
 
-def selection_tournament(individuals : list, n : int = 4, tournament_size : int = 5, island=None) -> list:
+def selection_tournament(individuals : list, n : int = 4, tournament_size : int = 5, with_replacement : bool = True, island=None) -> list:
     """
     Classic tournament selection. Given a number of selection rounds (`n`), select a random list of individuals of `tournament_size` and select the top individual from the random selection.
 
@@ -82,6 +82,7 @@ def selection_tournament(individuals : list, n : int = 4, tournament_size : int 
         individuals (list): A list of Individuals.
         n (int): The number of tournaments to run, effectively the number of selected individuals to return (default = 4).
         tournament_size (int): The number of random individuals to select during each tournament (default = 5).
+        with_replacement (bool) : Whether the sample is with or without replacement (default = True).
         island (Island): The Island calling the method (default = None).
 
     Returns:
@@ -89,11 +90,11 @@ def selection_tournament(individuals : list, n : int = 4, tournament_size : int 
     """
     parents = []
     for i in range(n):
-        selection = selection_random(individuals, tournament_size, island=island)
+        selection = selection_random(individuals, tournament_size, island=island, with_replacement=with_replacement)
         parents.extend(selection_elites_top_n(selection, 1, island=island))
     return parents
 
-def selection_tournament_unique(individuals : list, n : int = 4, tournament_size : int = 5, max_step : int = 100, island=None) -> list:
+def selection_tournament_unique(individuals : list, n : int = 4, tournament_size : int = 5, with_replacement : bool = True, max_step : int = 100, island=None) -> list:
     """
     Classic tournament selection but ensures a unique list of selected individuals. Given a number of selection rounds (`n`), select a random list of individuals of `tournament_size` and select the top individual from the random selection.
 
@@ -102,6 +103,7 @@ def selection_tournament_unique(individuals : list, n : int = 4, tournament_size
         n (int): The number of tournaments to run, effectively the number of selected individuals to return (default = 4).
         tournament_size (int): The number of random individuals to select during each tournament (default = 5).
         max_step (int): In the unlikely event that a unique list of size `n` can not be achieved, break out of the loop after this amount of steps (default = 100).
+        with_replacement (bool) : Whether the sample is with or without replacement (default = True).
         island (Island): The Island calling the method (default = None).
 
     Returns:
@@ -111,7 +113,7 @@ def selection_tournament_unique(individuals : list, n : int = 4, tournament_size
     i = 0
     steps = 0
     while i < n:
-        selection = selection_random(individuals, tournament_size, island=island)
+        selection = selection_random(individuals, tournament_size, island=island, with_replacement=with_replacement)
         fittest = selection_elites_top_n(selection, 1, island=island)[0]
         steps += 1
         if not fittest in parents:
@@ -122,14 +124,14 @@ def selection_tournament_unique(individuals : list, n : int = 4, tournament_size
             break
     return parents
 
-def selection_random(individuals : list, n : int = 4, with_replacement : bool = False, island=None) -> list:
+def selection_random(individuals : list, n : int = 4, with_replacement : bool = True, island=None) -> list:
     """
     Completely random selection.
 
     Args:
         individuals (list): A list of Individuals.
         n (int): Number to select (default = 4).
-        with_replacement (bool) : Whether the sample is with or without replacement (default = False).
+        with_replacement (bool) : Whether the sample is with or without replacement (default = True).
         island (Island): The Island calling the method (default = None).
 
     Returns:
