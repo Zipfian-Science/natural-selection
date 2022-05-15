@@ -30,9 +30,9 @@ by Zipfian Science
 ```
 Python tools for creating and running Evolutionary Algorithm (EA) experiments by [Zipfian Science](https://zipfian.science/).
 
-* For documentation, see [docs](http://docs.zipfian.science/natural-selection/index.html).
+* For documentation, see [docs](https://docs.zipfian.science/natural-selection/index.html).
 * Source on [GitHub](https://github.com/Zipfian-Science/natural-selection).
-* For history, see [changelog](http://docs.zipfian.science/natural-selection/changelog.html#changelog-page)
+* For history, see [changelog](https://docs.zipfian.science/natural-selection/changelog.html#changelog-page)
 ## Install
 
 ```shell script
