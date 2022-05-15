@@ -11,6 +11,11 @@ Changelog
 History
 ==========================
 
+Version 0.2.24 (2022-04-07)
+---------------------------
+
+* Added param ``with_replacement`` to selection functions.
+
 Version 0.2.23 (2022-04-05)
 ---------------------------
 

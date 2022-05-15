@@ -135,9 +135,9 @@ def add_files_for_commit():
         os.system(f"git add {f}")
 
 def broadcast_update_announce():
-    from broadcast import broadcast_update_announce
+    from broadcast import broadcast_update_linkedin
 
-    broadcast_update_announce()
+    broadcast_update_linkedin()
 
 def main(args):
     if not do_unit_tests(args):
@@ -200,6 +200,9 @@ def main(args):
     if args.git:
         add_files_for_commit()
 
+    if args.linkedin:
+        broadcast_update_announce()
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -251,6 +254,7 @@ if __name__ == "__main__":
         type=str,
         default=None,
         help="Define release name for remote object")
+
     parser.add_argument(
         "--pipreq",
         "-p",
@@ -275,6 +279,15 @@ if __name__ == "__main__":
         "-g",
         help="Add usual files for commit",
         action="store_true",
+        default=True,
+    )
+
+    parser.add_argument(
+        "--linkedin",
+        "-l",
+        help="Post update to LinkedIn",
+        action="store_true",
+        default=False
     )
 
     main(parser.parse_args())
