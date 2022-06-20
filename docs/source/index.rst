@@ -37,14 +37,16 @@ Import the tools:
 
 .. code-block:: python
 
-    from natural_selection.genetic_algorithms import Gene, Chromosome, Individual, Island
+    from natural_selection import Island
+    from natural_selection.genetic_algorithms import Gene, Chromosome, Individual
     from natural_selection.genetic_algorithms.utils.random_functions import random_int, random_gaussian
 
 Then simply create a GA experiment:
 
 .. code-block:: python
 
-   from natural_selection.genetic_algorithms import Gene, Chromosome, Individual, Island
+   from natural_selection import Island
+   from natural_selection.genetic_algorithms import Gene, Chromosome, Individual
    from natural_selection.genetic_algorithms.utils.random_functions import random_int, random_gaussian
 
    # Create a gene
@@ -83,9 +85,10 @@ Changes and history
 
 See :ref:`changelog-page` for version history.
 
-Version 0.2.24 (2022-04-07):
+Version 0.2.25 (2022-06-20):
 
-* Added param ``with_replacement`` to selection functions.
+* Implemented new multiprocessing ability. Can now specify with the ``core_count`` param to split up evaluation over multiple cores.
+* Major refactoring. ``Island`` is now imported from the main package, to make it future proof for running genetic programs.
 
 
 Indices and tables
