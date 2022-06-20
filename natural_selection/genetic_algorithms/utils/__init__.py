@@ -42,6 +42,20 @@ def post_evolution_function_save_all(island):
     for p in island.population:
         p.save_individual(filepath=f'individual_{p.name}.pkl')
 
+def evaluate_individual(individual, island, params):
+    """
+    A wrapper function for spawning multi processes.
+
+    Args:
+        individual: Single individual to evaluate.
+        island: The calling island
+        params: Function eval params.
+        results: A dictionary for aligning fitness scores.
+
+    """
+    island.verbose_logging(f"eval: {str(individual)}")
+    return individual.evaluate(params=params, island=island)
+
 class GeneticAlgorithmError(Exception):
     """
     Encapsulating graceful exception handling during evolutionary runs.

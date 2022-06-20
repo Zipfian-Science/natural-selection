@@ -12,6 +12,7 @@ __status__ = "Development"
 
 import uuid
 from typing import List, Union, Any, Callable
+import pickle
 
 import natural_selection.genetic_programs.functions as op
 from natural_selection.genetic_programs.utils import GeneticProgramError
@@ -260,7 +261,16 @@ class GeneticProgram:
         Returns:
             numeric: Fitness value.
         """
-        self.fitness = self.fitness_function(node_tree=self.node_tree, island=island, **params)
+        if not params is None:
+            _params = params
+        else:
+            _params = {}
+        try:
+            self.fitness = self.fitness_function(program=self, island=island, **_params)
+        except Exception as exc:
+            if island:
+                island.verbose_logging(f"ERROR: {self.name} - {repr(self.node_tree)} - {repr(exc)}")
+            raise GeneticProgramError(message=f'Could not evaluate program "{self.name}" due to {repr(exc)}')
 
         stamp = { "name": self.name,
                   "age": self.age,
@@ -286,8 +296,70 @@ class GeneticProgram:
             self.genetic_code = repr(self.node_tree)
         return self.genetic_code
 
+    def save(self, filepath : str):
+        """
+        Save an individual to a pickle file.
+
+        Args:
+            filepath (str): File path to write to.
+        """
+        with open(filepath, "wb") as f:
+            pickle.dump(self.__dict__, f)
+
+    def load(self, filepath : str):
+        """
+        Load an individual from a pickle file.
+
+        Args:
+            filepath (str): File path to load from.
+        """
+        with open(filepath, "rb") as f:
+            self.__dict__.update(pickle.load(f))
+
+    def add_new_property(self, key : str, value : Any):
+        """
+        Method to add new properties (attributes).
+
+        Args:
+            key (str): Name of property.
+            value (Any): Anything.
+        """
+        if self.__individual_properties:
+            self.__individual_properties.update({key: value})
+        else:
+            self.__individual_properties = {key: value}
+        self.__dict__.update({key: value})
+
+    def get_properties(self) -> dict:
+        """
+        Gets a dict of the custom properties that were added at initialisation or the `add_new_property` method.
+
+        Returns:
+            dict: All custom properties.
+        """
+        return self.__individual_properties
+
+    def get(self, key : str, default=None):
+        """
+        Gets the value of a property or returns default if it doesn't exist.
+
+        Args:
+            key (str): Property name.
+            default: Value to return if the property is not found (default = None).
+
+        Returns:
+            any: The property of the individual.
+        """
+        if key in self.__dict__.keys():
+            return self.__dict__[key]
+        return default
+
     def __str__(self) -> str:
-        return f'({self.name}:{self.fitness})'
+        return f'GeneticProgram({self.name}:{self.fitness})'
+
+    def __repr__(self) -> str:
+        genetic_code = self.unique_genetic_code()
+        return f'GeneticProgram({self.name}:{self.fitness}:{self.age}:{self.species_type}:{genetic_code})'
 
     def __eq__(self, other):
         if isinstance(other, GeneticProgram):

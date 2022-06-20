@@ -187,7 +187,7 @@ selection, crossover, and mutation operators, giving the experimenter more flexi
    from natural_selection.genetic_algorithms import Gene
    from natural_selection.genetic_algorithms import Chromosome
    from natural_selection.genetic_algorithms import Individual
-   from natural_selection.genetic_algorithms import Island
+   from natural_selection import Island
    from natural_selection.genetic_algorithms.utils.random_functions import random_int, random_gaussian
 
    # Create a gene

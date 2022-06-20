@@ -11,6 +11,13 @@ Changelog
 History
 ==========================
 
+Version 0.2.25 (2022-06-20)
+---------------------------
+
+* Implemented new multiprocessing ability. Can now specify with the ``core_count`` param to split up evaluation over multiple cores.
+* Major refactoring. ``Island`` is now imported from the main package, to make it future proof for running genetic programs.
+
+
 Version 0.2.24 (2022-04-07)
 ---------------------------
 

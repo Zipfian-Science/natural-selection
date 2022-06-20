@@ -160,3 +160,4 @@ def broadcast_update_linkedin():
         print(('Server started on port:{}'.format(LINKEDIN_PORT)))
         webbrowser.open(url, new=0, autoraise=True)
         httpd.serve_forever()
+        webbrowser.open('https://www.linkedin.com/company/zipfian-science/posts/', new=0, autoraise=True)

@@ -1,5 +1,6 @@
 import unittest
-from natural_selection.genetic_algorithms import Gene, Chromosome, Individual, Island
+from natural_selection.genetic_algorithms import Gene, Chromosome, Individual
+from natural_selection import Island
 from natural_selection.genetic_algorithms.utils.random_functions import random_int
 from natural_selection.genetic_algorithms.operators.mutation import mutation_randomize_n_point
 from natural_selection.genetic_algorithms.operators.initialisation import initialise_population_mutation_function

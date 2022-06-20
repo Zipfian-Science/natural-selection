@@ -1,5 +1,6 @@
 import unittest
-from natural_selection.genetic_algorithms import Gene, Chromosome, Individual, Island
+from natural_selection.genetic_algorithms import Gene, Chromosome, Individual
+from natural_selection import Island
 from natural_selection.genetic_algorithms.utils.random_functions import random_int
 from natural_selection.genetic_algorithms.operators.selection import selection_tournament_unique, selection_roulette, selection_almost_roulette_minimisation
 

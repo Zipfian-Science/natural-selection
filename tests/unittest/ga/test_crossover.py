@@ -1,5 +1,6 @@
 import unittest
-from natural_selection.genetic_algorithms import Gene, Chromosome, Individual, Island
+from natural_selection.genetic_algorithms import Gene, Chromosome, Individual
+from natural_selection import Island
 from natural_selection.genetic_algorithms.utils.random_functions import random_int, random_choice
 from natural_selection.genetic_algorithms.operators.crossover import crossover_two_n_point, crossover_one_binary_union
 
