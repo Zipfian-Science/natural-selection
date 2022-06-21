@@ -11,6 +11,12 @@ Changelog
 History
 ==========================
 
+Version 0.2.26 (2022-)
+---------------------------
+
+* Work on ``GeneticProgram`` class.
+* Renamed ``natural_selection.genetic_programs.functions `` to ``natural_selection.genetic_programs.node_operators ``.
+
 Version 0.2.25 (2022-06-20)
 ---------------------------
 

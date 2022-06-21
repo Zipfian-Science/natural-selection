@@ -7,6 +7,9 @@ class Operator:
         self.min_arity = min_arity
 
     def exec(self, args):
+        if len(args) > self.max_arity or len(args) < self.min_arity:
+            raise AssertionError(
+                f"Number of arguments do not match the allowed arity min:{self.min_arity} max:{self.max_arity}")
         return self.function(args)
 
 class OperatorReturn(Operator):

@@ -24,7 +24,7 @@ from natural_selection.genetic_algorithms.utils import clone_classic, default_sa
 
 from natural_selection.genetic_programs.operators.initialisation import initialise_population_full_method
 from natural_selection.genetic_programs.utils import GeneticProgramError
-import natural_selection.genetic_programs.functions as gp_func
+import natural_selection.genetic_programs.node_operators as gp_func
 
 
 class Island:

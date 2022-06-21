@@ -13,8 +13,9 @@ __status__ = "Development"
 import uuid
 from typing import List, Union, Any, Callable
 import pickle
+import warnings as w
 
-import natural_selection.genetic_programs.functions as op
+import natural_selection.genetic_programs.node_operators as op
 from natural_selection.genetic_programs.utils import GeneticProgramError
 
 
@@ -156,11 +157,14 @@ class GeneticProgram:
 
     Args:
         fitness_function (Callable): Function with ``func(Node, island, **params)`` signature.
+        node_tree (Node): A starting node tree (default = None).
         operators (list): List of all operators that nodes can be constructed from.
         terminals (list): List of all terminals that can be included in the node tree, can be numeric or strings for variables.
         max_depth (int): Maximum depth that node tree can grow.
         name (str): Name for keeping track of lineage (default = None).
         species_type (str) : A unique string to identify the species type, for preventing cross polluting (default = None).
+        filepath (str): Skip init and load from a pickled file.
+        individual_properties (dict): For fitness functions, extra params may be given (default = None).
 
     Attributes:
         fitness (Numeric): The fitness score after evaluation.
@@ -171,12 +175,20 @@ class GeneticProgram:
     """
 
     def __init__(self,
-                 fitness_function: Callable,
-                 operators : List[op.Operator],
-                 terminals : List[Union[str,int,float]],
-                 max_depth : int,
+                 fitness_function: Callable = None,
+                 node_tree : Node = None,
+                 operators : List[op.Operator] = None,
+                 terminals : List[Union[str,int,float]]= None,
+                 max_depth : int = None,
                  name: str = None,
-                 species_type : str = None):
+                 species_type : str = None,
+                 filepath : str = None,
+                 individual_properties : dict = None):
+        if not filepath is None:
+            self.load(filepath=filepath)
+            return
+        if fitness_function and '<lambda>' in repr(fitness_function):
+            w.warn("WARNING: 'fitness_function' lambda can not be pickled using standard libraries.")
         if name is None:
             self.name = str(uuid.uuid4())
         else:
@@ -184,8 +196,8 @@ class GeneticProgram:
         self.operators = operators
         self.terminals = terminals
         self.max_depth = max_depth
-        self.node_tree = None
-        self.root_node = Node(label=name,arity=1, operator=op.OperatorReturn())
+        self.node_tree = node_tree
+        self.root_node = Node(label=self.name,arity=1, operator=op.OperatorReturn())
 
         self.fitness_function = fitness_function
         self.fitness = None
@@ -196,9 +208,18 @@ class GeneticProgram:
         if species_type:
             self.species_type = species_type
         else:
-            self.species_type = "DEFAULT_SPECIES"
+            self.species_type = "def"
+
+        self.__individual_properties = individual_properties
+        if individual_properties:
+            for k, v in individual_properties.items():
+                self.__dict__.update({k: v})
 
     def __call__(self, **kwargs):
+        if self.node_tree:
+            self.root_node[0] = self.node_tree
+        else:
+            raise GeneticProgramError('No node tree has been constructed!')
         return self.root_node(**kwargs)
 
 

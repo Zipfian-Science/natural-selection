@@ -1,6 +1,6 @@
 import unittest
-from natural_selection.genetic_programs.functions import OperatorAdd, OperatorSub, OperatorMul, OperatorDiv, Operator
-import natural_selection.genetic_programs.functions as op
+from natural_selection.genetic_programs.node_operators import OperatorAdd, OperatorSub, OperatorMul, OperatorDiv, Operator
+import natural_selection.genetic_programs.node_operators as op
 from natural_selection.genetic_programs import Node
 
 class TestNode(unittest.TestCase):

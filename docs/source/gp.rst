@@ -49,7 +49,7 @@ Instances of nodes can be executed with parameters.
 
 .. code-block:: python
 
-   from natural_selection.genetic_programs.functions import OperatorAdd
+   from natural_selection.genetic_programs.node_operators import OperatorAdd
 
    n_1 = Node(is_terminal=True, label='x')
    n_2 = Node(is_terminal=True, terminal_value=42)
