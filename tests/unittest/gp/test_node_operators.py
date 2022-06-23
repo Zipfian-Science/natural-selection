@@ -20,6 +20,9 @@ class TestNodeOperators(unittest.TestCase):
         with self.assertRaises(AssertionError):
             returned_value = custom.exec([15,20,50])
 
+        with self.assertRaises(AssertionError):
+            returned_value = custom.exec([15])
+
         n1 = Node(label='X', is_terminal=True)
         n2 = Node(label='Y', is_terminal=True)
 

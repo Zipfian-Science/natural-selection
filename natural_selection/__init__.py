@@ -377,6 +377,7 @@ class Island:
         self.verbose_logging("init: complete")
 
         for p in self.population:
+            p.history.append({"init_island": self.name})
             self.__add_to_lineage(p)
 
     def __add_to_lineage(self, individual : Individual):
@@ -425,6 +426,7 @@ class Island:
 
         for i in migrants_for_adding:
             self.verbose_logging(f"migration: add {str(i)}")
+            i.history.append({"migration_island": self.name})
             self.population.append(i)
             self.unique_genome.append(i.unique_genetic_code())
             self.__add_to_lineage(i)
@@ -749,6 +751,7 @@ class Island:
                     # Else, add it effectively allowing "twins" to exist
                     alien_fitnesses.append(alien.fitness)
                     self.verbose_logging(f"evolve: add {str(alien)}")
+                    alien.history.append({"alien_init_island": self.name})
                     self.population.append(alien)
                     self.unique_genome.append(alien.unique_genetic_code())
                     self.__add_to_lineage(alien)

@@ -11,12 +11,97 @@ __email__ = "justin.hocking@zipfian.science"
 __status__ = "Development"
 
 import uuid
-from typing import List, Union, Any, Callable
+from typing import List, Union, Any, Callable, Type
 import pickle
 import warnings as w
+from inspect import isclass
+
+import numpy.random as random
+import random as pyrand
 
 import natural_selection.genetic_programs.node_operators as op
 from natural_selection.genetic_programs.utils import GeneticProgramError
+
+
+def random_generate(genetic_program,
+                    operators : list = None,
+                    terminals : list = None,
+                    max_depth : int = None,
+                    min_depth : int = None,
+                    growth_mode : str = 'grow',
+                    terminal_prob : float = 0.5,
+                    island = None):
+    current_depth = 1
+
+    if max_depth is None:
+        max_depth = genetic_program.max_depth
+
+    if min_depth is None:
+        min_depth = genetic_program.min_depth
+
+    def create_random_node_or_terminal():
+        if random.random() > terminal_prob:
+            return create_random_node()
+        return create_random_terminal()
+
+    def create_random_terminal():
+        if terminals:
+            terminal = pyrand.choice(terminals)
+        else:
+            terminal = pyrand.choice(genetic_program.terminals)
+        if isinstance(terminal, str):
+            return Node(label=terminal, is_terminal=True)
+        else:
+            return Node(is_terminal=True, terminal_value=terminal)
+
+    def create_random_node():
+        if operators:
+            starting_operator = pyrand.choice(operators)
+        else:
+            starting_operator = pyrand.choice(genetic_program.operators)
+        if isinstance(starting_operator, op.Operator):
+            initialised_operator = starting_operator
+        elif isclass(starting_operator):
+            initialised_operator = starting_operator()
+        else:
+            raise GeneticProgramError(f'Could not recognise the given operator {repr(starting_operator)}')
+
+        if initialised_operator.min_arity == initialised_operator.max_arity:
+            starting_arity = initialised_operator.max_arity
+        else:
+            starting_arity = random.randint(initialised_operator.min_arity, initialised_operator.max_arity)
+
+        return Node(arity=starting_arity, operator=initialised_operator)
+
+    def add_random_children(node, current_depth, max_depth, min_depth):
+        at_least_one = False
+        for i in range(0, node.arity):
+            if current_depth == max_depth-1:
+                child = create_random_terminal()
+            elif growth_mode == 'full':
+                child = create_random_node()
+            elif current_depth < min_depth and i == node.arity-1 and not at_least_one:
+                child = create_random_node()
+            else:
+                child = create_random_node_or_terminal()
+                at_least_one = True
+            if not child.is_terminal:
+                child = add_random_children(child, current_depth + 1, max_depth, min_depth)
+
+            node[i] = child
+
+        return node
+
+
+    init_node = create_random_node()
+
+    init_node = add_random_children(init_node, current_depth, max_depth, min_depth)
+
+    genetic_program.node_tree = init_node
+
+    return genetic_program
+
+
 
 
 class Node:
@@ -54,7 +139,7 @@ class Node:
             self.label = operator.operator_label
         else:
             self.label = str(terminal_value)
-        self.arity = arity
+        self.arity = 1 if is_terminal else arity
         self.operator = operator
         self.is_terminal = is_terminal
         self.terminal_value = terminal_value
@@ -107,6 +192,8 @@ class Node:
         else:
             assert index < len(self.children), 'Index Out of bounds!'
 
+        assert isinstance(node, Node), 'Child must be of type Node'
+
         self.children[index] = node
 
     def __getitem__(self, index):
@@ -135,6 +222,12 @@ class Node:
     def clear_children(self):
         self.children = [None] * self.arity
 
+    def is_empty(self):
+        for child in self.children:
+            if not child is None:
+                return False
+        return True
+
     def depth(self):
         """
         Finds the depth of the current tree. This is done by traversing the tree and returning the deepest depth found.
@@ -146,6 +239,8 @@ class Node:
             return 1
         deepest = 0
         for n in self.children:
+            if n is None:
+                raise GeneticProgramError("A child node is of NoneType")
             d = n.depth() + 1
             if d > deepest:
                 deepest = d
@@ -166,6 +261,9 @@ class GeneticProgram:
         filepath (str): Skip init and load from a pickled file.
         individual_properties (dict): For fitness functions, extra params may be given (default = None).
 
+    Notes:
+        If no fitness function is given, the default __call__ is used.
+
     Attributes:
         fitness (Numeric): The fitness score after evaluation.
         age (int): How many generations was the individual alive.
@@ -177,9 +275,10 @@ class GeneticProgram:
     def __init__(self,
                  fitness_function: Callable = None,
                  node_tree : Node = None,
-                 operators : List[op.Operator] = None,
+                 operators : List[Union[Type,op.Operator]] = None,
                  terminals : List[Union[str,int,float]]= None,
-                 max_depth : int = None,
+                 max_depth: int = None,
+                 min_depth : int = None,
                  name: str = None,
                  species_type : str = None,
                  filepath : str = None,
@@ -196,6 +295,7 @@ class GeneticProgram:
         self.operators = operators
         self.terminals = terminals
         self.max_depth = max_depth
+        self.min_depth = min_depth
         self.node_tree = node_tree
         self.root_node = Node(label=self.name,arity=1, operator=op.OperatorReturn())
 
@@ -271,7 +371,7 @@ class GeneticProgram:
         if reset_genetic_code:
             self.genetic_code = None
 
-    def evaluate(self, params : dict, island=None) -> Any:
+    def evaluate(self, params : dict = None, island=None) -> Any:
         """
         Run the fitness function with the given params.
 
@@ -287,7 +387,10 @@ class GeneticProgram:
         else:
             _params = {}
         try:
-            self.fitness = self.fitness_function(program=self, island=island, **_params)
+            if self.fitness_function is None:
+                self.fitness = self(**_params)
+            else:
+                self.fitness = self.fitness_function(program=self, island=island, **_params)
         except Exception as exc:
             if island:
                 island.verbose_logging(f"ERROR: {self.name} - {repr(self.node_tree)} - {repr(exc)}")
