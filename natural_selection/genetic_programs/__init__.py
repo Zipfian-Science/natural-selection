@@ -100,19 +100,19 @@ def random_generate(operators : list = None,
         return Node(arity=starting_arity, operator=initialised_operator)
 
     def add_random_children(node, current_depth, max_depth, min_depth):
-        at_least_one = False
+        at_least_one_node = False
         for i in range(0, node.arity):
             if current_depth == max_depth-1:
                 child = create_random_terminal()
             elif growth_mode == 'full':
                 child = create_random_node()
-            elif current_depth < min_depth and i == node.arity-1 and not at_least_one:
+            elif current_depth < min_depth and i == node.arity-1 and not at_least_one_node:
                 child = create_random_node()
             else:
                 child = create_random_node_or_terminal()
-                at_least_one = True
             if not child.is_terminal:
                 child = add_random_children(child, current_depth + 1, max_depth, min_depth)
+                at_least_one_node = True
 
             node[i] = child
 

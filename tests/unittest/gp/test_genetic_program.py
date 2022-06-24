@@ -9,9 +9,8 @@ class TestGeneticProgram(unittest.TestCase):
         operators = [OperatorAdd, OperatorSub]
         terminals = ['X', 2]
 
-        gp = GeneticProgram()
+        gp_full = GeneticProgram(operators=operators, terminals=terminals, max_depth=5, min_depth=1, growth_mode='full')
 
-        gp_full = random_generate(genetic_program=gp, operators=operators, terminals=terminals, max_depth=5, min_depth=1, growth_mode='full')
 
         # Must be of depth 5 because
         depth = gp_full.node_tree.depth()
@@ -22,7 +21,7 @@ class TestGeneticProgram(unittest.TestCase):
 
         self.assertIsInstance(function_value, int)
 
-        gp_grow = random_generate(genetic_program=gp, operators=operators, terminals=terminals, max_depth=3, min_depth=1, growth_mode='grow')
+        gp_grow = GeneticProgram(operators=operators, terminals=terminals, max_depth=3, min_depth=1, growth_mode='grow')
 
         depth = gp_grow.node_tree.depth()
 
@@ -32,7 +31,7 @@ class TestGeneticProgram(unittest.TestCase):
 
         self.assertIsInstance(function_value, int)
 
-        gp_grow = random_generate(genetic_program=gp, operators=operators, terminals=terminals, max_depth=4, min_depth=3, growth_mode='grow')
+        gp_grow = GeneticProgram(operators=operators, terminals=terminals, max_depth=4, min_depth=3, growth_mode='grow')
 
         depth = gp_grow.node_tree.depth()
 
@@ -43,13 +42,38 @@ class TestGeneticProgram(unittest.TestCase):
 
         self.assertIsInstance(function_value, int)
 
-        gp = GeneticProgram(operators=operators, terminals=terminals, max_depth=4, min_depth=4)
-
-        gp_grow = random_generate(genetic_program=gp, growth_mode='grow')
+        gp_grow = GeneticProgram(operators=operators, terminals=terminals, max_depth=4, min_depth=4, growth_mode='grow')
 
         depth = gp_grow.node_tree.depth()
 
         self.assertEqual(depth, 4)
+
+    def test_brute_check_depth(self):
+        operators = [OperatorAdd, OperatorSub]
+        terminals = ['X', 2]
+
+        # Full gen
+        for i in range(50):
+            gp = GeneticProgram(operators=operators, terminals=terminals, max_depth=5, min_depth=1, growth_mode='full')
+
+            self.assertEqual(gp.node_tree.depth(), 5)
+
+        # Grow gen
+        for i in range(50):
+            gp = GeneticProgram(operators=operators, terminals=terminals, max_depth=5, min_depth=2,
+                                     growth_mode='grow')
+
+            depth = gp.node_tree.depth()
+
+            self.assertLessEqual(depth, 5)
+            self.assertGreaterEqual(depth, 2)
+
+        for i in range(50):
+            gp = GeneticProgram(operators=operators, terminals=terminals, max_depth=3, min_depth=3,
+                                growth_mode='grow')
+
+            self.assertEqual(gp.node_tree.depth(), 3)
+
 
 
     def test_evaluate(self):
