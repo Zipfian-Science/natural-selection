@@ -11,11 +11,121 @@ __email__ = "justin.hocking@zipfian.science"
 __status__ = "Development"
 
 import uuid
-from typing import List, Union, Any, Callable
+from typing import List, Union, Any, Callable, Type
 import pickle
+import warnings as w
+from inspect import isclass
 
-import natural_selection.genetic_programs.functions as op
+import numpy.random as random
+import random as pyrand
+
+import natural_selection.genetic_programs.node_operators as op
 from natural_selection.genetic_programs.utils import GeneticProgramError
+
+
+def random_generate(operators : list = None,
+                    terminals : list = None,
+                    max_depth : int = None,
+                    min_depth : int = None,
+                    growth_mode : str = 'grow',
+                    terminal_prob : float = 0.5,
+                    genetic_program = None):
+    """
+    Function for random node tree creation. This function can be used for either Full tree generation or Grow generation.
+    Additionally, minimum and maximum depths along with the probability of adding a terminal to a node can be defined.
+
+    Args:
+
+        operators (list): List of all operators that nodes can be constructed from (default = None).
+        terminals (list): List of all terminals that can be included in the node tree, can be numeric or strings for variables (default = None).
+        max_depth (int): Maximum depth that node tree can grow (default = 3).
+        min_depth (int): Minimum depth that node tree must be (default = 1).
+        growth_mode (str): Type of tree growth method to use, "full" or "grow" (default = "grow").
+        terminal_prob (float): Probability of a generated node is a terminal (default = 0.5).
+        genetic_program (GeneticProgram): An optional program (default = None).
+
+    Returns:
+        Node: The node tree generated.
+    """
+    current_depth = 1
+
+    if max_depth is None:
+        if genetic_program:
+            max_depth = genetic_program.max_depth
+        else:
+            raise GeneticProgramError('No max_depth or genetic program given')
+
+    if min_depth is None:
+        if genetic_program:
+            min_depth = genetic_program.min_depth
+        else:
+            raise GeneticProgramError('No max_depth or genetic program given')
+
+    def create_random_node_or_terminal():
+        if random.random() > terminal_prob:
+            return create_random_node()
+        return create_random_terminal()
+
+    def create_random_terminal():
+        if terminals:
+            terminal = pyrand.choice(terminals)
+        elif genetic_program:
+            terminal = pyrand.choice(genetic_program.terminals)
+        else:
+            raise GeneticProgramError('No terminals were given or define')
+        if isinstance(terminal, str):
+            return Node(label=terminal, is_terminal=True)
+        else:
+            return Node(is_terminal=True, terminal_value=terminal)
+
+    def create_random_node():
+        if operators:
+            starting_operator = pyrand.choice(operators)
+        elif genetic_program:
+            starting_operator = pyrand.choice(genetic_program.operators)
+        else:
+            raise GeneticProgramError('No operators were given or define')
+        if isinstance(starting_operator, op.Operator):
+            initialised_operator = starting_operator
+        elif isclass(starting_operator):
+            initialised_operator = starting_operator()
+        else:
+            raise GeneticProgramError(f'Could not recognise the given operator {repr(starting_operator)}')
+
+        if initialised_operator.min_arity == initialised_operator.max_arity:
+            starting_arity = initialised_operator.max_arity
+        else:
+            starting_arity = random.randint(initialised_operator.min_arity, initialised_operator.max_arity)
+
+        return Node(arity=starting_arity, operator=initialised_operator)
+
+    def add_random_children(node, current_depth, max_depth, min_depth):
+        at_least_one_node = False
+        for i in range(0, node.arity):
+            if current_depth == max_depth-1:
+                child = create_random_terminal()
+            elif growth_mode == 'full':
+                child = create_random_node()
+            elif current_depth < min_depth and i == node.arity-1 and not at_least_one_node:
+                child = create_random_node()
+            else:
+                child = create_random_node_or_terminal()
+            if not child.is_terminal:
+                child = add_random_children(child, current_depth + 1, max_depth, min_depth)
+                at_least_one_node = True
+
+            node[i] = child
+
+        return node
+
+
+    init_node = create_random_node()
+
+    init_node = add_random_children(init_node, current_depth, max_depth, min_depth)
+
+    return init_node
+
+
 
 
 class Node:
@@ -53,7 +163,7 @@ class Node:
             self.label = operator.operator_label
         else:
             self.label = str(terminal_value)
-        self.arity = arity
+        self.arity = 1 if is_terminal else arity
         self.operator = operator
         self.is_terminal = is_terminal
         self.terminal_value = terminal_value
@@ -106,6 +216,8 @@ class Node:
         else:
             assert index < len(self.children), 'Index Out of bounds!'
 
+        assert isinstance(node, Node), 'Child must be of type Node'
+
         self.children[index] = node
 
     def __getitem__(self, index):
@@ -134,6 +246,12 @@ class Node:
     def clear_children(self):
         self.children = [None] * self.arity
 
+    def is_empty(self):
+        for child in self.children:
+            if not child is None:
+                return False
+        return True
+
     def depth(self):
         """
         Finds the depth of the current tree. This is done by traversing the tree and returning the deepest depth found.
@@ -145,6 +263,8 @@ class Node:
             return 1
         deepest = 0
         for n in self.children:
+            if n is None:
+                raise GeneticProgramError("A child node is of NoneType")
             d = n.depth() + 1
             if d > deepest:
                 deepest = d
@@ -155,12 +275,22 @@ class GeneticProgram:
     A class that encapsulates a single genetic program, with node tree and a fitness evaluation function.
 
     Args:
-        fitness_function (Callable): Function with ``func(Node, island, **params)`` signature.
-        operators (list): List of all operators that nodes can be constructed from.
-        terminals (list): List of all terminals that can be included in the node tree, can be numeric or strings for variables.
-        max_depth (int): Maximum depth that node tree can grow.
+        fitness_function (Callable): Function with ``func(Node, island, **params)`` signature (default = None).
+        node_tree (Node): A starting node tree (default = None).
+        operators (list): List of all operators that nodes can be constructed from (default = None).
+        terminals (list): List of all terminals that can be included in the node tree, can be numeric or strings for variables (default = None).
+        max_depth (int): Maximum depth that node tree can grow (default = 3).
+        min_depth (int): Minimum depth that node tree must be (default = 1).
+        growth_mode (str): Type of tree growth method to use, "full" or "grow" (default = "grow").
+        terminal_prob (float): Probability of a generated node is a terminal (default = 0.5).
+        tree_generator (Callable): Function with to create the tree.
         name (str): Name for keeping track of lineage (default = None).
         species_type (str) : A unique string to identify the species type, for preventing cross polluting (default = None).
+        filepath (str): Skip init and load from a pickled file.
+        program_properties (dict): For fitness functions, extra params may be given (default = None).
+
+    Notes:
+        If no fitness function is given, the default __call__ is used.
 
     Attributes:
         fitness (Numeric): The fitness score after evaluation.
@@ -171,12 +301,24 @@ class GeneticProgram:
     """
 
     def __init__(self,
-                 fitness_function: Callable,
-                 operators : List[op.Operator],
-                 terminals : List[Union[str,int,float]],
-                 max_depth : int,
+                 fitness_function: Callable = None,
+                 node_tree : Node = None,
+                 operators : List[Union[Type,op.Operator]] = None,
+                 terminals : List[Union[str,int,float]]= None,
+                 max_depth: int = 3,
+                 min_depth : int = 1,
+                 growth_mode: str = 'grow',
+                 terminal_prob: float = 0.5,
+                 tree_generator: Callable = random_generate,
                  name: str = None,
-                 species_type : str = None):
+                 species_type : str = None,
+                 filepath : str = None,
+                 program_properties : dict = None):
+        if not filepath is None:
+            self.load(filepath=filepath)
+            return
+        if fitness_function and '<lambda>' in repr(fitness_function):
+            w.warn("WARNING: 'fitness_function' lambda can not be pickled using standard libraries.")
         if name is None:
             self.name = str(uuid.uuid4())
         else:
@@ -184,8 +326,19 @@ class GeneticProgram:
         self.operators = operators
         self.terminals = terminals
         self.max_depth = max_depth
-        self.node_tree = None
-        self.root_node = Node(label=name,arity=1, operator=op.OperatorReturn())
+        self.min_depth = min_depth
+        self.node_tree = node_tree if node_tree else tree_generator(
+            operators=operators,
+            terminals=terminals,
+            max_depth=max_depth,
+            min_depth=min_depth,
+            growth_mode=growth_mode,
+            terminal_prob=terminal_prob,
+            genetic_program=self
+        )
+        self.growth_mode = growth_mode
+        self.tree_generator = tree_generator
+        self.root_node = Node(label=self.name,arity=1, operator=op.OperatorReturn())
 
         self.fitness_function = fitness_function
         self.fitness = None
@@ -196,9 +349,18 @@ class GeneticProgram:
         if species_type:
             self.species_type = species_type
         else:
-            self.species_type = "DEFAULT_SPECIES"
+            self.species_type = "def"
+
+        self.__program_properties = program_properties
+        if program_properties:
+            for k, v in program_properties.items():
+                self.__dict__.update({k: v})
 
     def __call__(self, **kwargs):
+        if self.node_tree:
+            self.root_node[0] = self.node_tree
+        else:
+            raise GeneticProgramError('No node tree has been constructed!')
         return self.root_node(**kwargs)
 
 
@@ -250,7 +412,7 @@ class GeneticProgram:
         if reset_genetic_code:
             self.genetic_code = None
 
-    def evaluate(self, params : dict, island=None) -> Any:
+    def evaluate(self, params : dict = None, island=None) -> Any:
         """
         Run the fitness function with the given params.
 
@@ -266,7 +428,10 @@ class GeneticProgram:
         else:
             _params = {}
         try:
-            self.fitness = self.fitness_function(program=self, island=island, **_params)
+            if self.fitness_function is None:
+                self.fitness = self(**_params)
+            else:
+                self.fitness = self.fitness_function(program=self, island=island, **_params)
         except Exception as exc:
             if island:
                 island.verbose_logging(f"ERROR: {self.name} - {repr(self.node_tree)} - {repr(exc)}")
@@ -324,10 +489,10 @@ class GeneticProgram:
             key (str): Name of property.
             value (Any): Anything.
         """
-        if self.__individual_properties:
-            self.__individual_properties.update({key: value})
+        if self.__program_properties:
+            self.__program_properties.update({key: value})
         else:
-            self.__individual_properties = {key: value}
+            self.__program_properties = {key: value}
         self.__dict__.update({key: value})
 
     def get_properties(self) -> dict:
@@ -337,7 +502,7 @@ class GeneticProgram:
         Returns:
             dict: All custom properties.
         """
-        return self.__individual_properties
+        return self.__program_properties
 
     def get(self, key : str, default=None):
         """

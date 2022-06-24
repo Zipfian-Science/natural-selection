@@ -11,6 +11,17 @@ Changelog
 History
 ==========================
 
+Version 0.2.26 (2022-)
+---------------------------
+
+* Added tree generation function ``random_generate`` to genetic_programs.
+* Renamed ``natural_selection.genetic_programs.functions `` to ``natural_selection.genetic_programs.node_operators ``.
+* Added ``is_empty`` to Node class.
+* Added more history "stamps" to Island for alien spawn, migrant import.
+* General work on ``GeneticProgram`` class.
+* Added ``create_genetic_program`` to Island for easy wrapper.
+
+
 Version 0.2.25 (2022-06-20)
 ---------------------------
 

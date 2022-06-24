@@ -331,7 +331,7 @@ class Individual:
                  filepath : str = None,
                  individual_properties : dict = None):
         if not filepath is None:
-            self.load_individual(filepath=filepath)
+            self.load(filepath=filepath)
             return
         if fitness_function and '<lambda>' in repr(fitness_function):
             w.warn("WARNING: 'fitness_function' lambda can not be pickled using standard libraries.")

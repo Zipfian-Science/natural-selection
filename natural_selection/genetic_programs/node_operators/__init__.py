@@ -1,12 +1,15 @@
 class Operator:
 
-    def __init__(self, operator_label : str = '', function = None, min_arity : int = -1, max_arity : int = -1):
+    def __init__(self, operator_label : str = '', function = None, min_arity : int = 0, max_arity : int = 10):
         self.operator_label = operator_label
         self.function = function
         self.max_arity = max_arity
         self.min_arity = min_arity
 
     def exec(self, args):
+        if len(args) > self.max_arity or len(args) < self.min_arity:
+            raise AssertionError(
+                f"Number of arguments do not match the allowed arity min:{self.min_arity} max:{self.max_arity}")
         return self.function(args)
 
 class OperatorReturn(Operator):
@@ -22,10 +25,13 @@ class OperatorReturn(Operator):
 
 class OperatorAdd(Operator):
 
-    def __init__(self, operator_label: str = 'add', function = None):
-        super().__init__(operator_label, function)
+    def __init__(self, operator_label: str = 'add', function = None, max_arity : int = 2):
+        super().__init__(operator_label, function, min_arity=2, max_arity=max_arity)
 
     def exec(self, args):
+        if len(args) < self.min_arity:
+            raise AssertionError(
+                f"Number of arguments do not match the allowed arity min:{self.min_arity} max:{self.max_arity}")
         a = 0
         for v in args:
             a += v
@@ -33,10 +39,13 @@ class OperatorAdd(Operator):
 
 class OperatorSub(Operator):
 
-    def __init__(self, operator_label: str = 'sub', function = None):
-        super().__init__(operator_label, function)
+    def __init__(self, operator_label: str = 'sub', function = None, max_arity : int = 2):
+        super().__init__(operator_label, function, min_arity=2, max_arity=max_arity)
 
     def exec(self, args):
+        if len(args) < self.min_arity:
+            raise AssertionError(
+                f"Number of arguments do not match the allowed arity min:{self.min_arity} max:{self.max_arity}")
         a = args[0]
         for v in args[1:]:
             a -= v
@@ -44,10 +53,13 @@ class OperatorSub(Operator):
 
 class OperatorMul(Operator):
 
-    def __init__(self, operator_label: str = 'mul', function = None):
-        super().__init__(operator_label, function)
+    def __init__(self, operator_label: str = 'mul', function = None, max_arity : int = 2):
+        super().__init__(operator_label, function, min_arity=2, max_arity=max_arity)
 
     def exec(self, args):
+        if len(args) < self.min_arity:
+            raise AssertionError(
+                f"Number of arguments do not match the allowed arity min:{self.min_arity} max:{self.max_arity}")
         a = args[0]
         for v in args[1:]:
             a = a * v
@@ -55,10 +67,13 @@ class OperatorMul(Operator):
 
 class OperatorDiv(Operator):
 
-    def __init__(self, operator_label: str = 'div', function = None):
-        super().__init__(operator_label, function)
+    def __init__(self, operator_label: str = 'div', function = None, max_arity : int = 2):
+        super().__init__(operator_label, function, min_arity=2, max_arity=max_arity)
 
     def exec(self, args):
+        if len(args) < self.min_arity:
+            raise AssertionError(
+                f"Number of arguments do not match the allowed arity min:{self.min_arity} max:{self.max_arity}")
         a = args[0]
         for v in args[1:]:
             a = a / v
@@ -66,10 +81,13 @@ class OperatorDiv(Operator):
 
 class OperatorPow(Operator):
 
-    def __init__(self, operator_label: str = 'pow', function = None):
-        super().__init__(operator_label, function)
+    def __init__(self, operator_label: str = 'pow', function = None, max_arity : int = 2):
+        super().__init__(operator_label, function, min_arity=2, max_arity=max_arity)
 
     def exec(self, args):
+        if len(args) < self.min_arity:
+            raise AssertionError(
+                f"Number of arguments do not match the allowed arity min:{self.min_arity} max:{self.max_arity}")
         a = args[0]
         for v in args[1:]:
             a = a ** v

@@ -1,4 +1,5 @@
 from numpy import random
+import random as pyrand
 
 def random_int(gene):
     """
@@ -122,4 +123,4 @@ def random_choice(gene):
     """
     if not 'choices' in gene.__dict__:
         raise KeyError("'choices' not defined in this gene, please include a list values!")
-    return random.choice(gene.choices)
+    return pyrand.choice(gene.choices)
