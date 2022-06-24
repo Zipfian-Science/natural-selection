@@ -7,13 +7,13 @@ import random
 import logging
 from datetime import datetime
 import warnings as w
-from typing import Callable, Any, Iterable, List, Union
+from typing import Callable, Any, Iterable, List, Union, Type
 import pickle
 
 import numpy as np
 
 from natural_selection.genetic_algorithms import Gene, Chromosome, Individual
-from natural_selection.genetic_programs import Node, GeneticProgram
+from natural_selection.genetic_programs import Node, GeneticProgram, random_generate
 
 from natural_selection.genetic_algorithms.operators.initialisation import initialise_population_random, alien_spawn_default
 from natural_selection.genetic_algorithms.operators.selection import selection_elites_top_n, selection_parents_two, selection_survivors_all
@@ -312,6 +312,59 @@ class Island:
             chromosome: A new Chromosome.
         """
         return Chromosome(genes=genes, gene_verify_func=gene_verify_func, chromosome_properties=chromosome_properties)
+
+    def create_genetic_program(self,
+                               fitness_function: Callable = None,
+                               node_tree: Node = None,
+                               operators: List[Union[Type, gp_func.Operator]] = None,
+                               terminals: List[Union[str, int, float]] = None,
+                               max_depth: int = 3,
+                               min_depth: int = 1,
+                               growth_mode: str = 'grow',
+                               terminal_prob: float = 0.5,
+                               tree_generator: Callable = random_generate,
+                               name: str = None,
+                               species_type: str = None,
+                               add_to_population: bool = False,
+                               program_properties: dict = None
+                               ):
+        """
+        Wrapping function to create a new GeneticProgram. Useful when writing new initialisation functions. See GeneticProgram class.
+
+        Args:
+            fitness_function (Callable): Function with ``func(Node, island, **params)`` signature (default = None).
+            node_tree (Node): A starting node tree (default = None).
+            operators (list): List of all operators that nodes can be constructed from (default = None).
+            terminals (list): List of all terminals that can be included in the node tree, can be numeric or strings for variables (default = None).
+            max_depth (int): Maximum depth that node tree can grow (default = 3).
+            min_depth (int): Minimum depth that node tree must be (default = 1).
+            growth_mode (str): Type of tree growth method to use, "full" or "grow" (default = "grow").
+            terminal_prob (float): Probability of a generated node is a terminal (default = 0.5).
+            tree_generator (Callable): Function with to create the tree.
+            name (str): Name for keeping track of lineage (default = None).
+            species_type (str) : A unique string to identify the species type, for preventing cross polluting (default = None).
+            add_to_population (bool): Add this new program to the population (default = False).
+            program_properties (dict): For fitness functions, extra params may be given (default = None).
+
+        Returns:
+            program: Newly created GeneticProgram.
+        """
+        gp = GeneticProgram(fitness_function=fitness_function,
+                              node_tree=node_tree,
+                              operators=operators,
+                              terminals=terminals,
+                              max_depth=max_depth,
+                              min_depth=min_depth,
+                              growth_mode=growth_mode,
+                              tree_generator=tree_generator,
+                              name=name,
+                              species_type=species_type,
+                              program_properties=program_properties
+                              )
+        if add_to_population:
+            self.population.append(gp)
+            return gp
+
 
     def create_individual(self,
                           fitness_function : Callable,
