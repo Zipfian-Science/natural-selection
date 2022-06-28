@@ -2,6 +2,7 @@ import unittest
 from natural_selection.genetic_programs.node_operators import OperatorAdd, OperatorSub, OperatorMul, OperatorDiv, Operator
 import natural_selection.genetic_programs.node_operators as op
 from natural_selection.genetic_programs import Node
+from natural_selection.genetic_programs.utils import GeneticProgramError
 
 class TestNode(unittest.TestCase):
 
@@ -232,6 +233,67 @@ class TestNode(unittest.TestCase):
 
         self.assertEquals(value, 42)
         self.assertEquals(str(n), "return(x)")
+
+    def test_breadth(self):
+        n_1 = Node(terminal_value=2, is_terminal=True)
+        n_2 = Node(terminal_value=2, is_terminal=True)
+
+        n_mul = Node(label='N', arity=2, operator=OperatorMul(), children=[n_1, n_2])
+
+        n_add = Node(label='N', arity=2, operator=OperatorAdd(), children=[n_1, n_2])
+
+        n_add = Node(operator=OperatorAdd(), children=[n_mul, n_add])
+
+        value = n_add.breadth(depth=3)
+
+        self.assertEquals(value,4)
+
+        n_add = Node(operator=OperatorAdd(), children=[n_1, n_add])
+
+        value = n_add.breadth(depth=4)
+
+        self.assertEquals(value, 4)
+
+        value = n_add.breadth(depth=3)
+
+        self.assertEquals(value, 2)
+
+        with self.assertRaises(GeneticProgramError):
+            value = n_add.breadth(depth=5)
+
+        with self.assertRaises(GeneticProgramError):
+            value = n_add.breadth(depth=0)
+
+        # Test more broad
+
+        n_2 = Node(terminal_value=2, is_terminal=True)
+        n_mul = Node(operator=OperatorMul(), children=[n_2, n_1])
+
+        n_add = Node(operator=OperatorAdd(max_arity=4), children=[n_mul, n_2, n_2, n_2])
+
+        n_mul = Node(operator=OperatorMul(), children=[n_add, n_2])
+
+        value = n_mul.breadth(depth=3)
+
+        self.assertEqual(value, 4)
+
+        value = n_mul.breadth(depth=4)
+
+        self.assertEqual(value, 2)
+
+        # Test no depth passed
+
+        value = n_mul.breadth()
+
+        self.assertEqual(value, 2)
+
+        # Test max
+
+        value, d = n_mul.max_breadth()
+
+        self.assertEqual(value, 4)
+        self.assertEqual(d, 3)
+
 
     def test_depth(self):
         n_1 = Node(terminal_value=2, is_terminal=True)

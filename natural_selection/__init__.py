@@ -356,6 +356,7 @@ class Island:
                               max_depth=max_depth,
                               min_depth=min_depth,
                               growth_mode=growth_mode,
+                              terminal_prob=terminal_prob,
                               tree_generator=tree_generator,
                               name=name,
                               species_type=species_type,

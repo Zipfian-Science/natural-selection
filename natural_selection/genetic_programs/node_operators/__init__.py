@@ -1,5 +1,5 @@
 class Operator:
-
+    # TODO define strongly typed sets
     def __init__(self, operator_label : str = '', function = None, min_arity : int = 0, max_arity : int = 10):
         self.operator_label = operator_label
         self.function = function
