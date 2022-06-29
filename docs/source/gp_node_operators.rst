@@ -16,7 +16,7 @@ Custom operators
 
 Base Operator
 ---------------------
-.. autoclass:: natural_selection.genetic_programs.operators.node_operators.__init__.Operator
+.. autoclass:: natural_selection.genetic_programs.node_operators.__init__.Operator
    :members:
 
 Standard operators
@@ -24,61 +24,61 @@ Standard operators
 
 Return Operator
 ---------------------
-.. autoclass:: natural_selection.genetic_programs.operators.node_operators.__init__.OperatorReturn
+.. autoclass:: natural_selection.genetic_programs.node_operators.__init__.OperatorReturn
    :members:
 
 Addition Operator
 ---------------------
-.. autoclass:: natural_selection.genetic_programs.operators.node_operators.__init__.OperatorAdd
+.. autoclass:: natural_selection.genetic_programs.node_operators.__init__.OperatorAdd
    :members:
 
 Subtraction Operator
 ---------------------
-.. autoclass:: natural_selection.genetic_programs.operators.node_operators.__init__.OperatorSub
+.. autoclass:: natural_selection.genetic_programs.node_operators.__init__.OperatorSub
    :members:
 
 Multiplication Operator
 -----------------------
-.. autoclass:: natural_selection.genetic_programs.operators.node_operators.__init__.OperatorMul
+.. autoclass:: natural_selection.genetic_programs.node_operators.__init__.OperatorMul
    :members:
 
 Division Operator
 ---------------------
-.. autoclass:: natural_selection.genetic_programs.operators.node_operators.__init__.OperatorDiv
+.. autoclass:: natural_selection.genetic_programs.node_operators.__init__.OperatorDiv
    :members:
 
 Power Operator
 ---------------------
-.. autoclass:: natural_selection.genetic_programs.operators.node_operators.__init__.OperatorPow
+.. autoclass:: natural_selection.genetic_programs.node_operators.__init__.OperatorPow
    :members:
 
 Less-Equal Operator
 ---------------------
-.. autoclass:: natural_selection.genetic_programs.operators.node_operators.__init__.OperatorLTE
+.. autoclass:: natural_selection.genetic_programs.node_operators.__init__.OperatorLTE
    :members:
 
 Less than Operator
 ---------------------
-.. autoclass:: natural_selection.genetic_programs.operators.node_operators.__init__.OperatorLT
+.. autoclass:: natural_selection.genetic_programs.node_operators.__init__.OperatorLT
    :members:
 
 Greater-Equal Operator
 ----------------------
-.. autoclass:: natural_selection.genetic_programs.operators.node_operators.__init__.OperatorGTE
+.. autoclass:: natural_selection.genetic_programs.node_operators.__init__.OperatorGTE
    :members:
 
 Greater than Operator
 ---------------------
-.. autoclass:: natural_selection.genetic_programs.operators.node_operators.__init__.OperatorGT
+.. autoclass:: natural_selection.genetic_programs.node_operators.__init__.OperatorGT
    :members:
 
 Equality Operator
 ---------------------
-.. autoclass:: natural_selection.genetic_programs.operators.node_operators.__init__.OperatorEq
+.. autoclass:: natural_selection.genetic_programs.node_operators.__init__.OperatorEq
    :members:
 
 Non-Equality Operator
 ---------------------
-.. autoclass:: natural_selection.genetic_programs.operators.node_operators.__init__.OperatorNE
+.. autoclass:: natural_selection.genetic_programs.node_operators.__init__.OperatorNE
    :members:
 

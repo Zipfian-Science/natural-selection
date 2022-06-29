@@ -461,7 +461,7 @@ class GeneticProgram:
         self.terminals = terminals
         self.max_depth = max_depth
         self.min_depth = min_depth
-        self.node_tree = node_tree if node_tree else tree_generator(
+        self.node_tree = node_tree if not node_tree is None else tree_generator(
             operators=operators,
             terminals=terminals,
             max_depth=max_depth,
@@ -492,7 +492,7 @@ class GeneticProgram:
                 self.__dict__.update({k: v})
 
     def __call__(self, **kwargs):
-        if self.node_tree:
+        if not self.node_tree is None:
             self.root_node[0] = self.node_tree
         else:
             raise GeneticProgramError('No node tree has been constructed!')
