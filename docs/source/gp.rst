@@ -64,6 +64,13 @@ Node class
 .. autoclass:: natural_selection.genetic_programs.__init__.Node
    :members:
 
+Tree Generator
+========================
+
+To generate a node tree at random, two possible generation methods are used. The ``full`` and ``grow`` methods.
+
+.. autofunction:: natural_selection.genetic_programs.__init__.random_generate
+
 GeneticProgram
 ========================
 .. autoclass:: natural_selection.genetic_programs.__init__.GeneticProgram

@@ -1,5 +1,5 @@
-__version__ = '0.2.26'
-__date__ = "2022-06-20"
+__version__ = '0.2.27'
+__date__ = "2022-06-29"
 
 from time import gmtime
 import multiprocessing as mp
@@ -356,6 +356,7 @@ class Island:
                               max_depth=max_depth,
                               min_depth=min_depth,
                               growth_mode=growth_mode,
+                              terminal_prob=terminal_prob,
                               tree_generator=tree_generator,
                               name=name,
                               species_type=species_type,
@@ -363,7 +364,7 @@ class Island:
                               )
         if add_to_population:
             self.population.append(gp)
-            return gp
+        return gp
 
 
     def create_individual(self,
@@ -393,7 +394,7 @@ class Island:
             self.population.append(ind)
         return ind
 
-    def initialise(self, adam : Individual,
+    def initialise(self, adam : Union[Individual,GeneticProgram],
                population_size: int = 8,
                initialisation_params : dict = None,
                evaluate_population : bool = True
@@ -433,12 +434,13 @@ class Island:
             p.history.append({"init_island": self.name})
             self.__add_to_lineage(p)
 
-    def __add_to_lineage(self, individual : Individual):
+    def __add_to_lineage(self, individual : Union[Individual, GeneticProgram]):
+        c = str(individual.chromosome) if isinstance(individual,Individual) else str(individual.node_tree)
         node = {
             'name': individual.name,
             'age': individual.age,
             'fitness': individual.fitness,
-            'chromosome': str(individual.chromosome),
+            'chromosome': c,
             '_individual' : individual
         }
         properties = individual.get_properties()
@@ -468,7 +470,7 @@ class Island:
             if species_check:
                 if i.species_type != self.species_type:
                     continue
-            if allow_twins or not i.unique_genetic_code() in self.unique_genome:
+            if allow_twins or not i.unique_genetic_code(force_update=True) in self.unique_genome:
                     if i.fitness is None or reset_fitness:
                         migrants_for_testing.append(i)
                     else:
@@ -713,7 +715,7 @@ class Island:
                 self.lineage['edges'].append(edge)
 
         for individual in self.survivor_selection(individuals=generation_children, island=self, **survivor_selection_params):
-            if self.allow_twins or not individual.unique_genetic_code() in self.unique_genome:
+            if self.allow_twins or not individual.unique_genetic_code(force_update=True) in self.unique_genome:
                 # If we want a diverse gene pool, this must be true
                 self.verbose_logging(f"evolve: add {str(individual)}")
                 self.population.append(individual)
@@ -800,7 +802,7 @@ class Island:
         if len(new_aliens) > 0:
             alien_fitnesses = list()
             for alien in self.__evaluate_individuals(new_aliens):
-                if self.allow_twins or not alien.unique_genetic_code() in self.unique_genome:
+                if self.allow_twins or not alien.unique_genetic_code(force_update=True) in self.unique_genome:
                     # Else, add it effectively allowing "twins" to exist
                     alien_fitnesses.append(alien.fitness)
                     self.verbose_logging(f"evolve: add {str(alien)}")
