@@ -1,39 +1,12 @@
 import socketserver
 from typing import Tuple
 from urllib.parse import urlparse
-from linkedin import linkedin
-from socketserver import ThreadingTCPServer, TCPServer
+from socketserver import ThreadingTCPServer
 from http.server import SimpleHTTPRequestHandler
-from webbrowser import open_new_tab
-import json
+import threading
 import requests
-
-
-class LinkedInWrapper(object):
-
-    def __init__(self, id, secret, port):
-        self.id = id
-        self.secret = secret
-
-        self.callback_url = 'http://localhost:{0}/code/'.format(port)
-
-        print("CLIENT ID: %s" % self.id)
-        print("CLIENT SECRET: %s" % self.secret)
-        print("Callback URL: %s" % self.callback_url)
-
-        self.authentication = linkedin.LinkedInAuthentication(
-            self.id,
-            self.secret,
-            self.callback_url,
-            permissions=['w_member_social']
-        )
-
-        self.application = linkedin.LinkedInApplication(self.authentication)
-
-        print("Please double check that the callback URL has been correctly "
-              "added in the developer console ("
-              "https://www.linkedin.com/developer/apps/), then open "
-              "http://localhost:8080 in your browser\n\n")
+import os
+import webbrowser
 
 class LinkedInShareCustomHandler(SimpleHTTPRequestHandler):
 
@@ -44,13 +17,8 @@ class LinkedInShareCustomHandler(SimpleHTTPRequestHandler):
         self.redirect_uri = "http://localhost:8080/code/"
         self.org_id = int(os.getenv("LINKEDIN_ORGANISATION_ID", 0))
 
-        base_url = "https://www.linkedin.com/oauth/v2/authorization"
-        redirect_uri = "http://localhost:8080/code/"
-        # scope = "w_organization_social"
-        scope = "w_member_social"
+        self.scope = os.getenv("LINKEDIN_SCOPE", "w_organization_social")
 
-        url = f"{base_url}?response_type=code&client_id={self.LINKEDIN_CLIENT_ID}&state=random&redirect_uri={redirect_uri}&scope={scope}"
-        print(url)
         super().__init__(request, client_address, server)
 
 
@@ -60,14 +28,12 @@ class LinkedInShareCustomHandler(SimpleHTTPRequestHandler):
         self.end_headers()
 
     def get_access_token(self, authorization_code):
-        # Get access token
 
         url_access_token = "https://www.linkedin.com/oauth/v2/accessToken"
-        auth_code = authorization_code
 
         payload = {
             'grant_type': 'authorization_code',
-            'code': auth_code,
+            'code': authorization_code,
             'redirect_uri': self.redirect_uri,
             'client_id': self.LINKEDIN_CLIENT_ID,
             'client_secret': self.LINKEDIN_CLIENT_SECRET
@@ -76,7 +42,6 @@ class LinkedInShareCustomHandler(SimpleHTTPRequestHandler):
         response = requests.post(url=url_access_token, params=payload)
         response_json = response.json()
 
-        # Extract the access_token from the response_json
         return response_json['access_token']
 
     def get_person_id(self, access_token):
@@ -87,6 +52,30 @@ class LinkedInShareCustomHandler(SimpleHTTPRequestHandler):
         response = requests.get(url=url, headers=header)
         response_json_li_person = response.json()
         return response_json_li_person['id']
+
+    def _build_post_details(self):
+        changes = ''
+        appending = False
+        with open('./docs/source/changelog.rst', 'r') as f:
+            lines = f.readlines()
+            for l in lines:
+                if l.startswith('---'):
+                    appending = True
+                    continue
+                if l.startswith('Version') and appending:
+                    break
+                if appending:
+                    changes = f'{changes}{l}'
+
+        changes = f'A new update to the natural-selection package has just been released on PyPI! Changes include:{changes}#genetic #algorithms in #python'
+
+        return {
+            'img_url' : 'https://zipfian.science/assets/images/ea_small.png',
+            'post_external_link' : "https://docs.zipfian.science/natural-selection/changelog.html",
+            'post_title' :  f"New natural-selection updates",
+            'post_text' : changes
+        }
+
 
     def do_GET(self):
 
@@ -114,32 +103,33 @@ class LinkedInShareCustomHandler(SimpleHTTPRequestHandler):
                 'Content-Type': 'application/json'
             }
 
-            img_url = 'https://images.pexels.com/photos/2115217/pexels-photo-2115217.jpeg'
-            post_external_link = "https://www.redhat.com/en/topics/api/what-is-a-rest-api"
-            post_title = "What is a REST API?"
-            post_owner = f'urn:li:person:{self.get_person_id(access_token)}' # f'urn:li:organization:{self.org_id}'
-            post_text = f'Learn more about REST APIs in details.  \n#restapi #api'
+            post_details = self._build_post_details()
+
+            if self.scope == 'w_organization_social':
+                post_owner = f'urn:li:organization:{self.org_id}'
+            else:
+                post_owner = f'urn:li:person:{self.get_person_id(access_token)}'
 
             payload = {
                 "content": {
                     "contentEntities": [
                         {
-                            "entityLocation": post_external_link,
+                            "entityLocation": post_details['post_external_link'],
                             "thumbnails": [
                                 {
-                                    "resolvedUrl": img_url
+                                    "resolvedUrl": post_details['img_url']
                                 }
                             ]
                         }
                     ],
-                    "title": post_title
+                    "title": post_details['post_title']
                 },
                 'distribution': {
                     'linkedInDistributionTarget': {}
                 },
                 'owner': post_owner,
                 'text': {
-                    'text': post_text
+                    'text': post_details['post_text']
                 }
             }
 
@@ -147,30 +137,27 @@ class LinkedInShareCustomHandler(SimpleHTTPRequestHandler):
 
             print(response.json())
 
+            server = threading.Thread(target=httpd.shutdown)
+            server.daemon = True
+            server.start()
 
-import os
+LINKEDIN_PORT = int(os.getenv("LINKEDIN_PORT"))
+LINKEDIN_CLIENT_ID = os.getenv("LINKEDIN_CLIENT_ID")
+base_url = "https://www.linkedin.com/oauth/v2/authorization"
+redirect_uri = "http://localhost:8080/code/"
 
-def broadcast_update_announce():
+scope = os.getenv("LINKEDIN_SCOPE", "w_organization_social")
 
-    LINKEDIN_PORT = int(os.getenv("LINKEDIN_PORT"))
+url = f"{base_url}?response_type=code&client_id={LINKEDIN_CLIENT_ID}&state=random&redirect_uri={redirect_uri}&scope={scope}"
+print(url)
 
-    LINKEDIN_CLIENT_ID = os.getenv("LINKEDIN_CLIENT_ID")
+httpd = ThreadingTCPServer(('localhost', LINKEDIN_PORT), LinkedInShareCustomHandler)
 
-    base_url = "https://www.linkedin.com/oauth/v2/authorization"
-    redirect_uri = "http://localhost:8080/code/"
-    # scope = "w_organization_social"
-    scope = "w_member_social"
-    scope = "w_member_social,r_liteprofile"
+def broadcast_update_linkedin():
 
-    url = f"{base_url}?response_type=code&client_id={LINKEDIN_CLIENT_ID}&state=random&redirect_uri={redirect_uri}&scope={scope}"
-    print(url)
+    with httpd:
 
-    httpd = TCPServer(('localhost', LINKEDIN_PORT), LinkedInShareCustomHandler)
-
-    print(('Server started on port:{}'.format(LINKEDIN_PORT)))
-
-    httpd.serve_forever()
-
-    httpd.shutdown()
-
-# broadcast_update_announce()
+        print(('Server started on port:{}'.format(LINKEDIN_PORT)))
+        webbrowser.open(url, new=0, autoraise=True)
+        httpd.serve_forever()
+        webbrowser.open('https://www.linkedin.com/company/zipfian-science/posts/', new=0, autoraise=True)

@@ -17,6 +17,9 @@ Some text.
    gp
    gp_helper_functions
    gp_initialisation
+   gp_mutation
+   gp_crossover
+   gp_node_operators
 
 Example experiment
 ========================

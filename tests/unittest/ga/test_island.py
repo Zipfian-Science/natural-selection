@@ -1,6 +1,7 @@
 import os.path
 import unittest
-from natural_selection.genetic_algorithms import Gene, Chromosome, Individual, Island
+from natural_selection.genetic_algorithms import Gene, Chromosome, Individual
+from natural_selection import Island
 from natural_selection.genetic_algorithms.utils.random_functions import random_int
 from natural_selection.genetic_algorithms.operators.crossover import crossover_two_n_point
 
@@ -63,7 +64,7 @@ class TestSimpleIsland(unittest.TestCase):
 
         aliens = [Individual(fitness, name="AlsoAdam", chromosome=gen)]
 
-        self.life.import_migrants(aliens)
+        self.life.import_migrants(aliens, allow_twins=False)
 
         self.assertEquals(len(self.life.population), 5)
 
@@ -151,7 +152,7 @@ class TestOtherIsland(unittest.TestCase):
 
         aliens = [Individual(fitness, name="AlsoAdam", chromosome=gen)]
 
-        self.life.import_migrants(aliens)
+        self.life.import_migrants(aliens, allow_twins=False)
 
         self.assertEquals(len(self.life.population), 5)
 

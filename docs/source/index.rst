@@ -37,14 +37,16 @@ Import the tools:
 
 .. code-block:: python
 
-    from natural_selection.genetic_algorithms import Gene, Chromosome, Individual, Island
+    from natural_selection import Island
+    from natural_selection.genetic_algorithms import Gene, Chromosome, Individual
     from natural_selection.genetic_algorithms.utils.random_functions import random_int, random_gaussian
 
 Then simply create a GA experiment:
 
 .. code-block:: python
 
-   from natural_selection.genetic_algorithms import Gene, Chromosome, Individual, Island
+   from natural_selection import Island
+   from natural_selection.genetic_algorithms import Gene, Chromosome, Individual
    from natural_selection.genetic_algorithms.utils.random_functions import random_int, random_gaussian
 
    # Create a gene
@@ -78,15 +80,79 @@ Then simply create a GA experiment:
    for gene in genes:
      print(gene.name, gene.value)
 
+Islands
+========================
+
+Islands are the main engines that drive the evolutionary process. They can be customised with different
+selection, crossover, and mutation operators, giving the experimenter more flexibility when creating experiments.
+
+.. code-block:: python
+
+   from natural_selection.genetic_algorithms import Gene
+   from natural_selection.genetic_algorithms import Chromosome
+   from natural_selection.genetic_algorithms import Individual
+   from natural_selection import Island
+   from natural_selection.genetic_algorithms.utils.random_functions import random_int, random_gaussian
+
+   # Create a gene
+   g_1 = Gene(name="test_int", value=3, gene_max=10, gene_min=1, randomise_function=random_int)
+   g_2 = Gene(name="test_real", value=0.5, gene_max=1.0, gene_min=0.1, randomise_function=random_gaussian)
+
+   # Create a chromosome
+
+   chromosome = Chromosome([g_1, g_2])
+
+   # Next, create an individual to carry these genes and evaluate them
+   fitness_function = lambda island, individual, x, y: individual.chromosome[0].value * x + individual.chromosome[1].value * y
+   adam = Individual(fitness_function=fitness_function, name="Adam", chromosome=chromosome)
+
+   # Now we can create an island for running the evolutionary process
+   # Notice the fitness function parameters are given here.
+   params = dict()
+   params['x'] = 0.5
+   params['y'] = 0.2
+   isolated_island = Island(function_params=params)
+
+   # Using a single individual, we can create a new population
+   isolated_island.initialise(adam, population_size=5)
+
+   # And finally, we let the randomness of life do its thing: optimise
+   best_individual = isolated_island.evolve(n_generations=5)
+
+   # After running for a few generations, we have an individual with the highest fitness
+   fitness = best_individual.fitness
+   genes = best_individual.chromosome
+
+   for gene in genes:
+     print(gene.name, gene.value)
+
+Islands are customisable in how they operate on population members.
+
+Island class
+------------------------
+
+.. autoclass:: natural_selection.__init__.Island
+   :members:
+
 Changes and history
 ---------------------
 
 See :ref:`changelog-page` for version history.
 
-Version 0.2.23 (2022-04-05):
+Version 0.2.26 (2022-06-29):
 
-* Added a new ability to spawn new aliens at the end of each generation.
-* Added ``alien_spawn_function`` to Island initialisation.
+* Major work on expanding package to include Genetic Programming.
+* Added tree generation function ``random_generate`` to genetic_programs.
+* Renamed ``natural_selection.genetic_programs.functions`` to ``natural_selection.genetic_programs.node_operators``.
+* Added ``is_empty`` to Node class.
+* Added ``breadth`` and ``max_breadth`` to Node class, useful for doing crossover.
+* Added more history "stamps" to Island for alien spawn, migrant import.
+* General work on ``GeneticProgram`` class.
+* Added ``create_genetic_program`` to Island for easy wrapper.
+* Added ``get_subtree`` to Node class to find a subtree at the given point.
+* Added ``set_subtree`` to Node class to set a subtree at the given point.
+* Node operators now have a ``strict_precedence`` parameter to solve issues where argument precedence is important.
+* Fixed issue with genetic code checks by adding ``force_update`` to both GeneticProgram and Individual.
 
 
 Indices and tables
