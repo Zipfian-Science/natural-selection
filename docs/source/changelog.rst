@@ -14,6 +14,7 @@ History
 Version 0.2.26 (2022-)
 ---------------------------
 
+* Major work on expanding package to include Genetic Programming.
 * Added tree generation function ``random_generate`` to genetic_programs.
 * Renamed ``natural_selection.genetic_programs.functions `` to ``natural_selection.genetic_programs.node_operators ``.
 * Added ``is_empty`` to Node class.
@@ -21,7 +22,10 @@ Version 0.2.26 (2022-)
 * Added more history "stamps" to Island for alien spawn, migrant import.
 * General work on ``GeneticProgram`` class.
 * Added ``create_genetic_program`` to Island for easy wrapper.
-
+* Added ``get_subtree`` to Node class to find a subtree at the given point.
+* Added ``set_subtree`` to Node class to set a subtree at the given point.
+* Node operators now have a ``strict_precedence`` parameter to solve issues where argument precedence is important.
+* Fixed issue with genetic code checks by adding ``force_update`` to both GeneticProgram and Individual.
 
 Version 0.2.25 (2022-06-20)
 ---------------------------

@@ -1,10 +1,11 @@
 class Operator:
     # TODO define strongly typed sets
-    def __init__(self, operator_label : str = '', function = None, min_arity : int = 0, max_arity : int = 10):
+    def __init__(self, operator_label : str = '', function = None, min_arity : int = 0, max_arity : int = 10, strict_precedence : bool = True):
         self.operator_label = operator_label
         self.function = function
         self.max_arity = max_arity
         self.min_arity = min_arity
+        self.strict_precedence = strict_precedence
 
     def exec(self, args):
         if len(args) > self.max_arity or len(args) < self.min_arity:
@@ -26,7 +27,7 @@ class OperatorReturn(Operator):
 class OperatorAdd(Operator):
 
     def __init__(self, operator_label: str = 'add', function = None, max_arity : int = 2):
-        super().__init__(operator_label, function, min_arity=2, max_arity=max_arity)
+        super().__init__(operator_label, function, min_arity=2, max_arity=max_arity, strict_precedence=False)
 
     def exec(self, args):
         if len(args) < self.min_arity:
@@ -40,7 +41,7 @@ class OperatorAdd(Operator):
 class OperatorSub(Operator):
 
     def __init__(self, operator_label: str = 'sub', function = None, max_arity : int = 2):
-        super().__init__(operator_label, function, min_arity=2, max_arity=max_arity)
+        super().__init__(operator_label, function, min_arity=2, max_arity=max_arity, strict_precedence=True)
 
     def exec(self, args):
         if len(args) < self.min_arity:
@@ -54,7 +55,7 @@ class OperatorSub(Operator):
 class OperatorMul(Operator):
 
     def __init__(self, operator_label: str = 'mul', function = None, max_arity : int = 2):
-        super().__init__(operator_label, function, min_arity=2, max_arity=max_arity)
+        super().__init__(operator_label, function, min_arity=2, max_arity=max_arity, strict_precedence=False)
 
     def exec(self, args):
         if len(args) < self.min_arity:
@@ -68,7 +69,7 @@ class OperatorMul(Operator):
 class OperatorDiv(Operator):
 
     def __init__(self, operator_label: str = 'div', function = None, max_arity : int = 2):
-        super().__init__(operator_label, function, min_arity=2, max_arity=max_arity)
+        super().__init__(operator_label, function, min_arity=2, max_arity=max_arity, strict_precedence=True)
 
     def exec(self, args):
         if len(args) < self.min_arity:
@@ -82,7 +83,7 @@ class OperatorDiv(Operator):
 class OperatorPow(Operator):
 
     def __init__(self, operator_label: str = 'pow', function = None, max_arity : int = 2):
-        super().__init__(operator_label, function, min_arity=2, max_arity=max_arity)
+        super().__init__(operator_label, function, min_arity=2, max_arity=max_arity, strict_precedence=True)
 
     def exec(self, args):
         if len(args) < self.min_arity:
@@ -96,7 +97,7 @@ class OperatorPow(Operator):
 class OperatorLTE(Operator):
 
     def __init__(self, operator_label: str = 'lte', function = None):
-        super().__init__(operator_label, function, min_arity=2, max_arity=2)
+        super().__init__(operator_label, function, min_arity=2, max_arity=2, strict_precedence=True)
 
     def exec(self, args):
         if len(args) > self.max_arity or len(args) < self.min_arity:
@@ -108,7 +109,7 @@ class OperatorLTE(Operator):
 class OperatorLT(Operator):
 
     def __init__(self, operator_label: str = 'lt', function=None):
-        super().__init__(operator_label, function, min_arity=2, max_arity=2)
+        super().__init__(operator_label, function, min_arity=2, max_arity=2, strict_precedence=True)
 
     def exec(self, args):
         if len(args) > self.max_arity or len(args) < self.min_arity:
@@ -120,7 +121,7 @@ class OperatorLT(Operator):
 class OperatorGTE(Operator):
 
     def __init__(self, operator_label: str = 'gte', function=None):
-        super().__init__(operator_label, function, min_arity=2, max_arity=2)
+        super().__init__(operator_label, function, min_arity=2, max_arity=2, strict_precedence=True)
 
     def exec(self, args):
         if len(args) > self.max_arity or len(args) < self.min_arity:
@@ -132,7 +133,7 @@ class OperatorGTE(Operator):
 class OperatorGT(Operator):
 
     def __init__(self, operator_label: str = 'gt', function=None):
-        super().__init__(operator_label, function, min_arity=2, max_arity=2)
+        super().__init__(operator_label, function, min_arity=2, max_arity=2, strict_precedence=True)
 
     def exec(self, args):
         if len(args) > self.max_arity or len(args) < self.min_arity:
@@ -144,7 +145,7 @@ class OperatorGT(Operator):
 class OperatorEq(Operator):
 
     def __init__(self, operator_label: str = 'eq', function=None):
-        super().__init__(operator_label, function, min_arity=2, max_arity=2)
+        super().__init__(operator_label, function, min_arity=2, max_arity=2, strict_precedence=False)
 
     def exec(self, args):
         if len(args) > self.max_arity or len(args) < self.min_arity:
@@ -156,7 +157,7 @@ class OperatorEq(Operator):
 class OperatorNE(Operator):
 
     def __init__(self, operator_label: str = 'ne', function=None):
-        super().__init__(operator_label, function, min_arity=2, max_arity=2)
+        super().__init__(operator_label, function, min_arity=2, max_arity=2, strict_precedence=False)
 
     def exec(self, args):
         if len(args) > self.max_arity or len(args) < self.min_arity:

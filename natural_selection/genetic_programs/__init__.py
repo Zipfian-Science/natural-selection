@@ -122,6 +122,8 @@ def random_generate(operators : list = None,
 
         return node
 
+    if max_depth == 1:
+        return create_random_terminal()
 
     init_node = create_random_node()
 
@@ -214,7 +216,10 @@ class Node:
             labels = list()
             for n in self.children:
                 labels.append(repr(n))
-            return f"{self.label}({', '.join(sorted(labels))})"
+            if self.operator.strict_precedence:
+                return f"{self.label}({', '.join(labels)})"
+            else:
+                return f"{self.label}({', '.join(sorted(labels))})"
 
     def __setitem__(self, index, node):
         if isinstance(index, slice):
@@ -293,6 +298,9 @@ class Node:
         Args:
             depth (int): At which depth to find the breadth (default = None).
 
+        Raises:
+            GeneticProgramError: If the depth > tree depth or depth < 0.
+
         Returns:
             int: The breadth of the given depth.
         """
@@ -321,6 +329,78 @@ class Node:
 
         return max_breadth, max_breadth_depth
 
+    def __get_tree(self, current_depth : int, to_depth : int, ids_only : bool = False):
+        if current_depth == to_depth-1:
+            if ids_only:
+                return [hex(id(n)) for n in self.children]
+            else:
+                return self.children
+        else:
+            kids = list()
+            for n in self.children:
+                kids.extend(n.__get_tree(to_depth=to_depth, current_depth=current_depth+1, ids_only=ids_only))
+            return kids
+
+    def get_subtree(self, depth : int, index : int):
+        """
+        Gets a subtree at the given depth and zero-indexed point.
+
+        Args:
+            depth (int): The depth at which to find the subtree.
+            index (int): The zero-indexed point at the given depth.
+
+        Raises:
+            GeneticProgramError: If the depth > tree depth or depth < 0, or index > length of nodes.
+
+        Returns:
+            Node: The subtree at the point.
+        """
+        if depth > self.depth() or depth < 1:
+            raise GeneticProgramError(f'Current tree depth not reachable at {depth}')
+
+        child_nodes = self.__get_tree(current_depth=1, to_depth=depth)
+
+        if index >= len(child_nodes):
+            raise GeneticProgramError(f'Index {index} out of range for nodes at depth {depth}')
+
+        return child_nodes[index]
+
+    def __set_tree(self, current_depth : int, to_depth : int, tree, tree_id):
+        if current_depth == to_depth-1:
+            for i in range(len(self.children)):
+                if hex(id(self.children[i])) == tree_id:
+                    self.children[i] = tree
+                    return True
+            return False
+        else:
+            for n in self.children:
+                if n.__set_tree(to_depth=to_depth, current_depth=current_depth+1, tree=tree, tree_id=tree_id):
+                    break
+
+    def set_subtree(self, depth : int, index : int, subtree):
+        """
+        Set the subtree at the given depth and the index.
+
+        Raises:
+            GeneticProgramError: If the depth > tree depth or depth < 0, or index > length of nodes.
+
+        Args:
+            depth (int): The depth at which to set the subtree.
+            index (int): The zero-indexed point at the given depth to set the subtree.
+            subtree (Node): The subtree to set at the given point.
+
+        """
+        if depth > self.depth() or depth < 1:
+            raise GeneticProgramError(f'Current tree depth not reachable at {depth}')
+
+        ids = self.__get_tree(current_depth=1, to_depth=depth, ids_only=True)
+
+        if index >= len(ids):
+            raise GeneticProgramError(f'Index {index} out of range for nodes at depth {depth}')
+
+        id_ = ids[index]
+
+        self.__set_tree(current_depth=1, to_depth=depth, tree=subtree, tree_id=id_)
 
 
 
@@ -437,7 +517,7 @@ class GeneticProgram:
         if reset_parent_name_list:
             self.parents = list()
         for parent in parents:
-            self.parents.append(parent.name)
+            self.parents.append(parent)
 
 
     def reset_name(self, name: str = None):
@@ -513,14 +593,17 @@ class GeneticProgram:
         self.history.append(stamp)
         return self.fitness
 
-    def unique_genetic_code(self) -> str:
+    def unique_genetic_code(self, force_update : bool = False) -> str:
         """
         Gets the unique genetic code, generating if it is undefined.
+
+        Args:
+            force_update (bool): Force update of genetic_code property (default = False).
 
         Returns:
             str: String name of Chromosome.
         """
-        if self.genetic_code is None:
+        if self.genetic_code is None or force_update:
             self.genetic_code = repr(self.node_tree)
         return self.genetic_code
 

@@ -1,5 +1,5 @@
 import unittest
-from natural_selection.genetic_programs.node_operators import OperatorAdd, OperatorSub, OperatorMul, OperatorDiv, Operator
+from natural_selection.genetic_programs.node_operators import OperatorAdd, OperatorSub, OperatorMul, OperatorDiv, Operator, OperatorPow, OperatorEq, OperatorLT
 import natural_selection.genetic_programs.node_operators as op
 from natural_selection.genetic_programs import Node
 from natural_selection.genetic_programs.utils import GeneticProgramError
@@ -157,6 +157,66 @@ class TestNode(unittest.TestCase):
 
         self.assertEquals(repr(n_8), "42")
 
+    def test_repr_advance_precedence(self):
+        n_1 = Node(label='z', arity=1, is_terminal=True)
+        n_2 = Node(label='x', arity=1, is_terminal=True)
+
+        # Add
+        n_add_1 = Node(operator=OperatorAdd(), children=[n_2, n_1])
+        n_add_2 = Node(operator=OperatorAdd(), children=[n_1, n_2])
+
+        r_add_1, r_add_2 = repr(n_add_1), repr(n_add_2)
+
+        self.assertEqual(r_add_1, r_add_2)
+
+        # Multi
+        n_add_1 = Node(operator=OperatorMul(), children=[n_2, n_1])
+        n_add_2 = Node(operator=OperatorMul(), children=[n_1, n_2])
+
+        r_add_1, r_add_2 = repr(n_add_1), repr(n_add_2)
+
+        self.assertEqual(r_add_1, r_add_2)
+
+        # Eq
+        n_add_1 = Node(operator=OperatorEq(), children=[n_2, n_1])
+        n_add_2 = Node(operator=OperatorEq(), children=[n_1, n_2])
+
+        r_add_1, r_add_2 = repr(n_add_1), repr(n_add_2)
+
+        self.assertEqual(r_add_1, r_add_2)
+
+        # Sub
+        n_sub_1 = Node(operator=OperatorSub(), children=[n_2, n_1])
+        n_sub_2 = Node(operator=OperatorSub(), children=[n_1, n_2])
+
+        r_sub_1, r_sub_2 = repr(n_sub_1), repr(n_sub_2)
+
+        self.assertNotEqual(r_sub_1, r_sub_2)
+
+        # Div
+        n_sub_1 = Node(operator=OperatorDiv(), children=[n_2, n_1])
+        n_sub_2 = Node(operator=OperatorDiv(), children=[n_1, n_2])
+
+        r_sub_1, r_sub_2 = repr(n_sub_1), repr(n_sub_2)
+
+        self.assertNotEqual(r_sub_1, r_sub_2)
+
+        # Pow
+        n_sub_1 = Node(operator=OperatorPow(), children=[n_2, n_1])
+        n_sub_2 = Node(operator=OperatorPow(), children=[n_1, n_2])
+
+        r_sub_1, r_sub_2 = repr(n_sub_1), repr(n_sub_2)
+
+        self.assertNotEqual(r_sub_1, r_sub_2)
+
+        # LT
+        n_sub_1 = Node(operator=OperatorLT(), children=[n_2, n_1])
+        n_sub_2 = Node(operator=OperatorLT(), children=[n_1, n_2])
+
+        r_sub_1, r_sub_2 = repr(n_sub_1), repr(n_sub_2)
+
+        self.assertNotEqual(r_sub_1, r_sub_2)
+
     def test_repr_advance(self):
         import math
         def custom_func(args):
@@ -294,6 +354,70 @@ class TestNode(unittest.TestCase):
         self.assertEqual(value, 4)
         self.assertEqual(d, 3)
 
+    def test_get_subtree(self):
+        n_1 = Node(terminal_value=2, is_terminal=True)
+        n_2 = Node(terminal_value=2, is_terminal=True)
+        n_mul = Node(operator=OperatorMul(), children=[n_2, n_1])
+
+        n_add = Node(operator=OperatorAdd(max_arity=4), children=[n_mul, n_2, n_2, n_2])
+
+        n_mul = Node(operator=OperatorMul(), children=[n_add, n_2])
+
+        sub_tree = n_mul.get_subtree(depth=3, index=3)
+
+        self.assertIsInstance(sub_tree, Node)
+
+        sub_tree = n_mul.get_subtree(depth=3, index=0)
+
+        self.assertIsInstance(sub_tree.operator, OperatorMul)
+
+        sub_tree = n_mul.get_subtree(depth=4, index=0)
+
+        self.assertEqual(sub_tree.terminal_value, 2)
+
+        with self.assertRaises(GeneticProgramError):
+            value = n_mul.get_subtree(depth=4, index=2)
+
+        with self.assertRaises(GeneticProgramError):
+            value = n_mul.get_subtree(depth=5, index=1)
+
+    def test_set_subtree(self):
+        n_1 = Node(terminal_value=2, is_terminal=True)
+        n_2 = Node(terminal_value=1, is_terminal=True)
+        n_mul = Node(operator=OperatorMul(), children=[n_2, n_1])
+
+        n_1 = Node(terminal_value=3, is_terminal=True)
+        n_2 = Node(terminal_value=4, is_terminal=True)
+        n_5 = Node(terminal_value=5, is_terminal=True)
+
+        n_add = Node(operator=OperatorAdd(max_arity=4), children=[n_mul, n_1, n_2, n_5])
+
+        n_mul = Node(operator=OperatorMul(), children=[n_add, n_2])
+
+        n_new_tree = Node(operator=OperatorDiv(), children=[Node(terminal_value=10, is_terminal=True), Node(label='X', is_terminal=True)])
+
+        before_repr = str(n_mul)
+        depth_before = n_mul.depth()
+        breadth_before = n_mul.breadth(4)
+        breadth_before_2 = n_mul.breadth(3)
+
+        with self.assertRaises(GeneticProgramError):
+            n_mul.set_subtree(depth=3, index=4, subtree=n_new_tree)
+
+        with self.assertRaises(GeneticProgramError):
+            n_mul.set_subtree(depth=5, index=0, subtree=n_new_tree)
+
+        n_mul.set_subtree(depth=3, index=3, subtree=n_new_tree)
+
+        after_repr = str(n_mul)
+        depth_after = n_mul.depth()
+        breadth_after = n_mul.breadth(4)
+        breadth_after_2 = n_mul.breadth(3)
+
+        self.assertNotEqual(before_repr, after_repr)
+        self.assertEqual(depth_before, depth_after)
+        self.assertNotEqual(breadth_before, breadth_after)
+        self.assertEqual(breadth_before_2, breadth_after_2)
 
     def test_depth(self):
         n_1 = Node(terminal_value=2, is_terminal=True)

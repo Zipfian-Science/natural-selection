@@ -448,14 +448,17 @@ class Individual:
         self.history.append(stamp)
         return self.fitness
 
-    def unique_genetic_code(self) -> str:
+    def unique_genetic_code(self, force_update : bool = False) -> str:
         """
         Gets the unique genetic code, generating if it is undefined.
+
+        Args:
+            force_update (bool): Force update of genetic_code property (default = False).
 
         Returns:
             str: String name of Chromosome.
         """
-        if self.genetic_code is None:
+        if self.genetic_code is None or force_update:
             self.genetic_code = repr(self.chromosome)
         return self.genetic_code
 
