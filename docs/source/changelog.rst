@@ -11,6 +11,17 @@ Changelog
 History
 ==========================
 
+Version 0.2.27 (2022-09-01)
+---------------------------
+
+* Added ``natural_selection.utils``.
+* Moved ``clone_classic`` to ``natural_selection.utils``.
+* Moved ``get_random_string`` to ``natural_selection.utils``.
+* Moved ``default_save_checkpoint_function`` to ``natural_selection.utils``.
+* Moved ``post_evolution_function_save_all`` to ``natural_selection.utils``.
+* Added ``evaluate_individual_multiproc_wrapper`` to ``natural_selection.utils``.
+* Added ``evaluate_individuals_sequentially`` to ``natural_selection.utils``.
+
 Version 0.2.26 (2022-06-29)
 ---------------------------
 
