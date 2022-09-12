@@ -12,6 +12,9 @@ import pickle
 
 import numpy as np
 
+from natural_selection.utils import get_random_string, clone_classic, default_save_checkpoint_function, \
+    evaluate_individuals_sequentially, evaluate_individual_multiproc_wrapper
+
 from natural_selection.genetic_algorithms import Gene, Chromosome, Individual
 from natural_selection.genetic_programs import Node, GeneticProgram, random_generate
 
@@ -20,7 +23,7 @@ from natural_selection.genetic_algorithms.operators.selection import selection_e
 from natural_selection.genetic_algorithms.operators.crossover import crossover_two_uniform
 from natural_selection.genetic_algorithms.operators.mutation import mutation_randomize
 from natural_selection.genetic_algorithms.utils.probability_functions import crossover_prob_function_classic, mutation_prob_function_classic
-from natural_selection.genetic_algorithms.utils import clone_classic, default_save_checkpoint_function, GeneticAlgorithmError, evaluate_individual
+from natural_selection.genetic_algorithms.utils import GeneticAlgorithmError
 
 from natural_selection.genetic_programs.operators.initialisation import initialise_population_full_method
 from natural_selection.genetic_programs.utils import GeneticProgramError
@@ -622,13 +625,10 @@ class Island:
 
     def __evaluate_individuals(self, individuals):
         if self.core_count == 1:
-            for individual in individuals:
-                self.verbose_logging(f"eval: {str(individual)}")
-                individual.evaluate(island=self, params=self.function_params)
-            return individuals
+            return evaluate_individuals_sequentially(individuals=individuals, island=self, params=self.function_params)
 
         with mp.Pool(self.core_count) as p:
-            for f, i in zip(p.starmap(evaluate_individual, [(i, self, self.function_params) for i in individuals]), individuals):
+            for f, i in zip(p.starmap(evaluate_individual_multiproc_wrapper, [(i, self, self.function_params) for i in individuals]), individuals):
                 i.fitness = f
 
         return individuals
@@ -919,21 +919,3 @@ class Island:
         if self.logging_function:
             self.logging_function(event_message=event_message, island=self)
 
-
-def get_random_string(length : int = 8, include_numeric=False) -> str:
-    """
-    Generate a random string with a given length. Used mainly for password generation.
-    Args:
-        length (int): Length to generate.
-        include_numeric (bool): Include numbers?
-
-    Returns:
-        str: Random character string.
-    """
-    import random
-    import string
-
-    letters = string.ascii_letters
-    if include_numeric:
-        letters = f'{letters}{string.digits}'
-    return ''.join(random.choice(letters) for i in range(length))
