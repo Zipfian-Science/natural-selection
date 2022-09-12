@@ -91,3 +91,38 @@ def evaluate_individuals_sequentially(individuals, island, params):
         island.verbose_logging(f"eval: {str(individual)}")
         individual.evaluate(island=island, params=params)
     return individuals
+
+def population_steady_state_remove_weakest(population, offspring, island, desc=True):
+
+    cloned = copy.deepcopy(population)
+    def sortFitness(val):
+        return val.fitness
+
+    if island:
+        cloned.sort(key=sortFitness, reverse=island.maximise_function)
+    else:
+        cloned.sort(key=sortFitness, reverse=desc)
+
+    deaths = list(cloned[-len(offspring):])
+    cloned[-len(offspring):] = offspring
+    return cloned, deaths
+
+def population_steady_state_remove_oldest(population, offspring, island):
+
+    cloned = copy.deepcopy(population)
+    def sortAge(val):
+        return val.age
+
+    cloned.sort(key=sortAge, reverse=False)
+
+    deaths = list(cloned[-len(offspring):])
+    cloned[-len(offspring):] = offspring
+    return cloned, deaths
+
+def population_generational(population, offspring, island):
+    return offspring, copy.deepcopy(population)
+
+def population_incremental(population, offspring, island):
+    new_population = copy.deepcopy(population)
+    new_population.extend(offspring)
+    return new_population, list()
