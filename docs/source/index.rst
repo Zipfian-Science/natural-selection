@@ -12,6 +12,7 @@ Natural Selection
 
    ga_main_page
    gp_main_page
+   utils
 
 Evolutionary Algorithm tools in Python
 ======================================

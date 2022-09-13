@@ -13,7 +13,7 @@ import pickle
 import numpy as np
 
 from natural_selection.utils import get_random_string, clone_classic, default_save_checkpoint_function, \
-    evaluate_individuals_sequentially, evaluate_individual_multiproc_wrapper
+    evaluate_individuals_sequentially, evaluate_individual_multiproc_wrapper, population_incremental
 
 from natural_selection.genetic_algorithms import Gene, Chromosome, Individual
 from natural_selection.genetic_programs import Node, GeneticProgram, random_generate
@@ -85,7 +85,7 @@ class Island:
 
     def __init__(self, function_params : dict = None,
                  maximise_function : bool = True,
-                 population_growth_function : Callable = None,
+                 population_growth_function : Callable = population_incremental,
                  initialisation_function: Callable = initialise_population_random,
                  parent_selection : Callable = selection_elites_top_n,
                  parent_combination : Callable = selection_parents_two,

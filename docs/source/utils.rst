@@ -23,6 +23,20 @@ Pre/post evolution functions
 ============================
 .. autofunction:: natural_selection.utils.post_evolution_function_save_all
 
+Population growth functions
+============================
+
+These functions are used to switch between steady-state, generational, and custom population growth methods.
+
+.. autofunction:: natural_selection.utils.population_steady_state_remove_weakest
+
+.. autofunction:: natural_selection.utils.population_steady_state_remove_oldest
+
+.. autofunction:: natural_selection.utils.population_generational
+
+.. autofunction:: natural_selection.utils.population_incremental
+
+
 Misc
 ============================
 .. autofunction:: natural_selection.utils.get_random_string

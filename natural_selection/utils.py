@@ -93,7 +93,18 @@ def evaluate_individuals_sequentially(individuals, island, params):
     return individuals
 
 def population_steady_state_remove_weakest(population, offspring, island, desc=True):
+    """
+    A steady-state method where offspring members replace weakest population members.
 
+    Args:
+        population (list): The current population to add to or replace.
+        offspring (list): The offspring members to add.
+        island (Island): The calling Island.
+        desc (bool): If used outside Island (default = True).
+
+    Returns:
+        tuple: The new population, the removed members
+    """
     cloned = copy.deepcopy(population)
     def sortFitness(val):
         return val.fitness
@@ -108,7 +119,17 @@ def population_steady_state_remove_weakest(population, offspring, island, desc=T
     return cloned, deaths
 
 def population_steady_state_remove_oldest(population, offspring, island):
+    """
+    A steady-state method where offspring members replace the oldest members.
 
+    Args:
+        population (list): The current population to add to or replace.
+        offspring (list): The offspring members to add.
+        island (Island): The calling Island.
+
+    Returns:
+        tuple: The new population, the removed members
+    """
     cloned = copy.deepcopy(population)
     def sortAge(val):
         return val.age
@@ -120,9 +141,31 @@ def population_steady_state_remove_oldest(population, offspring, island):
     return cloned, deaths
 
 def population_generational(population, offspring, island):
+    """
+    The generational method where the offspring replaces the full population.
+
+    Args:
+        population (list): The current population to add to or replace.
+        offspring (list): The offspring members to add.
+        island (Island): The calling Island.
+
+    Returns:
+        tuple: The new population, the removed members
+    """
     return offspring, copy.deepcopy(population)
 
 def population_incremental(population, offspring, island):
+    """
+    A simple incremental run where offspring members are added to the population.
+
+    Args:
+        population (list): The current population to add to or replace.
+        offspring (list): The offspring members to add.
+        island (Island): The calling Island.
+
+    Returns:
+        tuple: The new population, the removed members
+    """
     new_population = copy.deepcopy(population)
     new_population.extend(offspring)
     return new_population, list()

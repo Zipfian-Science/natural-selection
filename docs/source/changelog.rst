@@ -11,6 +11,13 @@ Changelog
 History
 ==========================
 
+Version 0.2.28 (2022-09-13)
+---------------------------
+
+* Added new ``population_growth_function`` to Island, easier to switch between stead-state and generational.
+* Added new population growth functions to ``utils``.
+
+
 Version 0.2.27 (2022-09-01)
 ---------------------------
 
