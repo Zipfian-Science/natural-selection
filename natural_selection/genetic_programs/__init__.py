@@ -216,7 +216,7 @@ class Node:
             labels = list()
             for n in self.children:
                 labels.append(repr(n))
-            if self.operator.strict_precedence:
+            if self.operator and self.operator.strict_precedence:
                 return f"{self.label}({', '.join(labels)})"
             else:
                 return f"{self.label}({', '.join(sorted(labels))})"
