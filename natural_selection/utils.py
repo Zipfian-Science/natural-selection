@@ -1,6 +1,7 @@
 import copy
 import os
 from datetime import datetime
+import warnings as w
 
 def clone_classic(individuals : list, island=None):
     """
@@ -94,7 +95,7 @@ def evaluate_individuals_sequentially(individuals, island, params):
 
 def population_steady_state_remove_weakest(population, offspring, island, desc=True):
     """
-    A steady-state method where offspring members replace weakest population members.
+    A steady-state method where offspring members replace the weakest population members.
 
     Args:
         population (list): The current population to add to or replace.
@@ -105,6 +106,8 @@ def population_steady_state_remove_weakest(population, offspring, island, desc=T
     Returns:
         tuple: The new population, the removed members
     """
+    if len(offspring) == 0:
+        return population, list()
     cloned = copy.deepcopy(population)
     def sortFitness(val):
         return val.fitness
@@ -130,6 +133,8 @@ def population_steady_state_remove_oldest(population, offspring, island):
     Returns:
         tuple: The new population, the removed members
     """
+    if len(offspring) == 0:
+        return population, list()
     cloned = copy.deepcopy(population)
     def sortAge(val):
         return val.age
@@ -152,6 +157,8 @@ def population_generational(population, offspring, island):
     Returns:
         tuple: The new population, the removed members
     """
+    if len(population) != len(offspring):
+        w.warn(f"WARNING: offspring size {len(offspring)} != population size {len(population)}. Set selection count to population size!")
     return offspring, copy.deepcopy(population)
 
 def population_incremental(population, offspring, island):
@@ -169,3 +176,22 @@ def population_incremental(population, offspring, island):
     new_population = copy.deepcopy(population)
     new_population.extend(offspring)
     return new_population, list()
+
+class IslandError(Exception):
+    """
+    Encapsulating graceful exception handling during evolutionary runs.
+
+    Args:
+        message (str): Message to print.
+        exit (bool): Whether to hard exit the process or not (default = False).
+    """
+
+    def __init__(self, message : str, exit : bool = False):
+        self.message = message
+        if exit:
+            print(f"IslandError: {self.message}")
+            quit(1)
+
+
+    def __str__(self):
+        return f"IslandError: {self.message}"

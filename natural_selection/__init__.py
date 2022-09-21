@@ -9,11 +9,12 @@ from datetime import datetime
 import warnings as w
 from typing import Callable, Any, Iterable, List, Union, Type
 import pickle
+import copy
 
 import numpy as np
 
 from natural_selection.utils import get_random_string, clone_classic, default_save_checkpoint_function, \
-    evaluate_individuals_sequentially, evaluate_individual_multiproc_wrapper, population_incremental
+    evaluate_individuals_sequentially, evaluate_individual_multiproc_wrapper, population_incremental, IslandError
 
 from natural_selection.genetic_algorithms import Gene, Chromosome, Individual
 from natural_selection.genetic_programs import Node, GeneticProgram, random_generate
@@ -673,7 +674,7 @@ class Island:
 
         self.parents.append({'generation' : g, 'parents' : selected_parents})
 
-        # Children are strictly copies or new objects seeing as the have a lineage and parents
+        # Children are strictly copies or new objects seeing as they have a lineage and parents
         generation_children = list()
         for parents in self.parent_combination(individuals=selected_parents, island=self, **parent_combination_params):
             self.verbose_logging(f"select: parent_count {len(parents)}")
@@ -697,7 +698,7 @@ class Island:
 
         self.children.append({'generation' : g, 'children' : generation_children})
 
-        # Mutants are not strictly copied but rather only modified seeing as the are part of the children list
+        # Mutants are not strictly copied but rather only modified seeing as they are part of the children list
         generation_mutants = list()
         for mutant in generation_children:
             if self.mutation_prob(mutation_probability=mutation_probability, island=self):
@@ -743,9 +744,12 @@ class Island:
                 self.verbose_logging(f"evolve: add {str(individual)}")
                 self.unique_genome.append(individual.unique_genetic_code())
 
-        self.population, deaths = self.population_growth_function(population=self.population,
+        grown_population, deaths = self.population_growth_function(population=self.population,
                                                                   offspring=interim_children,
                                                                   island=self, **population_growth_params)
+        if len(grown_population) == 0:
+            raise IslandError(f"Population length of 0. {len(interim_children)} offspring were created/survived in generation {g}")
+        self.population = grown_population
         self.deaths[g] = deaths
 
         population_fitnesses = [ind.fitness for ind in self.population]
@@ -784,6 +788,8 @@ class Island:
 
         self.verbose_logging(f"evolve: stats {self.generation_info[-1]}")
 
+        pop_stats = selection_elites_top_n(island=self, individuals=copy.deepcopy(self.population), n=len(self.population))
+
         self.generation_info.append(
             {
                 self.__generation_key: g,
@@ -793,14 +799,14 @@ class Island:
                 self.__fitness_std_key: np.std(population_fitnesses),
                 self.__fitness_min_key: min(population_fitnesses),
                 self.__fitness_max_key: max(population_fitnesses),
-                self.__most_fit_key: selection_elites_top_n(island=self, individuals=self.population, n=1)[0].name,
-                self.__least_fit_key: selection_elites_top_n(island=self, individuals=self.population, n=1)[-1].name
+                self.__most_fit_key: pop_stats[0].name,
+                self.__least_fit_key: pop_stats[-1].name
             }
         )
 
         self.verbose_logging(f"evolve: stats {self.generation_info[-1]}")
 
-        elites = selection_elites_top_n(island=self, individuals=self.population, n=4)
+        elites = selection_elites_top_n(island=self, individuals=copy.deepcopy(self.population), n=4)
         elite_fitnesses = [ind.fitness for ind in elites]
         self.elites.append({'generation': g, 'elites': elites})
 
@@ -823,7 +829,7 @@ class Island:
         for i in self.population:
             i.birthday()
 
-        new_aliens = self.alien_spawn_function(**alien_spawn_params ,island=self)
+        new_aliens = self.alien_spawn_function(**alien_spawn_params, island=self)
 
         if len(new_aliens) > 0:
             alien_fitnesses = list()
