@@ -788,7 +788,9 @@ class Island:
 
         self.verbose_logging(f"evolve: stats {self.generation_info[-1]}")
 
-        pop_stats = selection_elites_top_n(island=self, individuals=copy.deepcopy(self.population), n=len(self.population))
+        pop_stats = selection_elites_top_n(island=self,
+                                           individuals=copy.deepcopy(self.population),
+                                           n=len(self.population))
 
         self.generation_info.append(
             {
@@ -806,7 +808,7 @@ class Island:
 
         self.verbose_logging(f"evolve: stats {self.generation_info[-1]}")
 
-        elites = selection_elites_top_n(island=self, individuals=copy.deepcopy(self.population), n=4)
+        elites = pop_stats[:4]
         elite_fitnesses = [ind.fitness for ind in elites]
         self.elites.append({'generation': g, 'elites': elites})
 
