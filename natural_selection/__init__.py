@@ -14,7 +14,8 @@ import copy
 import numpy as np
 
 from natural_selection.utils import get_random_string, clone_classic, default_save_checkpoint_function, \
-    evaluate_individuals_sequentially, evaluate_individual_multiproc_wrapper, population_incremental, IslandError
+    evaluate_individuals_sequentially, evaluate_individual_multiproc_wrapper, IslandError
+from natural_selection.utils.population_growth import population_incremental
 
 from natural_selection.genetic_algorithms import Gene, Chromosome, Individual
 from natural_selection.genetic_programs import Node, GeneticProgram, random_generate

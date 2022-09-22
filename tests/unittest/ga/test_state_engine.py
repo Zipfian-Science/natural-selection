@@ -2,9 +2,8 @@ import unittest
 from natural_selection.genetic_algorithms import Gene, Chromosome, Individual
 from natural_selection import Island
 from natural_selection.genetic_algorithms.utils.random_functions import random_int
-from natural_selection.genetic_algorithms.operators.selection import selection_tournament
 from natural_selection.genetic_algorithms.operators.crossover import crossover_two_n_point
-from natural_selection.utils import population_generational, population_steady_state_remove_oldest, population_steady_state_remove_weakest
+from natural_selection.utils.population_growth import population_generational, population_steady_state_remove_oldest, population_steady_state_remove_weakest
 
 class TestSimpleIsland(unittest.TestCase):
 

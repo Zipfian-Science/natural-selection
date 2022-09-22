@@ -18,6 +18,7 @@ Version 0.2.28 (2022-09-21)
 * Added new ``population_growth_function`` to Island, easier to switch between stead-state and generational.
 * Added new population growth functions to ``utils``.
 * ``IslandError`` added to ``utils``.
+* Moved ``x`` from to ``utils``.
 
 
 Version 0.2.27 (2022-09-01)

@@ -28,13 +28,27 @@ Population growth functions
 
 These functions are used to switch between steady-state, generational, and custom population growth methods.
 
-.. autofunction:: natural_selection.utils.population_steady_state_remove_weakest
+.. autofunction:: natural_selection.utils.population_growth.population_steady_state_remove_weakest
 
-.. autofunction:: natural_selection.utils.population_steady_state_remove_oldest
+.. autofunction:: natural_selection.utils.population_growth.population_steady_state_remove_oldest
 
-.. autofunction:: natural_selection.utils.population_generational
+.. autofunction:: natural_selection.utils.population_growth.population_generational
 
-.. autofunction:: natural_selection.utils.population_incremental
+.. autofunction:: natural_selection.utils.population_growth.population_incremental
+
+Operation probability functions
+===============================
+.. contents:: Table of Contents
+
+Simple functions for performing operator probability checks.
+
+Crossover probability
+=====================
+.. autofunction:: natural_selection.utils.probability_functions.crossover_prob_function_classic
+
+Mutation probability
+=====================
+.. autofunction:: natural_selection.utils.probability_functions.mutation_prob_function_classic
 
 
 Misc
