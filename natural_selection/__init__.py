@@ -14,7 +14,8 @@ import copy
 import numpy as np
 
 from natural_selection.utils import get_random_string, clone_classic, default_save_checkpoint_function, \
-    evaluate_individuals_sequentially, evaluate_individual_multiproc_wrapper, population_incremental, IslandError
+    evaluate_individuals_sequentially, evaluate_individual_multiproc_wrapper, IslandError
+from natural_selection.utils.population_growth import population_incremental
 
 from natural_selection.genetic_algorithms import Gene, Chromosome, Individual
 from natural_selection.genetic_programs import Node, GeneticProgram, random_generate
@@ -23,7 +24,7 @@ from natural_selection.genetic_algorithms.operators.initialisation import initia
 from natural_selection.genetic_algorithms.operators.selection import selection_elites_top_n, selection_parents_two, selection_survivors_all
 from natural_selection.genetic_algorithms.operators.crossover import crossover_two_uniform
 from natural_selection.genetic_algorithms.operators.mutation import mutation_randomize
-from natural_selection.genetic_algorithms.utils.probability_functions import crossover_prob_function_classic, mutation_prob_function_classic
+from natural_selection.utils.probability_functions import crossover_prob_function_classic, mutation_prob_function_classic
 from natural_selection.genetic_algorithms.utils import GeneticAlgorithmError
 
 from natural_selection.genetic_programs.operators.initialisation import initialise_population_full_method
