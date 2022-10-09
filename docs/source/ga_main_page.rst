@@ -20,7 +20,6 @@ Some text
    ga_mutation
    ga_initialisation
 
-   ga_prob_functions
    ga_random_functions
    ga_helper_functions
 

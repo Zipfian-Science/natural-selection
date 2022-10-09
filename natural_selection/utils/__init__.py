@@ -91,3 +91,22 @@ def evaluate_individuals_sequentially(individuals, island, params):
         island.verbose_logging(f"eval: {str(individual)}")
         individual.evaluate(island=island, params=params)
     return individuals
+
+class IslandError(Exception):
+    """
+    Encapsulating graceful exception handling during evolutionary runs.
+
+    Args:
+        message (str): Message to print.
+        exit (bool): Whether to hard exit the process or not (default = False).
+    """
+
+    def __init__(self, message : str, exit : bool = False):
+        self.message = message
+        if exit:
+            print(f"IslandError: {self.message}")
+            quit(1)
+
+
+    def __str__(self):
+        return f"IslandError: {self.message}"
