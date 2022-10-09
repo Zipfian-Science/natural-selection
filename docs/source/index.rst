@@ -134,25 +134,27 @@ Island class
 .. autoclass:: natural_selection.__init__.Island
    :members:
 
+Utils
+---------------------
+
+See :ref:`island-helper-functions-page` for helper tools.
+
 Changes and history
 ---------------------
 
 See :ref:`changelog-page` for version history.
 
-Version 0.2.26 (2022-06-29):
+Version 0.2.27 (2022-09-02):
 
-* Major work on expanding package to include Genetic Programming.
-* Added tree generation function ``random_generate`` to genetic_programs.
-* Renamed ``natural_selection.genetic_programs.functions`` to ``natural_selection.genetic_programs.node_operators``.
-* Added ``is_empty`` to Node class.
-* Added ``breadth`` and ``max_breadth`` to Node class, useful for doing crossover.
-* Added more history "stamps" to Island for alien spawn, migrant import.
-* General work on ``GeneticProgram`` class.
-* Added ``create_genetic_program`` to Island for easy wrapper.
-* Added ``get_subtree`` to Node class to find a subtree at the given point.
-* Added ``set_subtree`` to Node class to set a subtree at the given point.
-* Node operators now have a ``strict_precedence`` parameter to solve issues where argument precedence is important.
-* Fixed issue with genetic code checks by adding ``force_update`` to both GeneticProgram and Individual.
+* A ``population_evaluation_function`` can now be added to define custom fitness function calls to individuals.
+* This makes the way open for multi server fitness evaluation.
+* Added ``natural_selection.utils``.
+* Moved ``clone_classic`` to ``natural_selection.utils``.
+* Moved ``get_random_string`` to ``natural_selection.utils``.
+* Moved ``default_save_checkpoint_function`` to ``natural_selection.utils``.
+* Moved ``post_evolution_function_save_all`` to ``natural_selection.utils``.
+* Added ``evaluate_individual_multiproc_wrapper`` to ``natural_selection.utils``.
+* Added ``evaluate_individuals_sequentially`` to ``natural_selection.utils``.
 
 
 Indices and tables

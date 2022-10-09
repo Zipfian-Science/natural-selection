@@ -1,5 +1,5 @@
-__version__ = '0.2.27'
-__date__ = "2022-06-29"
+__version__ = '0.2.28'
+__date__ = "2022-09-02"
 
 from time import gmtime
 import multiprocessing as mp
@@ -56,6 +56,7 @@ class Island:
         filepath (str): If a filepath is specified, the pickled island is loaded from it, skipping the rest of initialisation (default = None).
         save_checkpoint_level (int): Level of checkpoint saving 0 = none, 1 = per generation, 2 = per evaluation (default = 0).
         core_count (int, float): Number of cores to split evaluation on, for all cores, set -1, use float for fractional (default = 1).
+        population_evaluation_function (Callable): Function taking a list of individuals and calling the fitness functions (default = None).
         allow_twins (bool): Only add new offspring to the population if they have a unique chromosome (default = False).
 
     Attributes:
@@ -102,6 +103,7 @@ class Island:
                  filepath : str = None,
                  save_checkpoint_level : int = 0,
                  core_count : Union[int, float] = 1,
+                 population_evaluation_function : Callable = evaluate_individuals_sequentially,
                  allow_twins : bool = False):
 
         if name is None:
@@ -160,7 +162,7 @@ class Island:
         self.verbose_logging(f"island: survivor_selection_function {survivor_selection_function.__name__}")
 
         self.alien_spawn_function = alien_spawn_function
-        self.verbose_logging(f"island: survivor_selection_function {survivor_selection_function.__name__}")
+        self.verbose_logging(f"island: alien_spawn_function {alien_spawn_function.__name__}")
 
         self.save_checkpoint = save_checkpoint_function
         self.verbose_logging(f"island: save_checkpoint_function {save_checkpoint_function.__name__}")
@@ -170,6 +172,9 @@ class Island:
 
         self.random_seed = random_seed
         self.verbose_logging(f"island: random_seed {random_seed}")
+
+        self.population_evaluation_function = population_evaluation_function
+        self.verbose_logging(f"island: population_evaluation_function {population_evaluation_function.__name__}")
 
         if isinstance(core_count, int):
             if core_count < 1:
@@ -235,6 +240,9 @@ class Island:
 
         if save_checkpoint_function and '<lambda>' in repr(save_checkpoint_function):
             w.warn("WARNING: 'save_checkpoint_function' lambda can not be pickled using standard libraries.")
+
+        if population_evaluation_function and '<lambda>' in repr(population_evaluation_function):
+            w.warn("WARNING: 'population_evaluation_function' lambda can not be pickled using standard libraries.")
 
         self.__island_properties = dict()
 
@@ -625,7 +633,7 @@ class Island:
 
     def __evaluate_individuals(self, individuals):
         if self.core_count == 1:
-            return evaluate_individuals_sequentially(individuals=individuals, island=self, params=self.function_params)
+            return self.population_evaluation_function(individuals=individuals, island=self, params=self.function_params)
 
         with mp.Pool(self.core_count) as p:
             for f, i in zip(p.starmap(evaluate_individual_multiproc_wrapper, [(i, self, self.function_params) for i in individuals]), individuals):
