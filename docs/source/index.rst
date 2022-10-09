@@ -135,6 +135,11 @@ Island class
 .. autoclass:: natural_selection.__init__.Island
    :members:
 
+Utils
+---------------------
+
+See :ref:`island-helper-functions-page` for helper tools.
+
 Changes and history
 ---------------------
 
