@@ -145,7 +145,7 @@ Changes and history
 
 See :ref:`changelog-page` for version history.
 
-Version 0.2.28 (2022-09-21):
+Version 0.2.28 (2022-11-01):
 
 * Fixed bug in Node repr if operator is None.
 * Added new ``population_growth_function`` to Island, easier to switch between stead-state and generational.
