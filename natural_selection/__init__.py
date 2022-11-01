@@ -1,5 +1,5 @@
-__version__ = '0.2.28'
-__date__ = "2022-09-02"
+__version__ = '0.2.29'
+__date__ = "2022-11-01"
 
 from time import gmtime
 import multiprocessing as mp
