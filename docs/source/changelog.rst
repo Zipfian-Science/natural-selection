@@ -11,7 +11,7 @@ Changelog
 History
 ==========================
 
-Version 0.2.28 (2022-09-21)
+Version 0.2.28 (2022-11-01)
 ---------------------------
 
 * Fixed bug in Node repr if operator is None.
