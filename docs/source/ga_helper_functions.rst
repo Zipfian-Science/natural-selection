@@ -5,23 +5,11 @@
 
 .. _ga-helper-functions-page:
 
-Helper functions
+GA Helper functions
 **************************
 .. contents:: Table of Contents
 
-Simple helper functions and classes, amongst which cloning operations.
-
-Cloning functions
-=====================
-.. autofunction:: natural_selection.genetic_algorithms.utils.clone_classic
-
-Island checkpoint functions
-===========================
-.. autofunction:: natural_selection.genetic_algorithms.utils.default_save_checkpoint_function
-
-Pre/post evolution functions
-============================
-.. autofunction:: natural_selection.genetic_algorithms.utils.post_evolution_function_save_all
+Simple helper functions and classes.
 
 .. _general-ga-error-class:
 

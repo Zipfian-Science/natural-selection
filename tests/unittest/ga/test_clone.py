@@ -1,7 +1,7 @@
 import unittest
 from natural_selection.genetic_algorithms import Gene, Chromosome, Individual
 from natural_selection.genetic_algorithms.utils.random_functions import random_int
-from natural_selection.genetic_algorithms.utils import clone_classic
+from natural_selection.utils import clone_classic
 
 class TestNpointCx(unittest.TestCase):
 

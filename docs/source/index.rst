@@ -12,6 +12,7 @@ Natural Selection
 
    ga_main_page
    gp_main_page
+   utils
 
 Evolutionary Algorithm tools in Python
 ======================================
@@ -134,26 +135,22 @@ Island class
 .. autoclass:: natural_selection.__init__.Island
    :members:
 
+Utils
+---------------------
+
+See :ref:`island-helper-functions-page` for helper tools.
+
 Changes and history
 ---------------------
 
 See :ref:`changelog-page` for version history.
 
-Version 0.2.26 (2022-06-29):
+Version 0.2.28 (2022-11-01):
 
-* Major work on expanding package to include Genetic Programming.
-* Added tree generation function ``random_generate`` to genetic_programs.
-* Renamed ``natural_selection.genetic_programs.functions`` to ``natural_selection.genetic_programs.node_operators``.
-* Added ``is_empty`` to Node class.
-* Added ``breadth`` and ``max_breadth`` to Node class, useful for doing crossover.
-* Added more history "stamps" to Island for alien spawn, migrant import.
-* General work on ``GeneticProgram`` class.
-* Added ``create_genetic_program`` to Island for easy wrapper.
-* Added ``get_subtree`` to Node class to find a subtree at the given point.
-* Added ``set_subtree`` to Node class to set a subtree at the given point.
-* Node operators now have a ``strict_precedence`` parameter to solve issues where argument precedence is important.
-* Fixed issue with genetic code checks by adding ``force_update`` to both GeneticProgram and Individual.
-
+* Fixed bug in Node repr if operator is None.
+* Added new ``population_growth_function`` to Island, easier to switch between stead-state and generational.
+* Added new population growth functions to ``utils``.
+* ``IslandError`` added to ``utils``.
 
 Indices and tables
 ==================

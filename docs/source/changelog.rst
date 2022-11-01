@@ -11,6 +11,29 @@ Changelog
 History
 ==========================
 
+Version 0.2.28 (2022-11-01)
+---------------------------
+
+* Fixed bug in Node repr if operator is None.
+* Added new ``population_growth_function`` to Island, easier to switch between stead-state and generational.
+* Added new population growth functions to ``utils``.
+* ``IslandError`` added to ``utils``.
+* Moved ``x`` from to ``utils``.
+
+
+Version 0.2.27 (2022-09-02)
+---------------------------
+
+* A ``population_evaluation_function`` can now be added to define custom fitness function calls to individuals.
+* This makes the way open for multi server fitness evaluation.
+* Added ``natural_selection.utils``.
+* Moved ``clone_classic`` to ``natural_selection.utils``.
+* Moved ``get_random_string`` to ``natural_selection.utils``.
+* Moved ``default_save_checkpoint_function`` to ``natural_selection.utils``.
+* Moved ``post_evolution_function_save_all`` to ``natural_selection.utils``.
+* Added ``evaluate_individual_multiproc_wrapper`` to ``natural_selection.utils``.
+* Added ``evaluate_individuals_sequentially`` to ``natural_selection.utils``.
+
 Version 0.2.26 (2022-06-29)
 ---------------------------
 
