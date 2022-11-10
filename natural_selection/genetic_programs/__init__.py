@@ -132,7 +132,8 @@ def random_generate(operators : list = None,
     return init_node
 
 
-
+IS_DETERMINISTIC = False
+MEMOISE_CACHE = dict()
 
 class Node:
     """
@@ -182,11 +183,21 @@ class Node:
             self.children = list()
 
     def __call__(self, **kwargs):
+
         if self.is_terminal:
             if self.label in kwargs.keys():
                 return kwargs[self.label]
             return self.terminal_value
         else:
+            if IS_DETERMINISTIC:
+                rep = f"{repr(self)} {repr(kwargs)}"
+                if rep in MEMOISE_CACHE:
+                    return MEMOISE_CACHE[rep]
+
+                result = self.operator.exec([x(**kwargs) for x in self.children])
+                MEMOISE_CACHE[rep] = result
+                return result
+
             return self.operator.exec([x(**kwargs) for x in self.children])
 
     def __str__(self):
@@ -312,7 +323,7 @@ class Node:
 
     def max_breadth(self):
         """
-        Find the most broadest part of the tree, returning the breadth and depth at which it occurs.
+        Find the broadest part of the tree, returning the breadth and depth at which it occurs.
 
         Returns:
             tuple: Breadth, depth
@@ -421,6 +432,7 @@ class GeneticProgram:
         name (str): Name for keeping track of lineage (default = None).
         species_type (str) : A unique string to identify the species type, for preventing cross polluting (default = None).
         filepath (str): Skip init and load from a pickled file.
+        is_deterministic (bool): Sets the whole program as deterministic, which improves function calls through memoisation (default = False).
         program_properties (dict): For fitness functions, extra params may be given (default = None).
 
     Notes:
@@ -447,6 +459,7 @@ class GeneticProgram:
                  name: str = None,
                  species_type : str = None,
                  filepath : str = None,
+                 is_deterministic: bool = False,
                  program_properties : dict = None):
         if not filepath is None:
             self.load(filepath=filepath)
@@ -473,6 +486,7 @@ class GeneticProgram:
         self.terminal_prob = terminal_prob
         self.growth_mode = growth_mode
         self.tree_generator = tree_generator
+
         self.root_node = Node(label=self.name,arity=1, operator=op.OperatorReturn())
 
         self.fitness_function = fitness_function
@@ -485,6 +499,10 @@ class GeneticProgram:
             self.species_type = species_type
         else:
             self.species_type = "def"
+
+        self.is_deterministic = is_deterministic
+        global IS_DETERMINISTIC
+        IS_DETERMINISTIC = is_deterministic
 
         self.__program_properties = program_properties
         if program_properties:
