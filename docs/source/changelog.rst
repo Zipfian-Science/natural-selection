@@ -11,6 +11,12 @@ Changelog
 History
 ==========================
 
+Version 0.2.29 (2022-11-22)
+---------------------------
+
+* Added ``is_deterministic`` to GeneticProgram. This is used only if the GP is deterministic.
+* If the GP is deterministic, the function call is sped up through memoisation (i.e. cached results).
+
 Version 0.2.28 (2022-11-01)
 ---------------------------
 
