@@ -349,7 +349,8 @@ class Island:
                                name: str = None,
                                species_type: str = None,
                                add_to_population: bool = False,
-                               program_properties: dict = None
+                               program_properties: dict = None,
+                               is_deterministic: bool = False
                                ):
         """
         Wrapping function to create a new GeneticProgram. Useful when writing new initialisation functions. See GeneticProgram class.
@@ -368,6 +369,7 @@ class Island:
             species_type (str) : A unique string to identify the species type, for preventing cross polluting (default = None).
             add_to_population (bool): Add this new program to the population (default = False).
             program_properties (dict): For fitness functions, extra params may be given (default = None).
+            is_deterministic (bool): Sets the whole program as deterministic, which improves function calls through memoisation (default = False).
 
         Returns:
             program: Newly created GeneticProgram.
@@ -383,7 +385,8 @@ class Island:
                               tree_generator=tree_generator,
                               name=name,
                               species_type=species_type,
-                              program_properties=program_properties
+                              program_properties=program_properties,
+                              is_deterministic=is_deterministic,
                               )
         if add_to_population:
             self.population.append(gp)
