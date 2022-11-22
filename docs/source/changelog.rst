@@ -11,7 +11,7 @@ Changelog
 History
 ==========================
 
-Version 0.2.29 (2022-11-)
+Version 0.2.29 (2022-11-22)
 ---------------------------
 
 * Added ``is_deterministic`` to GeneticProgram. This is used only if the GP is deterministic.
