@@ -2,7 +2,6 @@ from setuptools import setup, find_packages
 import os
 import json
 from datetime import datetime
-from natural_selection import __version__ as ver
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -12,6 +11,7 @@ if os.path.isfile(version_file):
         version = json.load(f)
         version_name = '{major}.{minor}.{patch}'.format(**version)
 else:
+    from natural_selection import __version__ as ver
     version_name = ver
 
 # Get the long description from the README file
@@ -30,7 +30,7 @@ if os.path.isfile(os.path.join(here, 'requirements.txt')):
         if '-i http' in pipreq[0]:
             pipreq.pop(0)
 else:
-    pipreq = []
+    pipreq = ['numpy']
 
 
 setup(
