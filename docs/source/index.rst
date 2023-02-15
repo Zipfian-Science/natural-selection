@@ -145,9 +145,9 @@ Changes and history
 
 See :ref:`changelog-page` for version history.
 
-Version 0.2.30 (2023-01-25):
+Version 0.2.33 (2023-02-15):
 
-* major bug fix: for installing, if numpy is not present could not install due to importing in ``setup.py``
+* previous major fix was not fixed. This time it is fixed.
 
 Indices and tables
 ==================
