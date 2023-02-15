@@ -11,6 +11,16 @@ Changelog
 History
 ==========================
 
+Version 0.2.33 (2023-02-15)
+---------------------------
+
+* previous major fix was not fixed. This time it is fixed.
+
+Version 0.2.30 (2023-01-25)
+---------------------------
+
+* major bug fix: for installing, if numpy is not present could not install due to importing in ``setup.py``
+
 Version 0.2.29 (2022-11-22)
 ---------------------------
 

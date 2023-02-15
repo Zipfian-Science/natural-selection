@@ -1,6 +1,4 @@
-__version__ = '0.2.30'
-__date__ = "2022-11-22"
-
+from .__version__ import __version__, __date__
 from time import gmtime
 import multiprocessing as mp
 import random
